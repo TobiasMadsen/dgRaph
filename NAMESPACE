@@ -1,0 +1,3 @@
+useDynLib(PGMscore)
+exportPattern("^[[:alpha:]]+")
+importFrom(Rcpp, evalCpp)
