@@ -70,7 +70,7 @@ namespace phy {
 	vector<xmatrix_t> const & facFunA,
 	vector<xmatrix_t> const & facFunB)
   {
-    init(varDimensions, facPotentials, facNeighbors);//, facFunA, facFunB);
+    init(varDimensions, facPotentials, facNeighbors);
   }
 
   DFG::DFG(vector<unsigned> const & varDimensions, 
@@ -1140,9 +1140,7 @@ namespace phy {
     vector<unsigned> const & nbs = neighbors[current];
     DFGNode const & nd = nodes[current];
 
-    
     //one neighbor
-
     if(nd.dimension == 1){
       for( unsigned i = 0; i < nd.potential.size2(); ++i)
 	if(nd.fun_b.size1() != 0)
@@ -1150,8 +1148,6 @@ namespace phy {
 	else
 	  outMes2[i] = 0;
     }
-    
-
 
     if(nd.dimension == 2){
       if(nbs[0] == receiver){
@@ -1221,6 +1217,185 @@ namespace phy {
       calcExpectMessageVariable(current, receiver, stateMasks, inMessages2, outMessages2);
   }
 
+  //Calculate expectancies
+  pair<xnumber_t,xnumber_t> DFG::calcExpectancies(vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks){
+    //Initialize messages
+    if( inMu_.size() == 0)
+      initMessages(inMu_, outMu_);
+    if( inLambda_.size() == 0)
+      initMessages(inLambda_, outLambda_);
+
+    xnumber_t res_lik = 1; //Likelihood type 
+    xnumber_t res_exp = 0; //Expectancy type
+
+    for(int i = 0; i < roots.size(); ++i){
+      //Calc inward recursion
+      unsigned root = roots.at(i);
+      runExpectanciesInwardsRec(root, root, fun_a, fun_b, stateMasks, inMu_, outMu_, inLambda_, outLambda_);
+
+      //use incoming messages to root to calculaete expectancy
+      stateMask_t const * stateMask = stateMasks[ convNodeToVar(root) ];
+
+      res_lik *= calcNormConst(root, stateMask, inMu_[root]);
+      if(!nodes[root].isFactor){
+	vector<unsigned> const & nbs = neighbors[ root ];
+	
+	for(unsigned k = 0; k < nodes[root].dimension; ++k){
+	  for(unsigned i = 0; i < nbs.size(); ++i){
+	    xnumber_t add_exp = (*inLambda_[root][i])[k];
+	    if( stateMask){
+	      add_exp *= (*stateMask)[k];
+	      //res_lik *= (*stateMask)[k]*(*inMu_[root][i])[k];
+	    }
+	    else{
+	      //res_lik *= (*inMu_[root][i])[k];
+	    }
+	    for(unsigned j = 0; j < nbs.size(); ++j){
+	      if(i == j)
+		continue;
+	      add_exp *= (*inMu_[root][j])[k];
+	    }
+	    res_exp += add_exp;
+	  }
+	}
+      }
+    }//Ends loop over roots
+
+    return make_pair(res_lik, res_exp);
+  }
+
+  void DFG::runExpectanciesInwardsRec(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const{
+    // recursively call all nodes
+    vector<unsigned> const & nbs = neighbors[current];
+    for(unsigned i = 0; i < nbs.size(); ++i){
+      unsigned nb = nbs[i];
+      if(nb != sender)
+	runExpectanciesInwardsRec(nb, current, fun_a, fun_b, stateMasks, inMu, outMu, inLambda, outLambda);
+    }
+
+    if( current == sender) // this is root so does not send anything inwards
+      return;
+    
+    calcExpectanciesMessage(current, sender, fun_a, fun_b, stateMasks, inMu, outMu, inLambda, outLambda);
+  }
+
+  void DFG::calcExpectanciesMessage(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const {
+    if(nodes[current].isFactor)
+      calcExpectanciesMessageFactor(current, receiver, fun_a, fun_b, inMu, outMu, inLambda, outLambda);
+    else
+      calcExpectanciesMessageVariable(current, receiver, stateMasks, inMu, outMu, inLambda, outLambda);
+  }
+
+  void DFG::calcExpectanciesMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const
+  {
+    vector<unsigned> const & nbs = neighbors[current];
+    vector< xvector_t const *> const & inMesMu( inMu[current] );
+    xvector_t & outMesMu = outMu[current][ getIndex( nbs, receiver) ]; //identify message
+    vector< xvector_t const *> const & inMesLambda( inLambda[current] );
+    xvector_t & outMesLambda = outLambda[current][ getIndex( nbs, receiver) ]; //identify message
+
+    calcExpectanciesMessageFactor(current, receiver, fun_a, fun_b, inMesMu, outMesMu, inMesLambda, outMesLambda);
+  }
+
+  void DFG::calcExpectanciesMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const
+  {
+    vector<unsigned> const & nbs = neighbors[current];
+    DFGNode const & nd = nodes[current];
+    xmatrix_t pot_a = fun_a.at( convNodeToFac(current));
+    xmatrix_t pot_b = fun_b.at( convNodeToFac(current));
+
+    //One neighbor
+    if(nd.dimension == 1){
+      for( unsigned i = 0; i < nd.potential.size2(); ++i){
+	outMesMu[i] = pot_a(0,i);
+	outMesLambda[i] = pot_a(0,i)*pot_b(0,i);
+      }
+    }
+
+    //Two neighbors
+    if(nd.dimension == 2){
+      if(nbs[0] == receiver){ // rows are receivers
+	outMesMu = prod(pot_a, *inMesMu[1]);
+	
+	//TODO Vectorize the following computations
+	for(unsigned i = 0; i < pot_a.size1(); ++i){
+	  outMesLambda[i] = 0;
+	  for(unsigned j = 0; j < pot_a.size2(); ++j){
+	    outMesLambda[i] += pot_a(i,j)*pot_b(i,j)*(*inMesMu[1])[j];
+	    outMesLambda[i] += pot_a(i,j)*(*inMesLambda[1])[j];
+	  }
+	}
+      }
+      else{ // nbs[1] == receiver, columns are receivers
+	outMesMu = prod(*inMesMu[0], pot_a);
+
+	//TODO Vectorize the following computations
+	for(unsigned j = 0; j < pot_a.size2(); ++j){
+	  outMesLambda[j] = 0;
+	  for(unsigned i = 0; i < pot_a.size1(); ++i){
+	    outMesLambda[j] += pot_a(i,j)*pot_b(i,j)*(*inMesMu[0])[i];
+	    outMesLambda[j] += pot_a(i,j)*(*inMesLambda[0])[i];
+	  }
+	}
+      }
+    }
+  }
+
+  void DFG::calcExpectanciesMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const
+  {
+    vector<unsigned> const & nbs = neighbors[current];
+    vector< xvector_t const *> const & inMesMu( inMu[current]); //Relies on precondition, possibly do assertion
+    xvector_t & outMesMu = outMu[current][ getIndex( nbs, receiver) ];
+    vector< xvector_t const *> const & inMesLambda( inLambda[current]);
+    xvector_t & outMesLambda = outLambda[current][ getIndex( nbs, receiver) ];
+
+    stateMask_t const * stateMask = stateMasks[ convNodeToVar(current) ];
+
+    calcExpectanciesMessageVariable(current, receiver, stateMask, inMesMu, outMesMu, inMesLambda, outMesLambda);
+  }
+
+  void DFG::calcExpectanciesMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const
+  {
+    vector<unsigned> const & nbs = neighbors[current];
+
+    //Calculate mu messages
+    if (stateMask){
+      for(unsigned i = 0; i < outMesMu.size(); ++i)
+	outMesMu[i] = (*stateMask)[i];
+    }
+    else{ //init to 1
+      for(unsigned i = 0; i < outMesMu.size(); ++i)
+	outMesMu[i] = 1;
+    }
+
+    for(unsigned i = 0; i < nbs.size(); ++i)
+      if(nbs[i] != receiver)
+	for(unsigned j = 0; j < outMesMu.size(); ++j)
+	  outMesMu[j] *= (*inMesMu[i])[j];
+
+    //Calculate lambda messages
+    for( unsigned i = 0; i < outMesLambda.size(); ++i){
+      outMesLambda[i] = 0;
+    }
+
+    for(unsigned k = 0; k < outMesLambda.size(); ++k){
+      for(unsigned i = 0; i < nbs.size(); ++i){
+	if(nbs[i] == receiver)
+	  continue;
+	xnumber_t add = (*inMesLambda[i])[k];
+	for(unsigned j = 0; j < nbs.size(); ++j){
+	  if(j==i or nbs[j] == receiver)
+	    continue;
+	  add *= (*inMesMu[j])[k];
+	}
+	outMesLambda[k] += add;
+      }
+    }
+    if(stateMask){//observed variable
+      for(unsigned i = 0; i < outMesLambda.size(); ++i)
+	outMesLambda[i] *= (*stateMask)[i];
+    }
+  }
 
   void calcNormConsMultObs(vector<xnumber_t> & result, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
   {

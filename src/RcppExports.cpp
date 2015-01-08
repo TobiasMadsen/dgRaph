@@ -20,3 +20,38 @@ BEGIN_RCPP
     return __sexp_result;
 END_RCPP
 }
+// mgfDFG
+double mgfDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors);
+RcppExport SEXP PGMscore_mgfDFG(SEXP varDimensionsSEXP, SEXP facPotentialsSEXP, SEXP facNeighborsSEXP) {
+BEGIN_RCPP
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< IntegerVector >::type varDimensions(varDimensionsSEXP );
+        Rcpp::traits::input_parameter< List >::type facPotentials(facPotentialsSEXP );
+        Rcpp::traits::input_parameter< List >::type facNeighbors(facNeighborsSEXP );
+        double __result = mgfDFG(varDimensions, facPotentials, facNeighbors);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
+END_RCPP
+}
+// mgfDFG2
+double mgfDFG2(IntegerVector varDimensions, List facPotentials1, List facPotentials2, List facNeighbors);
+RcppExport SEXP PGMscore_mgfDFG2(SEXP varDimensionsSEXP, SEXP facPotentials1SEXP, SEXP facPotentials2SEXP, SEXP facNeighborsSEXP) {
+BEGIN_RCPP
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< IntegerVector >::type varDimensions(varDimensionsSEXP );
+        Rcpp::traits::input_parameter< List >::type facPotentials1(facPotentials1SEXP );
+        Rcpp::traits::input_parameter< List >::type facPotentials2(facPotentials2SEXP );
+        Rcpp::traits::input_parameter< List >::type facNeighbors(facNeighborsSEXP );
+        double __result = mgfDFG2(varDimensions, facPotentials1, facPotentials2, facNeighbors);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
+END_RCPP
+}

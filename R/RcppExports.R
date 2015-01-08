@@ -5,3 +5,11 @@ evalDFG <- function(x) {
     .Call('PGMscore_evalDFG', PACKAGE = 'PGMscore', x)
 }
 
+mgfDFG <- function(varDimensions, facPotentials, facNeighbors) {
+    .Call('PGMscore_mgfDFG', PACKAGE = 'PGMscore', varDimensions, facPotentials, facNeighbors)
+}
+
+mgfDFG2 <- function(varDimensions, facPotentials1, facPotentials2, facNeighbors) {
+    .Call('PGMscore_mgfDFG2', PACKAGE = 'PGMscore', varDimensions, facPotentials1, facPotentials2, facNeighbors)
+}
+

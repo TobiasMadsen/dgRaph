@@ -158,6 +158,9 @@ using namespace std;
     xnumber_t calcExpect(); ///< Using naive algorithm
     xnumber_t calcExpect2(stateMaskVec_t const & stateMasks); ///< Using (if implemented correctly) memory efficient algorithm
 
+    /** No precondition give the two kinds of potentials*/
+    pair<xnumber_t,xnumber_t> calcExpectancies(vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks);
+
     /** write factor graph in dot format (convert to ps using: cat out.dot | dot -Tps -o out.ps ) */
     void writeDot(string const & fileName);
 
@@ -239,6 +242,18 @@ using namespace std;
     void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<xvector_t const *> const & inMes2, xvector_t & outMes2, vector<xvector_t const *> const & inMes) const;
     void calcExpectMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages2, vector<vector<xvector_t> > & outMessages2) const;
 
+
+    //Functions for calculating expectancies
+    //See note: sumProduct.pdf
+    void runExpectanciesInwardsRec(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
+//void runExpectanciesOutwardsRec(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
+    void calcExpectanciesMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
+    void calcExpectanciesMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const;
+    void calcExpectanciesMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
+    void calcExpectanciesMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const;
+    void calcExpectanciesMessage(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
+
+
     /** Convert to boost factor graph (only captures graph structure */ 
     boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> mkBoostGraph();
 
@@ -258,6 +273,13 @@ using namespace std;
 
     vector<vector<xvector_t const *> > inMessages2_; //For messages of the second type
     vector<vector<xvector_t> > outMessages2_;
+
+    //Structures for calculation of expectancies
+    //See note sumproduct.pdf
+    vector<vector<xvector_t const *> > inMu_;
+    vector<vector<xvector_t> > outMu_;
+    vector<vector<xvector_t const *> > inLambda_;
+    vector<vector<xvector_t> > outLambda_;
 
     vector<vector_t> mVariableMarginals;
     vector<matrix_t> mFactorMarginals;
