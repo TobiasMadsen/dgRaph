@@ -976,10 +976,12 @@ namespace phy {
       unsigned root = roots.at(i);
       runExpectInwardsRec(root, root, fun_a, fun_b, stateMasks, inMu_, outMu_, inLambda_, outLambda_);
 
-      //use incoming messages to root to calculaete expectancy
+      //use incoming messages to root to calculate expectancy
       stateMask_t const * stateMask = stateMasks[ convNodeToVar(root) ];
+      
+      xnumber_t lik_com = calcNormConst(root, stateMask, inMu_[root]);
+      res_lik *= lik_com;
 
-      res_lik *= calcNormConst(root, stateMask, inMu_[root]);
       if(!nodes[root].isFactor){
 	vector<unsigned> const & nbs = neighbors[ root ];
 	
@@ -994,13 +996,13 @@ namespace phy {
 		continue;
 	      add_exp *= (*inMu_[root][j])[k];
 	    }
-	    res_exp += add_exp;
+	    res_exp += add_exp/lik_com;
 	  }
 	}
       }
     }//Ends loop over roots
 
-    return make_pair(res_lik, res_exp);
+    return make_pair(res_lik, res_exp*res_lik);
   }
 
   void DFG::runExpectInwardsRec(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const{
