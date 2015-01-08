@@ -20,25 +20,13 @@ namespace phy {
 
 
   DFGNode::DFGNode(xmatrix_t const & potential) : 
-    isFactor(true), potential(potential), fun_a(potential)
-    {
-      fun_b = xmatrix_t(potential.size1(), potential.size2(),1);
-      
-      if (potential.size1() == 1)
-	dimension = 1;
-      else
-	dimension = 2;
-    }
-
-  DFGNode::DFGNode(xmatrix_t const & potential, xmatrix_t const & fun_a_init, xmatrix_t const & fun_b_init) : 
-    isFactor(true), potential(potential), fun_a(fun_a_init), fun_b(fun_b_init)
+    isFactor(true), potential(potential)
     {
       if (potential.size1() == 1)
 	dimension = 1;
       else
 	dimension = 2;
     }
-  
 
   // The graph is defined in terms of the factor neighbors. We want
   // links to be represented both ways, i.e., also from var nodes to
@@ -64,15 +52,6 @@ namespace phy {
     init(varDimensions, facPotentials, facNeighbors);
   }
 
-  DFG::DFG(vector<unsigned> const & varDimensions,
-	vector<xmatrix_t> const & facPotentials,
-	vector<vector<unsigned> > const & facNeighbors,
-	vector<xmatrix_t> const & facFunA,
-	vector<xmatrix_t> const & facFunB)
-  {
-    init(varDimensions, facPotentials, facNeighbors);
-  }
-
   DFG::DFG(vector<unsigned> const & varDimensions, 
 	   vector<matrix_t> const & facPotentials, 
 	   vector<vector<unsigned> > const & facNeighbors)
@@ -81,27 +60,6 @@ namespace phy {
     BOOST_FOREACH(matrix_t const & m, facPotentials)
       v.push_back( toXNumber(m) );
     init(varDimensions, v, facNeighbors);
-  }
-
-  DFG::DFG(vector<unsigned> const & varDimensions,
-	vector<matrix_t> const & facPotentials,
-	vector<vector<unsigned> > const & facNeighbors,
-	vector<matrix_t> const & facFunA,
-	vector<matrix_t> const & facFunB)
-  {
-    vector<xmatrix_t> facPotXMatrix;
-    BOOST_FOREACH(matrix_t const & m, facPotentials)
-      facPotXMatrix.push_back( toXNumber(m) );
-
-    vector<xmatrix_t> facFunAXMatrix;
-    BOOST_FOREACH(matrix_t const & m, facFunA)
-      facFunAXMatrix.push_back( toXNumber(m) );
-
-    vector<xmatrix_t> facFunBXMatrix;
-    BOOST_FOREACH(matrix_t const & m, facFunB)
-      facFunBXMatrix.push_back( toXNumber(m) );
-
-    init(varDimensions, facPotXMatrix, facNeighbors, facFunAXMatrix, facFunBXMatrix);
   }
 
   void DFG::resetFactorPotential(xmatrix_t const & pot, unsigned facId)
@@ -982,43 +940,6 @@ namespace phy {
     consistencyCheck();
   }
 
-  void DFG::init(vector<unsigned> const & varDimensions, vector<xmatrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors, vector<xmatrix_t> const & facFunA, vector<xmatrix_t> const & facFunB)
-  {
-    // reserve memory
-    nodes.reserve( varDimensions.size() + facPotentials.size() ); 
-    neighbors.reserve( varDimensions.size() + facPotentials.size() ); 
-    variables.reserve( varDimensions.size() );
-    factors.reserve( facPotentials.size() );
-
-    // define variable nodes
-    unsigned idx = 0;
-    BOOST_FOREACH(unsigned dim, varDimensions) {
-      nodes.push_back( DFGNode(dim) );
-      variables.push_back(idx);
-      idx++;
-    }
-
-    // define factor nodes
-    bool funAisPot = (facFunA.size() == 0);
-    if(facPotentials.size() != facFunA.size() and !funAisPot)
-      errorAbort("DiscreteFactorGraph.cpp::init facPotentials.size() != facFunA.size()");
-    if(facPotentials.size() != facFunB.size())
-      errorAbort("DiscreteFactorGraph.cpp::init facPotentials.size() != facFunB.size()");
-    for(int i = 0; i < facPotentials.size(); ++i){
-      if(funAisPot)
-	nodes.push_back(DFGNode(facPotentials.at(i), facPotentials.at(i), facFunB.at(i) ));
-      else
-	nodes.push_back(DFGNode(facPotentials.at(i), facFunA.at(i), facFunB.at(i) ));
-      factors.push_back(idx);
-      ++idx;
-    }
-    neighbors.resize( variables.size() ); // placeholder for var neighbors
-    neighbors.insert(neighbors.end(), facNeighbors.begin(), facNeighbors.end());  // all facNeighbors refer to variables, which have not changed indices
-    addTwoWayLinks(neighbors); // now add the var neighbors
-    initComponents();
-    consistencyCheck();
-  }
-
   //Calculate full likelihood
   number_t DFG::calcFullLikelihood( vector<unsigned> const & sample){
     //Make assertions
@@ -1040,185 +961,7 @@ namespace phy {
   }
 
   //Calculate expectancies
-  xnumber_t DFG::calcExpect(){
-    xnumber_t res = 0;
-    //Use dfg.calcFactorMarginals
-    vector<xmatrix_t> tmpFacMar;
-    initFactorMarginals(tmpFacMar);
-    calcFactorMarginals(tmpFacMar);
-
-    //loop over factors 
-    //find out where to put "function_b"-"potentials"
-    for (unsigned facId = 0; facId < factors.size(); ++facId){
-      unsigned ndId = convFacToNode(facId);
-      if(nodes[ndId].fun_b.size1() == 0)
-	continue;
-      //TODO: Check dimensions?
-      xmatrix_t exp = element_prod(tmpFacMar[facId], nodes[ndId].fun_b);
-      res += sumMatrix( exp);
-    }
-
-    return res;
-  }
-
-  //Calculate expectancies using message parsing
-  xnumber_t DFG::calcExpect2(stateMaskVec_t const & stateMasks){
-    //Initialize messages
-    if (inMessages2_.size() == 0)
-      initMessages(inMessages2_, outMessages2_);
-
-    xnumber_t res = 0;
-
-    for(int i = 0; i < roots.size(); ++i){
-      //calc inward recursion
-      unsigned root = roots.at(i);
-      runExpectInwardsRec(root, root, stateMasks, inMessages2_, outMessages2_);
-
-      //use incoming messages to root to calculate expectancy
-      stateMask_t const * stateMask = stateMasks[ convNodeToVar(root) ];
-
-
-      if(!nodes[root].isFactor){
-	vector<unsigned> const & nbs = neighbors[ root ];
-      
-	for(unsigned k = 0; k < nodes[root].dimension; ++k){
-	  for(unsigned i = 0; i < nbs.size(); ++i){
-	    xnumber_t add = (*inMessages2_[root][i])[k];
-	    if( stateMask){
-	      add *= (*stateMask)[k];
-	    }
-	    for(unsigned j = 0; j < nbs.size(); ++j){
-	      if(i == j)
-		continue;
-	      add *= (*inMessages_[root][j])[k];
-	    }
-	    res += add;
-	  }
-	}
-      }
-    }
-    return res/calcNormConst2(stateMasks);
-  }
-
-  void DFG::runExpectInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages2, vector<vector<xvector_t> > & outMessages2) const {
-    vector<unsigned> const & nbs = neighbors[current];
-    // recursively call all nodes
-    for(unsigned i = 0; i < nbs.size(); ++i){
-      unsigned nb = nbs[i];
-      if (nb != sender)
-	runExpectInwardsRec(nb, current, stateMasks, inMessages2, outMessages2);
-    }
-
-    if ( current == sender) // this is root so does not send anything inwards
-      return;
-    calcExpectMessage(current, sender, stateMasks, inMessages2, outMessages2);
-  }
-
-  // send messages from root outwards to leaves. Preconditon: DFG::runExpectInwardsRec must have been run
-  void DFG::runExpectOutwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages2, vector<vector<xvector_t> > & outMessages2) const {
-    vector<unsigned> const & nbs = neighbors[current];
-    // recursively call all nodes
-    for(unsigned i = 0; i < nbs.size(); ++i){
-      unsigned nb = nbs[i];
-      if(nb != sender){
-	calcExpectMessage(current, nb, stateMasks, inMessages2, outMessages2);
-	runExpectOutwardsRec(nb, current, stateMasks, inMessages2, outMessages2);
-      }
-    }
-  }
-
-  void DFG::calcExpectMessageFactor(unsigned current, unsigned receiver, vector<vector<xvector_t const *> > & inMessages2, vector<vector<xvector_t> > & outMessages2) const{
-    vector<unsigned> const & nbs = neighbors[current];
-    xvector_t & outMes2 = outMessages2[current][ getIndex( nbs, receiver) ]; //identify message
-    vector< xvector_t const *> const & inMes( inMessages_[current] );
-    vector< xvector_t const *> const & inMes2( inMessages2[current] );
-
-    calcExpectMessageFactor(current, receiver, inMes2, outMes2, inMes);
-  }
-  
-  void DFG::calcExpectMessageFactor(unsigned current, unsigned receiver, vector<xvector_t const *> const & inMes2, xvector_t & outMes2, vector<xvector_t const *> const & inMes) const {
-    vector<unsigned> const & nbs = neighbors[current];
-    DFGNode const & nd = nodes[current];
-
-    //one neighbor
-    if(nd.dimension == 1){
-      for( unsigned i = 0; i < nd.potential.size2(); ++i)
-	if(nd.fun_b.size1() != 0)
-	  outMes2[i] = nd.potential(0,i)*nd.fun_b(0,i);
-	else
-	  outMes2[i] = 0;
-    }
-
-    if(nd.dimension == 2){
-      if(nbs[0] == receiver){
-	//rows is receiver
-	for(unsigned i = 0; i < nd.potential.size1(); ++i){
-	  outMes2[i] = 0;
-	  for(unsigned j = 0; j < nd.potential.size2(); ++j){
-	    if(nd.fun_b.size1() != 0)
-	      outMes2[i] += nd.potential(i,j)*nd.fun_b(i,j)*(*inMes[1])[j];
-	    outMes2[i] += nd.potential(i,j)*(*inMes2[1])[j];
-	  }
-	}
-      }
-      else{
-	for(unsigned j = 0; j < nd.potential.size2(); ++j){
-	  outMes2[j] = 0;
-	  for(unsigned i = 0; i < nd.potential.size1(); ++i){
-	    if(nd.fun_b.size1() != 0)
-	      outMes2[j] += nd.potential(i,j)*nd.fun_b(i,j)*(*inMes[0])[i];
-	    outMes2[j] += nd.potential(i,j)*(*inMes2[0])[i];
-	  }
-	}
-      }
-    }
-    
-  }
-
-  void DFG::calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages2, vector<vector<xvector_t> > & outMessages2) const {
-    vector<unsigned> const & nbs = neighbors[current];
-    xvector_t & outMes2 = outMessages2[current][ getIndex( nbs, receiver) ];
-    vector< xvector_t const *> const & inMes2( inMessages2[current]);
-    vector< xvector_t const *> const & inMes( inMessages_[current]); //Relies on precondition, possibly do assertion
-    stateMask_t const * stateMask = stateMasks[ convNodeToVar(current) ];
-
-    calcExpectMessageVariable(current, receiver, stateMask, inMes2, outMes2, inMes);
-  }
-
-  void DFG::calcExpectMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<xvector_t const *> const & inMes2, xvector_t & outMes2, vector< xvector_t const *> const & inMes) const {
-    vector<unsigned> const & nbs = neighbors[current];
-    for( unsigned i = 0; i < outMes2.size(); ++i){
-      outMes2[i] = 0;
-    }
-
-    for(unsigned k = 0; k < outMes2.size(); ++k){
-      for(unsigned i = 0; i < nbs.size(); ++i){
-	if(nbs[i] == receiver)
-	  continue;
-	xnumber_t add = (*inMes2[i])[k];
-	for(unsigned j = 0; j < nbs.size(); ++j){
-	  if(j==i or nbs[j] == receiver)
-	    continue;
-	  add *= (*inMes[j])[k];
-	}
-	outMes2[k] += add;
-      }
-    }
-    if(stateMask){//observed variable
-      for(unsigned i = 0; i < outMes2.size(); ++i)
-	outMes2[i] *= (*stateMask)[i];
-    }
-  }
-
-  void DFG::calcExpectMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages2, vector<vector<xvector_t> > & outMessages2) const {
-    if(nodes[current].isFactor)
-      calcExpectMessageFactor(current, receiver, inMessages2, outMessages2);
-    else
-      calcExpectMessageVariable(current, receiver, stateMasks, inMessages2, outMessages2);
-  }
-
-  //Calculate expectancies
-  pair<xnumber_t,xnumber_t> DFG::calcExpectancies(vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks){
+  pair<xnumber_t,xnumber_t> DFG::calcExpect(vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks){
     //Initialize messages
     if( inMu_.size() == 0)
       initMessages(inMu_, outMu_);
@@ -1231,7 +974,7 @@ namespace phy {
     for(int i = 0; i < roots.size(); ++i){
       //Calc inward recursion
       unsigned root = roots.at(i);
-      runExpectanciesInwardsRec(root, root, fun_a, fun_b, stateMasks, inMu_, outMu_, inLambda_, outLambda_);
+      runExpectInwardsRec(root, root, fun_a, fun_b, stateMasks, inMu_, outMu_, inLambda_, outLambda_);
 
       //use incoming messages to root to calculaete expectancy
       stateMask_t const * stateMask = stateMasks[ convNodeToVar(root) ];
@@ -1243,13 +986,9 @@ namespace phy {
 	for(unsigned k = 0; k < nodes[root].dimension; ++k){
 	  for(unsigned i = 0; i < nbs.size(); ++i){
 	    xnumber_t add_exp = (*inLambda_[root][i])[k];
-	    if( stateMask){
+	    if( stateMask)
 	      add_exp *= (*stateMask)[k];
-	      //res_lik *= (*stateMask)[k]*(*inMu_[root][i])[k];
-	    }
-	    else{
-	      //res_lik *= (*inMu_[root][i])[k];
-	    }
+
 	    for(unsigned j = 0; j < nbs.size(); ++j){
 	      if(i == j)
 		continue;
@@ -1264,29 +1003,29 @@ namespace phy {
     return make_pair(res_lik, res_exp);
   }
 
-  void DFG::runExpectanciesInwardsRec(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const{
+  void DFG::runExpectInwardsRec(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const{
     // recursively call all nodes
     vector<unsigned> const & nbs = neighbors[current];
     for(unsigned i = 0; i < nbs.size(); ++i){
       unsigned nb = nbs[i];
       if(nb != sender)
-	runExpectanciesInwardsRec(nb, current, fun_a, fun_b, stateMasks, inMu, outMu, inLambda, outLambda);
+	runExpectInwardsRec(nb, current, fun_a, fun_b, stateMasks, inMu, outMu, inLambda, outLambda);
     }
 
     if( current == sender) // this is root so does not send anything inwards
       return;
     
-    calcExpectanciesMessage(current, sender, fun_a, fun_b, stateMasks, inMu, outMu, inLambda, outLambda);
+    calcExpectMessage(current, sender, fun_a, fun_b, stateMasks, inMu, outMu, inLambda, outLambda);
   }
 
-  void DFG::calcExpectanciesMessage(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const {
+  void DFG::calcExpectMessage(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const {
     if(nodes[current].isFactor)
-      calcExpectanciesMessageFactor(current, receiver, fun_a, fun_b, inMu, outMu, inLambda, outLambda);
+      calcExpectMessageFactor(current, receiver, fun_a, fun_b, inMu, outMu, inLambda, outLambda);
     else
-      calcExpectanciesMessageVariable(current, receiver, stateMasks, inMu, outMu, inLambda, outLambda);
+      calcExpectMessageVariable(current, receiver, stateMasks, inMu, outMu, inLambda, outLambda);
   }
 
-  void DFG::calcExpectanciesMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const
+  void DFG::calcExpectMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const
   {
     vector<unsigned> const & nbs = neighbors[current];
     vector< xvector_t const *> const & inMesMu( inMu[current] );
@@ -1294,10 +1033,10 @@ namespace phy {
     vector< xvector_t const *> const & inMesLambda( inLambda[current] );
     xvector_t & outMesLambda = outLambda[current][ getIndex( nbs, receiver) ]; //identify message
 
-    calcExpectanciesMessageFactor(current, receiver, fun_a, fun_b, inMesMu, outMesMu, inMesLambda, outMesLambda);
+    calcExpectMessageFactor(current, receiver, fun_a, fun_b, inMesMu, outMesMu, inMesLambda, outMesLambda);
   }
 
-  void DFG::calcExpectanciesMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const
+  void DFG::calcExpectMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const
   {
     vector<unsigned> const & nbs = neighbors[current];
     DFGNode const & nd = nodes[current];
@@ -1341,7 +1080,7 @@ namespace phy {
     }
   }
 
-  void DFG::calcExpectanciesMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const
+  void DFG::calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const
   {
     vector<unsigned> const & nbs = neighbors[current];
     vector< xvector_t const *> const & inMesMu( inMu[current]); //Relies on precondition, possibly do assertion
@@ -1351,10 +1090,10 @@ namespace phy {
 
     stateMask_t const * stateMask = stateMasks[ convNodeToVar(current) ];
 
-    calcExpectanciesMessageVariable(current, receiver, stateMask, inMesMu, outMesMu, inMesLambda, outMesLambda);
+    calcExpectMessageVariable(current, receiver, stateMask, inMesMu, outMesMu, inMesLambda, outMesLambda);
   }
 
-  void DFG::calcExpectanciesMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const
+  void DFG::calcExpectMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const
   {
     vector<unsigned> const & nbs = neighbors[current];
 

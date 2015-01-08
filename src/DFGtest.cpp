@@ -105,9 +105,9 @@ double mgfDFG2(IntegerVector varDimensions, List facPotentials1, List facPotenti
   //Calculate fun_a and fun_b
   phy::DFG dfg(varDim, facPot1, facNbs);
   phy::stateMaskVec_t stateMasks(varDimensions.size());
-  std::pair<phy::xnumber_t, phy::xnumber_t> res = dfg.calcExpectancies( facPot1, facPot2, stateMasks);
+  std::pair<phy::xnumber_t, phy::xnumber_t> res = dfg.calcExpect( facPot1, facPot2, stateMasks);
 
-  Rcout << "MGF:\t" << res.first << std::endl;
-  Rcout << "dMGF:\t" << res.second << std::endl;
-  return 0;
+  //  Rcout << "MGF:\t" << res.first << std::endl;
+  // Rcout << "dMGF:\t" << res.second << std::endl;
+  return res.first;
 }

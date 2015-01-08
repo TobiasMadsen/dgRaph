@@ -33,14 +33,9 @@ using namespace std;
     /**Factor node constructor*/
     DFGNode(xmatrix_t const & potential);
 
-    /**Factor node with exp*/
-    DFGNode(xmatrix_t const & potential, xmatrix_t const & fun_a_init, xmatrix_t const & fun_b_init);
-
     bool isFactor;      // true if factor node, false if variable node
     unsigned dimension; // dimension of variable or dimension of potential
     xmatrix_t potential; // n * m dimensional matrix defining factor potential. If n == 1, then the potential is treated as one-dimensional. n = m = 0 for variable nodes.
-    xmatrix_t fun_a; //See sumproduct note
-    xmatrix_t fun_b; // Expectancies 
   };
 
   class DFG 
@@ -62,23 +57,11 @@ using namespace std;
     // potential matrix is a 1xn matrix, where n is the dimension of
     // the nbs[0] node). This is checked by consistencyCheck(), which is
     // called by the constructor.
-    DFG(vector<unsigned> const & varDimensions,
-	vector<xmatrix_t> const & facPotentials,
-	vector<vector<unsigned> > const & facNeighbors,
-	vector<xmatrix_t> const & facFunA,
-	vector<xmatrix_t> const & facFunB);
-    
 
     // same as above but allows factor potentials to be defined as matrix_t types.
     DFG(vector<unsigned> const & varDimensions, // dimensions of random variables. Their enumeration is implicit
 	vector<matrix_t> const & facPotentials, // factor potentials (see definition in DFGNode)
 	vector<vector<unsigned> > const & facNeighbors);  // see below
-
-    DFG(vector<unsigned> const & varDimensions,
-	vector<matrix_t> const & facPotentials,
-	vector<vector<unsigned> > const & facNeighbors,
-	vector<matrix_t> const & facFunA,
-	vector<matrix_t> const & facFunB);
 
     /** The copy constructor is defined explicitly to ensure the
 	inMessages_ pointers are wiped out on copy. This means that
@@ -154,12 +137,8 @@ using namespace std;
     /** Calculate likelihood for a full observation */
     number_t calcFullLikelihood( vector<unsigned> const & sample);
 
-    /** Precondition: runSumProduct has been called */
-    xnumber_t calcExpect(); ///< Using naive algorithm
-    xnumber_t calcExpect2(stateMaskVec_t const & stateMasks); ///< Using (if implemented correctly) memory efficient algorithm
-
-    /** No precondition give the two kinds of potentials*/
-    pair<xnumber_t,xnumber_t> calcExpectancies(vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks);
+    /** No preconditions. Give the two kinds of potentials*/
+    pair<xnumber_t,xnumber_t> calcExpect(vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks);
 
     /** write factor graph in dot format (convert to ps using: cat out.dot | dot -Tps -o out.ps ) */
     void writeDot(string const & fileName);
@@ -209,8 +188,6 @@ using namespace std;
     // initialization called by constructors
     void init(vector<unsigned> const & varDimensions, vector<xmatrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors);
 
-    void init(vector<unsigned> const & varDimensions, vector<xmatrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors, vector<xmatrix_t> const & facFunA, vector<xmatrix_t> const & facFunB);
-
     // return string with info on factor i
     string factorInfoStr( unsigned const i, vector<string> varNames = vector<string>(), vector<string> facNames = vector<string>() );
     string variableInfoStr( unsigned const i, vector<string> varNames = vector<string>(), vector<string> facNames = vector<string>() );
@@ -233,25 +210,15 @@ using namespace std;
     void calcMaxSumMessageFactor(unsigned current, unsigned receiver, vector<xvector_t const *> const & inMes, xvector_t & outMes, vector<vector<unsigned> > & maxNBStates) const;
     void backtrackMaxSumOutwardsRec(vector<unsigned> & maxVariables, unsigned current, unsigned sender, unsigned maxState, vector<vector<vector<unsigned> > > & maxNeighborStates) const;
 
-    //helper functions for calcExpect2
-    void runExpectInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages2, vector<vector<xvector_t> > & outMessages2) const;
-    void runExpectOutwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages2, vector<vector<xvector_t> > & outMessages2) const;
-    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<vector<xvector_t const *> > & inMessages2, vector<vector<xvector_t> > & outMessages2) const;
-    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<xvector_t const *> const & inMes, xvector_t & outMes2, vector<xvector_t const *> const & inMes2) const;
-    void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages2, vector<vector<xvector_t> > & outMessages2) const;
-    void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<xvector_t const *> const & inMes2, xvector_t & outMes2, vector<xvector_t const *> const & inMes) const;
-    void calcExpectMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages2, vector<vector<xvector_t> > & outMessages2) const;
-
-
     //Functions for calculating expectancies
     //See note: sumProduct.pdf
-    void runExpectanciesInwardsRec(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
-//void runExpectanciesOutwardsRec(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
-    void calcExpectanciesMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
-    void calcExpectanciesMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const;
-    void calcExpectanciesMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
-    void calcExpectanciesMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const;
-    void calcExpectanciesMessage(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
+    void runExpectInwardsRec(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
+//void runExpectOutwardsRec(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
+    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
+    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const;
+    void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
+    void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const;
+    void calcExpectMessage(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
 
 
     /** Convert to boost factor graph (only captures graph structure */ 
