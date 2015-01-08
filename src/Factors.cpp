@@ -209,7 +209,8 @@ namespace phy {
 	N_ = boost::lexical_cast<int>(var.at(0));
       }
       catch(boost::bad_lexical_cast &){
-	std::cerr << "BinomialFactor::update Warning: Variable '" << var.at(0) << "' could not be converted to int" << std::endl;
+	Rcpp::Rcout << "BinomialFactor::update Warning: Variable '" << var.at(0) << "' could not be converted to int" << std::endl;
+	Rcpp::stop("Failed conversion");
       }
       return;
     }
@@ -219,7 +220,8 @@ namespace phy {
 	prob_ = boost::lexical_cast<double>(var.at(0));
       }
       catch(boost::bad_lexical_cast &){
-	std::cerr << "BinomialFactor::update Warning: Variable '" << var.at(0) << "'could not be converted to double" << std::endl;
+	Rcpp::Rcout << "BinomialFactor::update Warning: Variable '" << var.at(0) << "'could not be converted to double" << std::endl;
+	Rcpp::stop("Failed conversion");
       }
       return;
     }

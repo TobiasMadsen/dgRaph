@@ -38,7 +38,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // mgfDFG2
-double mgfDFG2(IntegerVector varDimensions, List facPotentials1, List facPotentials2, List facNeighbors);
+NumericVector mgfDFG2(IntegerVector varDimensions, List facPotentials1, List facPotentials2, List facNeighbors);
 RcppExport SEXP PGMscore_mgfDFG2(SEXP varDimensionsSEXP, SEXP facPotentials1SEXP, SEXP facPotentials2SEXP, SEXP facNeighborsSEXP) {
 BEGIN_RCPP
     SEXP __sexp_result;
@@ -48,7 +48,7 @@ BEGIN_RCPP
         Rcpp::traits::input_parameter< List >::type facPotentials1(facPotentials1SEXP );
         Rcpp::traits::input_parameter< List >::type facPotentials2(facPotentials2SEXP );
         Rcpp::traits::input_parameter< List >::type facNeighbors(facNeighborsSEXP );
-        double __result = mgfDFG2(varDimensions, facPotentials1, facPotentials2, facNeighbors);
+        NumericVector __result = mgfDFG2(varDimensions, facPotentials1, facPotentials2, facNeighbors);
         PROTECT(__sexp_result = Rcpp::wrap(__result));
     }
     UNPROTECT(1);

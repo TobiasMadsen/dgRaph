@@ -4,6 +4,7 @@
  * See README_license.txt for license agreement.
  *******************************************************************/
 #include "DfgIO.h"
+#include <Rcpp.h>
 
 namespace phy {
 
@@ -138,7 +139,7 @@ namespace phy {
 	  var = varVec.at(varPos);
 	}
 	catch(const std::out_of_range& e){
-	  std::cout << "Following varpos was not found in vector: " << varMap.at(subscribedVars.at(f).at(i)) << std::endl;
+	  Rcpp::Rcout << "Following varpos was not found in vector: " << varMap.at(subscribedVars.at(f).at(i)) << std::endl;
 	  errorAbort("Out of range  DfgIO updateFactors 2");
 	}
 	vars.push_back( var); 			  

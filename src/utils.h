@@ -21,7 +21,7 @@
 #include <utility>
 #include <algorithm>
 #include "PhyDef.h"
-
+#include <Rcpp.h>
 namespace phy {
 
   // ERROR CALLS
@@ -167,8 +167,8 @@ namespace phy {
 
   inline void errorAbort(string const & message)
   {
-    cerr << "Error. Program terminating. " << message << endl;
-    exit(1); // wanted to use abort, but it returned zero exit code (and I don't know how to set it).
+    Rcpp::Rcout << "Error. Program terminating. " << message << endl;
+    Rcpp::stop("Error");
   }
 
   template <class T>

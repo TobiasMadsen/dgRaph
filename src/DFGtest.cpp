@@ -89,7 +89,7 @@ double mgfDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors
 }
 
 // [[Rcpp::export]]
-double mgfDFG2(IntegerVector varDimensions, List facPotentials1, List facPotentials2, List facNeighbors){
+NumericVector mgfDFG2(IntegerVector varDimensions, List facPotentials1, List facPotentials2, List facNeighbors){
   //Convert varDimensions to std::vector<unsigned>
   std::vector<unsigned> varDim(varDimensions.begin(), varDimensions.end());
   //Convert both sets of factorPotentials to std::vector<xmatrix_t>
@@ -107,7 +107,8 @@ double mgfDFG2(IntegerVector varDimensions, List facPotentials1, List facPotenti
   phy::stateMaskVec_t stateMasks(varDimensions.size());
   std::pair<phy::xnumber_t, phy::xnumber_t> res = dfg.calcExpect( facPot1, facPot2, stateMasks);
 
-  //  Rcout << "MGF:\t" << res.first << std::endl;
-  // Rcout << "dMGF:\t" << res.second << std::endl;
-  return res.first;
+  NumericVector ret(2);
+  ret(0) = res.first;
+  ret(1) = res.second;
+  return ret;
 }
