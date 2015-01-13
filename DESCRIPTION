@@ -7,8 +7,14 @@ Author: Who wrote it
 Maintainer: Who to complain to <yourfault@somewhere.net>
 Description: More about what it does (maybe more than one line)
 License: What Licence is it under ?
-Imports: Rcpp (>= 0.11.2.2),
-         BH
-LinkingTo: Rcpp,
-           BH
-Suggests: testthat
+Imports: 
+  Rcpp (>= 0.11.2.2),
+  BH
+LinkingTo: 
+  Rcpp,
+  BH
+Suggests: 
+  testthat,
+  igraph,
+  knitr
+VignetteBuilder: knitr

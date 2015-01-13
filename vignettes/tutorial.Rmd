@@ -1,0 +1,24 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{An R Markdown Vignette with knitr}
+-->
+```{r setup, include=FALSE}
+library(knitr)
+library(PGMscore)
+require(igraph)
+```
+
+## PGMscore tutorial
+```{r echo=TRUE, warning=FALSE}
+  varDim <- rep(2:5)
+  facPot <- c(list(matrix(1,1,2)),
+              list(matrix(1,2,3)),
+              list(matrix(1,2,4)),
+              list(matrix(1,4,5)))
+  facNbs <- c(list(c(1L)),
+              list(c(1L,2L)),
+              list(c(1L,3L)),
+              list(c(3L,4L)))
+  pgm <- PGM(varDim, facPot, facNbs)
+  plot(pgm)
+```
