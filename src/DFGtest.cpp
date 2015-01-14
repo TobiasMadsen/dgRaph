@@ -3,37 +3,9 @@
 
 #include "PhyDef.h"
 #include "DiscreteFactorGraph.h"
+#include "rToCpp.h"
 
 using namespace Rcpp;
-
-void rMatToMat(NumericMatrix const & rmat, phy::xmatrix_t & mat){
-  mat.resize( rmat.nrow(), rmat.ncol());
-  for(int i = 0; i < rmat.nrow(); ++i)
-    for(int j = 0; j < rmat.ncol(); ++j)
-      mat(i,j) = rmat(i,j);
-}
-
-phy::xmatrix_t rMatToMat(NumericMatrix const & rmat){
-  phy::xmatrix_t ret;
-  rMatToMat(rmat, ret);
-  return ret;
-}
-
-std::vector<std::vector<unsigned> > rNbsToNbs(List const & rNbs){
-  std::vector< std::vector<unsigned> > ret(rNbs.size());
-
-  for(int i = 0; i < rNbs.size(); ++i){
-
-    SEXP sexpNbs = rNbs[i];
-    IntegerVector IVnbs(sexpNbs);
-    std::vector<unsigned> nbs;
-    for(int j = 0; j < IVnbs.size(); ++j)
-      nbs.push_back( IVnbs(j) );
-    ret.at(i) = nbs;
-  }
-  return ret;
-}
-
 
 // [[Rcpp::export]]
 double evalDFG(NumericVector x) {
@@ -88,8 +60,8 @@ double mgfDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors
   return 0;
 }
 
-// [[Rcpp::export]]
-NumericVector mgfDFG2(IntegerVector varDimensions, List facPotentials1, List facPotentials2, List facNeighbors){
+// [[Rcpp::export("PGMExpectCpp")]]
+NumericVector PGMExpectCpp(IntegerVector varDimensions, List facPotentials1, List facPotentials2, List facNeighbors){
   //Convert varDimensions to std::vector<unsigned>
   std::vector<unsigned> varDim(varDimensions.begin(), varDimensions.end());
   //Convert both sets of factorPotentials to std::vector<xmatrix_t>

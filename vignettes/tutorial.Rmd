@@ -6,19 +6,76 @@
 library(knitr)
 library(PGMscore)
 require(igraph)
+library(ggplot2)
 ```
 
 ## PGMscore tutorial
+A factorgraph consists of variables and factors. 
+
 ```{r echo=TRUE, warning=FALSE}
-  varDim <- rep(2:5)
-  facPot <- c(list(matrix(1,1,2)),
-              list(matrix(1,2,3)),
-              list(matrix(1,2,4)),
-              list(matrix(1,4,5)))
-  facNbs <- c(list(c(1L)),
-              list(c(1L,2L)),
-              list(c(1L,3L)),
-              list(c(3L,4L)))
-  pgm <- PGM(varDim, facPot, facNbs)
-  plot(pgm)
+varDim <- rep(4,4)
+facPot <- c(list(matrix(0.25,1,4)),
+            list(matrix(0.25,4,4)),
+            list(matrix(0.25,4,4)),
+            list(matrix(0.25,4,4)))
+facNbs <- c(list(c(1L)),
+            list(c(1L,2L)),
+            list(c(1L,3L)),
+            list(c(3L,4L)))
+pgm <- PGM(varDim, facPot, facNbs)
 ```
+
+If you have `igraph` installed the structure of the graph can be plotted using `plot`
+```{r}
+plot(pgm)
+```
+
+#### Tail approximation
+Suppose we have two models with the same graph structure, but different factor potentials. We can define a score of an observation as the loglikelihoodratio
+$$
+S(x) = \log \frac{\prod_{\mathcal{A}}f_a^\prime(x_a)}{\prod_{\mathcal{A}}f_a(x_a)} = \sum_{\mathcal{A}} \left[\log f_a^\prime(x_a) - \log f_a(x_a)\right]
+$$
+
+Bayesian statistics...
+
+Lets define a foreground model where the variables are highly correlated with the ancestors
+```{r}
+set.seed(1)
+facPotFg <- c(list(rndDist(1,4)),
+              list(rndDist(4,4)),
+              list(rndDist(4,4)),
+              list(rndDist(4,4)))
+```
+
+Lets calculate the tail probabilities in different points using the saddlepoint approximation
+```{r}
+saddlePointTails(3, pgm, facPotFg)
+x <- seq(1,3,by=0.1)
+cdf_upper_tail <- sapply(x,FUN=saddlePointTails, pgm=pgm, facPotFg=facPotFg)
+df_tail <- data.frame(x = x, tail = cdf_upper_tail)
+
+library(ggplot2)
+ggplot(df_tail, aes(x=x,y=tail)) + geom_line() +
+  theme_bw() + 
+  ylab("p-value") + 
+  xlab("score") +
+  ggtitle("Saddlepoint approximation of the upper tail")
+```
+
+Simulation of tail
+```{r}
+sampleIS <- sampleISCpp(1000, 0.0, varDim, facPot, facNbs, facPotFg)
+
+x <- seq(1,3,by=0.1)
+cdf_upper_tail <- sapply(x, function(x){sum(sampleIS$weights[sampleIS$scores>x])/1000})
+df_tail <- data.frame(x = x, tail = cdf_upper_tail)
+
+library(ggplot2)
+ggplot(df_tail, aes(x=x,y=tail)) + geom_line() +
+  theme_bw() + 
+  ylab("p-value") + 
+  xlab("score") +
+  ggtitle("Importance sampling of the upper tail")
+```
+
+
