@@ -20,36 +20,36 @@ facPotToFunB <- function(facPot1, facPot2){
 
 #' Saddlepoint estimation of tail probabilities
 #' @param  t        value at which to evaluate tail
-#' @param  pgm      Probalistic graphical model specifying null model
+#' @param  dfg      Probalistic graphical model specifying null model
 #' @param  facPotFg Foreground model 
-saddlePointTails <- function(t, pgm, facPotFg){
-  stopifnot(is.pgm(pgm))
+saddlePointTails <- function(t, dfg, facPotFg){
+  stopifnot(is.dfg(dfg))
   require(numDeriv, quietly = TRUE)
   
   #Check compatible dimensions
-  stopifnot( is.list(facPotFg), sapply(facPotFg, is.matrix))
-  stopifnot( length(facPotFg) == length(pgm$facPot))
+  stopifnot( is.list(facPotFg), all(sapply(facPotFg, is.matrix)))
+  stopifnot( length(facPotFg) == length(dfg$facPot))
   stopifnot( all(sapply(seq_along(facPot), FUN=function(i){all(dim(facPot[[i]])==dim(facPotFg[[i]]))})) )
   
   #Solve d/dt k(theta) = t
   #where k(theta) is the cumulant transform
   theta <- uniroot(function(x){
-    res <- PGMExpectCpp(pgm$varDim, 
-                        facPotToFunA(pgm$facPot, facPotFg, x),
-                        facPotToFunB(pgm$facPot, facPotFg),
-                        pgm$facNbs)
+    res <- PGMExpectCpp(dfg$varDim, 
+                        facPotToFunA(dfg$facPot, facPotFg, x),
+                        facPotToFunB(dfg$facPot, facPotFg),
+                        dfg$facNbs)
     return(res[2]/res[1]-t)
     }, c(-5,5))$root
   
   #Numerically find d/dt^2 k(t)
   kud2 <- grad(function(x){
-    res <- PGMExpectCpp(varDim, facPotToFunA(pgm$facPot, facPotFg, x), facPotToFunB(pgm$facPot, facPotFg),facNbs)
+    res <- PGMExpectCpp(varDim, facPotToFunA(dfg$facPot, facPotFg, x), facPotToFunB(dfg$facPot, facPotFg),facNbs)
     return(res[2]/res[1])
   }, theta)
   
   
   #Find MGF in theta
-  phi <- PGMExpectCpp(varDim, facPotToFunA(pgm$facPot, facPotFg, theta), facPotToFunB(pgm$facPot, facPotFg),facNbs)[1]
+  phi <- PGMExpectCpp(varDim, facPotToFunA(dfg$facPot, facPotFg, theta), facPotToFunB(dfg$facPot, facPotFg),facNbs)[1]
   
   #Calculate 
   la <- theta*sqrt(kud2)

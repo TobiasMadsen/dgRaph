@@ -13,21 +13,27 @@ library(ggplot2)
 A factorgraph consists of variables and factors. 
 
 ```{r echo=TRUE, warning=FALSE}
-varDim <- rep(4,4)
+varDim <- rep(4,6)
 facPot <- c(list(matrix(0.25,1,4)),
+            list(matrix(0.25,4,4)),
+            list(matrix(0.25,4,4)),
             list(matrix(0.25,4,4)),
             list(matrix(0.25,4,4)),
             list(matrix(0.25,4,4)))
 facNbs <- c(list(c(1L)),
             list(c(1L,2L)),
             list(c(1L,3L)),
-            list(c(3L,4L)))
-pgm <- PGM(varDim, facPot, facNbs)
+            list(c(3L,4L)),
+            list(c(3L,5L)),
+            list(c(5L,6L)) )
+facNames = c("Prior",rep("Int",5))
+varNames = c("Tobias","Oscar","Mette","Camilla","Sine","Maja")
+mydfg <- dfg(varDim, facPot, facNbs, varNames, facNames)
 ```
 
 If you have `igraph` installed the structure of the graph can be plotted using `plot`
 ```{r}
-plot(pgm)
+plot(mydfg)
 ```
 
 #### Tail approximation
@@ -36,12 +42,19 @@ $$
 S(x) = \log \frac{\prod_{\mathcal{A}}f_a^\prime(x_a)}{\prod_{\mathcal{A}}f_a(x_a)} = \sum_{\mathcal{A}} \left[\log f_a^\prime(x_a) - \log f_a(x_a)\right]
 $$
 
-Bayesian statistics...
+Motivate by bayesian statistics...
 
-Lets define a foreground model where the variables are highly correlated with the ancestors
+Lets define a foreground model where the variables are correlated with the ancestors
 ```{r}
+rndDist <- function(row,col){
+  x <- rexp(row*col,1/(c(1:row)+2))
+  mat <- matrix(x, row, col, byrow = T)
+  mat/rowSums(mat)
+}
 set.seed(1)
 facPotFg <- c(list(rndDist(1,4)),
+              list(rndDist(4,4)),
+              list(rndDist(4,4)),
               list(rndDist(4,4)),
               list(rndDist(4,4)),
               list(rndDist(4,4)))
@@ -49,14 +62,15 @@ facPotFg <- c(list(rndDist(1,4)),
 
 Lets calculate the tail probabilities in different points using the saddlepoint approximation
 ```{r}
-saddlePointTails(3, pgm, facPotFg)
-x <- seq(1,3,by=0.1)
-cdf_upper_tail <- sapply(x,FUN=saddlePointTails, pgm=pgm, facPotFg=facPotFg)
-df_tail <- data.frame(x = x, tail = cdf_upper_tail)
+saddlePointTails(3, mydfg, facPotFg)
+x <- seq(-3,4,by=0.01)
+cdf_upper_tail <- sapply(x,FUN=saddlePointTails, dfg=mydfg, facPotFg=facPotFg)
+df_tail <- data.frame(x = x, tailSaddle = cdf_upper_tail)
 
 library(ggplot2)
-ggplot(df_tail, aes(x=x,y=tail)) + geom_line() +
+ggplot(df_tail, aes(x=x,y=tailSaddle)) + geom_line() +
   theme_bw() + 
+  scale_y_log10() +
   ylab("p-value") + 
   xlab("score") +
   ggtitle("Saddlepoint approximation of the upper tail")
@@ -64,18 +78,42 @@ ggplot(df_tail, aes(x=x,y=tail)) + geom_line() +
 
 Simulation of tail
 ```{r}
-sampleIS <- sampleISCpp(1000, 0.0, varDim, facPot, facNbs, facPotFg)
+sampleIS <- rpgmscore(1000, 0, mydfg, facPotFg)
 
-x <- seq(1,3,by=0.1)
-cdf_upper_tail <- sapply(x, function(x){sum(sampleIS$weights[sampleIS$scores>x])/1000})
-df_tail <- data.frame(x = x, tail = cdf_upper_tail)
+cdf_upper_tail <- sapply(x, function(x){
+  obs <- sampleIS$weights*(sampleIS$scores > x)
+  error <- qnorm(0.975)*sd(obs)/sqrt(1000)
+  meanobs <- mean(obs)
+  c(meanobs-error, meanobs, meanobs+error)
+  })
+df_tail$tailNaiveLow <- pmax(cdf_upper_tail[1,], 0.0001)
+df_tail$tailNaive <- cdf_upper_tail[2,]
+df_tail$tailNaiveHigh <- cdf_upper_tail[3,]
+
+sampleIS <- rpgmscore(1000, 1.5, mydfg, facPotFg)
+
+cdf_upper_tail <- sapply(x, function(x){
+  obs <- sampleIS$weights*(sampleIS$scores > x)
+  error <- qnorm(0.975)*sd(obs)/sqrt(1000)
+  meanobs <- mean(obs)
+  c(meanobs-error, meanobs, meanobs+error)
+  })
+df_tail$tailISLow <- pmax(cdf_upper_tail[1,], 0.0001)
+df_tail$tailIS <- cdf_upper_tail[2,]
+df_tail$tailISHigh <- cdf_upper_tail[3,]
 
 library(ggplot2)
-ggplot(df_tail, aes(x=x,y=tail)) + geom_line() +
+ggplot(df_tail, aes(x=x)) + geom_line(aes(y=tailSaddle),linetype="longdash") +
+  geom_line(aes(y=tailNaive), colour="blue") +
+  geom_line(aes(y=tailIS), colour="red") +
+  geom_ribbon(aes(ymin=tailNaiveLow,ymax=tailNaiveHigh),alpha=0.3,fill="blue") +
+  geom_ribbon(aes(ymin=tailISLow,ymax=tailISHigh),alpha=0.3,fill="red") +
   theme_bw() + 
+  scale_y_log10() +
   ylab("p-value") + 
   xlab("score") +
-  ggtitle("Importance sampling of the upper tail")
+  ggtitle("Estimates of uppertail of score function") +
+  annotation_logticks(sides="l")
 ```
 
 

@@ -1,4 +1,4 @@
-#' PGM
+#' dfg
 #' Construct a probalistic graphical model
 #' 
 #' @param  varDim  Vector of integers containing variable dimensions
@@ -9,8 +9,8 @@
 #' varDim <- c(2L,3L)
 #' facPot <- list(matrix(c(1:6),2,3))
 #' facNbs <- list( c(0L,1L))
-#' my_pgm <- PGM(varDim, facPot, facNbs)
-PGM <- function(varDim, facPot, facNbs){
+#' my_pgm <- dfg(varDim, facPot, facNbs)
+dfg <- function(varDim, facPot, facNbs, varNames=seq_along(varDim), facNames=(length(varDim)+seq_along(facPot))){
   #Check varDim is a vector of integers
   stopifnot( is.vector(varDim, mode="numeric"),all(varDim %% 1 == 0))
   
@@ -35,9 +35,10 @@ PGM <- function(varDim, facPot, facNbs){
   graph <- NULL
   #Create graph
   if(require(igraph)){
-    graph <- graph.empty(directed=F) + vertices(length(varDim)+seq_along(facPot), color="red")
-    graph <- graph + vertices(seq_along(varDim), color="blue")
-    V(graph)$shape <- c(rep("square",length(facNbs)),rep("circle",length(varDim)))
+    #graph <- graph.empty(directed=F) + vertices(length(varDim)+seq_along(facPot), color="red")
+    graph <- graph.empty(directed=F) + vertices(facNames, color="red", shape="rectangle", size2=18, size=12*nchar(facNames))
+    graph <- graph + vertices(varNames, color="blue", shape="crectangle", size2=18, size=12*nchar(varNames))
+
     lapply(seq_along(facNbs),FUN=function(i){
       graph <<- graph + edges( c(i, length(facNbs)+facNbs[[i]][1]), mode="mutual")
       if(length(facNbs[[i]]) == 2)
@@ -47,22 +48,21 @@ PGM <- function(varDim, facPot, facNbs){
     warning("igraph not installed: Check manually that your graph is acyclic")
   }
   
-  structure(list(varDim=varDim, facPot=facPot, facNbs=facNbs, graph=graph), class = "pgm")
+  structure(list(varDim=varDim, facPot=facPot, facNbs=facNbs, dfgmodule=new("RDFG", varDim, facPot, facNbs),varNames=varNames, facNames=facNames, graph=graph), class = "dfg")
 }
 
-#' PGM
+#' is.dfg
 #' 
-#' Check if object is a PGM
+#' Check if object is a dfg
 #' 
 #' @param x object to be tested
-is.pgm <- function(x) inherits(x, "pgm")
+is.dfg <- function(x) inherits(x, "dfg")
 
-plot.pgm <- function(x){
+plot.dfg <- function(x){
   require(igraph)
   if(!is.null(x$graph)){
     plot(x$graph, layout = layout.reingold.tilford,
-         main = "PGM",
-         vertex.size = 25,
+         main = "DFG",
          vertex.frame.color = "white",
          vertex.label.color = "white",
          vertex.label.family = "sans",
