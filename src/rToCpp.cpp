@@ -16,6 +16,15 @@ phy::xmatrix_t rMatToMat(NumericMatrix const & rmat){
   return ret;
 }
 
+std::vector<phy::xmatrix_t> rFacPotToFacPot(List const & facPot){
+  std::vector<phy::xmatrix_t> ret;
+  for(int k = 0; k < facPot.size(); ++k){
+    ret.push_back( rMatToMat( facPot[k] ));
+  }
+
+  return ret;
+}
+
 std::vector<std::vector<unsigned> > rNbsToNbs(List const & rNbs){
   std::vector< std::vector<unsigned> > ret(rNbs.size());
 

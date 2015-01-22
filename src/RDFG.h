@@ -13,10 +13,14 @@ phy::DFG rToDFG(IntegerVector varDimensions, List facPotentials, List facNeighbo
 class RDFG{
 public:
   RDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors);
+  DataFrame makeImportanceSamples(int N, double alpha, List facPotentialsFg);
+
   double two(){ return 2;}
   int x_;
+
 private:
   phy::DFG dfg;
+
 };
 
 #endif //__RDFG_h

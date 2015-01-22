@@ -6,10 +6,12 @@ using namespace Rcpp ;
 RCPP_MODULE(phy) {
     class_<RDFG>("RDFG")
 
-    .constructor<IntegerVector, List, List>()
+      .constructor<IntegerVector, List, List>()
 
-    .field("x", &RDFG::x_)
+      .field("x", &RDFG::x_)
 
-    .method("two", &RDFG::two)
+      .method("two", &RDFG::two)
+
+      .method("makeImportanceSamples", &RDFG::makeImportanceSamples)
     ;
 }
