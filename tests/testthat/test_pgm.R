@@ -12,7 +12,7 @@ test_that("Check potential dimensions",{
               list(c(1L,3L)),
               list(c(3L,4L)))
   
-  expect_true({pgm <- PGM(varDim, facPot, facNbs); TRUE}) #If first commmand fails second command won't be evaluated
+  expect_true({mydfg <- dfg(varDim, facPot, facNbs); TRUE}) #If first commmand fails second command won't be evaluated
 })
 
 test_that("Wrong potential dimensions",{
@@ -26,7 +26,7 @@ test_that("Wrong potential dimensions",{
               list(c(1L,3L)),
               list(c(3L,4L)))
   
-  expect_error({pgm <- PGM(varDim, facPot, facNbs)}) #If first commmand fails second command won't be evaluated 
+  expect_error({mydfg <- dfg(varDim, facPot, facNbs)}) #If first commmand fails second command won't be evaluated 
 })
 
 test_that("Too many neighbors",{
@@ -40,7 +40,7 @@ test_that("Too many neighbors",{
               list(c(1L,3L)),
               list(c(3L,4L,5L)))
   
-  expect_error({pgm <- PGM(varDim, facPot, facNbs)}) #If first commmand fails second command won't be evaluated
+  expect_error({mydfg <- dfg(varDim, facPot, facNbs)}) #If first commmand fails second command won't be evaluated
 })
 
 test_that("Check acyclic",{
@@ -50,15 +50,15 @@ test_that("Check acyclic",{
   facNbs <- c(list(c(1,2)),
               list(c(2,1)))
   
-  expect_error({pgm <- PGM(varDim, facPot, facNbs)})
+  expect_error({mydfg <- dfg(varDim, facPot, facNbs)})
 })
 
-test_that("is.pgm",{
+test_that("is.dfg",{
   x <- list()
   
-  class(x) <- c('pgm')
-  expect_true(is.pgm(x))
+  class(x) <- c('dfg')
+  expect_true(is.dfg(x))
   
-  class(x) <- c('troll','pgm')
-  expect_true(is.pgm(x))
+  class(x) <- c('troll','dfg')
+  expect_true(is.dfg(x))
 })

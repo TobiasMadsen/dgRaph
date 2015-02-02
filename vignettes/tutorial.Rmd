@@ -27,7 +27,7 @@ facNbs <- c(list(c(1L)),
             list(c(3L,5L)),
             list(c(5L,6L)) )
 facNames = c("Prior",rep("Int",5))
-varNames = c("Tobias","Oscar","Mette","Camilla","Sine","Maja")
+varNames = c("Foo","Bar","Baz","Do","Re","Mi")
 mydfg <- dfg(varDim, facPot, facNbs, varNames, facNames)
 ```
 
@@ -62,13 +62,11 @@ facPotFg <- c(list(rndDist(1,4)),
 
 Lets calculate the tail probabilities in different points using the saddlepoint approximation
 ```{r}
-saddlePointTails(3, mydfg, facPotFg)
-x <- seq(-3,4,by=0.01)
-cdf_upper_tail <- sapply(x,FUN=saddlePointTails, dfg=mydfg, facPotFg=facPotFg)
-df_tail <- data.frame(x = x, tailSaddle = cdf_upper_tail)
+x <- seq(-3,4,0.01)
+dfsaddle <- tailSaddle(x, mydfg, facPotFg)
 
 library(ggplot2)
-ggplot(df_tail, aes(x=x,y=tailSaddle)) + geom_line() +
+ggplot(dfsaddle, aes(x=x,y=p)) + geom_line() +
   theme_bw() + 
   scale_y_log10() +
   ylab("p-value") + 
@@ -76,38 +74,45 @@ ggplot(df_tail, aes(x=x,y=tailSaddle)) + geom_line() +
   ggtitle("Saddlepoint approximation of the upper tail")
 ```
 
-Simulation of tail
+Naive simulation of scores to give estimates of $P(S > x)$. Notice that confidence bands is narrow for small scores and wide for high scores. Most often our interest is the 
 ```{r}
-sampleIS <- rpgmscore(1000, 0, mydfg, facPotFg)
+dfnaive <- tailIS(x, n=1000, alpha=0, dfg=mydfg, facPotFg=facPotFg)
+#Notice that taking alpha=0 corresponds to naive sampling
 
-cdf_upper_tail <- sapply(x, function(x){
-  obs <- sampleIS$weights*(sampleIS$scores > x)
-  error <- qnorm(0.975)*sd(obs)/sqrt(1000)
-  meanobs <- mean(obs)
-  c(meanobs-error, meanobs, meanobs+error)
-  })
-df_tail$tailNaiveLow <- pmax(cdf_upper_tail[1,], 0.0001)
-df_tail$tailNaive <- cdf_upper_tail[2,]
-df_tail$tailNaiveHigh <- cdf_upper_tail[3,]
+ggplot(dfnaive, aes(x=x,y=p)) + geom_line() +
+  theme_bw() +
+  scale_y_log10() + 
+  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="blue") +
+  annotation_logticks(sides="l")
+```
 
-sampleIS <- rpgmscore(1000, 1.5, mydfg, facPotFg)
+To get better estimates of $P(S > x)$ for higher values of $x$, we can apply importance sampling. The importance sampling distribution we use is defines by
+$$
+P^{IS}(x) \propto P^{bg}(x)^{1-\alpha}P^{fg}(x)^{\alpha}
+$$
+It is seen that putting $\alpha=0$ corresponds to naive sampling. We now estimate tail probabilities using importance sampling and $\alpha=1.5$.
 
-cdf_upper_tail <- sapply(x, function(x){
-  obs <- sampleIS$weights*(sampleIS$scores > x)
-  error <- qnorm(0.975)*sd(obs)/sqrt(1000)
-  meanobs <- mean(obs)
-  c(meanobs-error, meanobs, meanobs+error)
-  })
-df_tail$tailISLow <- pmax(cdf_upper_tail[1,], 0.0001)
-df_tail$tailIS <- cdf_upper_tail[2,]
-df_tail$tailISHigh <- cdf_upper_tail[3,]
+```{r}
+dfis <- tailIS(x, n=1000, alpha=1.5, dfg=mydfg, facPotFg=facPotFg)
+#Notice that taking alpha=0 corresponds to naive sampling
 
-library(ggplot2)
-ggplot(df_tail, aes(x=x)) + geom_line(aes(y=tailSaddle),linetype="longdash") +
-  geom_line(aes(y=tailNaive), colour="blue") +
-  geom_line(aes(y=tailIS), colour="red") +
-  geom_ribbon(aes(ymin=tailNaiveLow,ymax=tailNaiveHigh),alpha=0.3,fill="blue") +
-  geom_ribbon(aes(ymin=tailISLow,ymax=tailISHigh),alpha=0.3,fill="red") +
+ggplot(dfis, aes(x=x,y=p)) + geom_line() +
+  theme_bw() +
+  scale_y_log10() + 
+  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="red") +
+  annotation_logticks(sides="l")
+```
+
+We see quite opposite to naive sampling, that we have wide confidence bands for small $x$ and more narrow confidence bands for large $x$. So far we don't have any general advise for picking a good value of $\alpha$, the smaller probabilities you need to estimate, the larger $\alpha$.
+
+Lets compare the estimates from our three methods. The dashed line is the saddlepointapproximation, the blue line is naive sampling and in red importance sampling:
+
+```{r, echo=FALSE}
+ggplot(dfsaddle, aes(x=x)) + geom_line(aes(y=p),linetype="longdash") +
+  geom_line(data=dfis, aes(y=p), colour="red") +
+  geom_line(data=dfnaive, aes(y=p), colour="blue") +
+  geom_ribbon(data=dfis, aes(ymin=pmax(low, 0.001),ymax=high),alpha=0.3,fill="red") +
+  geom_ribbon(data=dfnaive, aes(ymin=pmax(low, 0.001),ymax=high),alpha=0.3,fill="blue") +
   theme_bw() + 
   scale_y_log10() +
   ylab("p-value") + 
@@ -116,4 +121,27 @@ ggplot(df_tail, aes(x=x)) + geom_line(aes(y=tailSaddle),linetype="longdash") +
   annotation_logticks(sides="l")
 ```
 
+##Combining
+Different values of alpha can be employed to get a narrow confidence limits over a long range of scores
 
+```{r}
+dfis <- tailIS(x, n=1000, alpha=c(0,0.5,1,1.5), dfg=mydfg, facPotFg=facPotFg)
+#Notice that taking alpha=0 corresponds to naive sampling
+
+ggplot(dfis, aes(x=x,y=p)) + geom_line() +
+  theme_bw() +
+  scale_y_log10() + 
+  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="red") +
+  annotation_logticks(sides="l")
+```
+
+##Quantiles
+The sampling function can also be used to estimate quantiles. 
+
+```{r}
+dfnaive <- tailIS(q=seq(0.01,0.5,by=0.001), n=1000, alpha=0, dfg=mydfg, facPotFg=facPotFg)
+#Notice that taking alpha=0 corresponds to naive sampling
+
+ggplot(dfnaive, aes(x=p,y=x)) + geom_line() +
+  theme_bw()
+```

@@ -25,6 +25,39 @@ phy::DFG rToDFG(IntegerVector varDimensions, List facPotentials, List facNeighbo
 RDFG::RDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors) 
   : dfg(rToDFG(varDimensions, facPotentials, facNeighbors)) {}
 
+double RDFG::calculateExpectedScoreIS(double alpha, List facPotentialsFg){
+  //Make conversions
+  std::vector<phy::xmatrix_t> facPotFg;
+  for(int k = 0; k < facPotentialsFg.size(); ++k){
+    facPotFg.push_back( rMatToMat( facPotentialsFg[k] ));
+  }
+
+  //Calculate IS distribution and score contributions
+  std::vector<phy::xmatrix_t> facPotIS( dfg.factors.size() );
+  std::vector<phy::xmatrix_t> score( dfg.factors.size() );
+
+  for(int f = 0; f < dfg.factors.size(); ++f){
+    phy::xmatrix_t const & potNull = dfg.getFactor(f).potential;
+    phy::xmatrix_t const & potFg   = facPotFg.at(f);
+
+    phy::xmatrix_t potIS(potNull.size1(), potNull.size2());
+    phy::xmatrix_t matScore( potNull.size1(), potNull.size2() );
+
+    for(int i = 0; i < potIS.size1(); ++i){
+      for(int j = 0; j < potIS.size2(); ++j){
+	potIS(i,j) = phy::power(potNull(i,j), 1-alpha)*phy::power(potFg(i,j), alpha);
+	matScore(i,j) = log( potFg(i,j) / potNull(i,j) );
+      }
+    }
+    facPotIS.at(f) = potIS;
+    score.at(f) = matScore;
+  }
+
+  phy::stateMaskVec_t stateMasks( dfg.variables.size() );
+  std::pair<phy::xnumber_t, phy::xnumber_t> res = dfg.calcExpect(facPotIS, score, stateMasks);
+  return (res.second / res.first);
+}
+
 DataFrame RDFG::makeImportanceSamples(int N, double alpha, List facPotentialsFg){
   //Make conversions
   std::vector<phy::xmatrix_t> facPotFg;
@@ -98,4 +131,84 @@ DataFrame RDFG::makeImportanceSamples(int N, double alpha, List facPotentialsFg)
 
   return Rcpp::DataFrame::create(Rcpp::Named("scores")  = scores,
 				 Rcpp::Named("weights") = weights );
+}
+
+// Preconditions
+// facPot either empty or length==factors.size()
+// observations either empty or length==variables.size()
+// observed either empty or length==variables.size()
+Rcpp::IntegerVector RDFG::maxProbState(Rcpp::List facPot, Rcpp::IntegerVector observations, Rcpp::LogicalVector observed){
+  //Create empty statemasks
+  phy::stateMaskVec_t stateMasks( dfg.variables.size() );
+  std::vector<phy::stateMask_t> stateMasksObj;
+  stateMasksObj.reserve( dfg.variables.size() );
+
+  //Observed variables
+  if(observed.size() == dfg.variables.size()){
+    for(int i = 0; i < dfg.variables.size(); ++i){
+      if(observed[i]){
+	stateMasksObj.push_back( phy::stateMask_t( dfg.getVariable(i).dimension, 0 ) );
+	stateMasksObj.back()( observations[i] ) = 1;
+	stateMasks.at(i) = & stateMasksObj.back();
+      }
+    }
+  }
+
+  //Create return vector
+  std::vector<unsigned> maxVarStates( dfg.variables.size() );
+
+  //Calculate most probable state
+  dfg.runMaxSum(stateMasks, maxVarStates);
+
+  return Rcpp::wrap(maxVarStates);
+}
+
+Rcpp::List RDFG::facExpCounts(Rcpp::List facPot, Rcpp::IntegerMatrix observations ){
+  if(observations.ncol() != dfg.variables.size() )
+    phy::errorAbort("ncol != variables.size");
+
+  //List with matrices to be returned
+  std::vector<phy::matrix_t> facExpCounts;
+  phy::initAccFactorMarginals(facExpCounts, dfg);
+
+  //Each row in the matrix is an observation
+  for(int i = 0; i < observations.nrow(); ++i){
+    //Create statemasks
+    phy::stateMaskVec_t stateMasks( dfg.variables.size(), NULL );
+    std::vector<phy::stateMask_t> stateMasksObj;
+    stateMasksObj.reserve( dfg.variables.size() );
+
+    for(int j = 0; j < observations.ncol(); ++j){
+      if( ! IntegerMatrix::is_na(observations(i, j))){
+	stateMasksObj.push_back(  phy::stateMask_t( dfg.getVariable(j).dimension, 0 ) );
+	stateMasksObj.back()( observations(i, j)) = 1;
+	stateMasks.at(j) = & stateMasksObj.back();
+      }
+    }
+
+    //calculation
+    std::vector<phy::xmatrix_t> tmpFacMar;
+    dfg.initFactorMarginals( tmpFacMar );
+    dfg.runSumProduct( stateMasks );
+    dfg.calcFactorMarginals( tmpFacMar );
+
+    for(int f = 0; f < dfg.factors.size(); ++f)
+      facExpCounts[f] += phy::toNumber( tmpFacMar[f] );
+
+  }
+
+  //Convert to list of matrices
+  Rcpp::List ret(dfg.factors.size());
+  for(int f = 0; f < dfg.factors.size(); ++f){
+    phy::matrix_t& facCounts = facExpCounts.at(f);
+    Rcpp::NumericMatrix rFacCounts(facCounts.size1(), facCounts.size2());
+    for(int i = 0; i < facCounts.size1(); ++i)
+      for(int j = 0; j < facCounts.size2(); ++j)
+	rFacCounts(i,j) = facCounts(i,j);
+
+    ret[f] = rFacCounts;
+  }
+
+
+  return ret;
 }

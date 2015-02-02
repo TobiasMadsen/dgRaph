@@ -13,5 +13,11 @@ RCPP_MODULE(phy) {
       .method("two", &RDFG::two)
 
       .method("makeImportanceSamples", &RDFG::makeImportanceSamples)
+
+      .method("calculateExpectedScoreIS", &RDFG::calculateExpectedScoreIS)
+      
+      .method("maxProbState", &RDFG::maxProbState)
+
+      .method("facExpCounts", &RDFG::facExpCounts)
     ;
 }
