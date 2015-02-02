@@ -573,13 +573,13 @@ namespace phy {
 	    m(i, j) *= (*inMes[0])[i] * (*inMes[1])[j];
       else // should not happen
 	errorAbort("Factor with more than two neighbors. Aborts.");
-       
-      // normalize
     }
 
-    xnumber_t const Z = sumMatrix(factorMarginals[0]);
-    for (unsigned facId = 0; facId < factors.size(); facId++)
+    //Not same normalization constant for all factors when graph is disconnected
+    for (unsigned facId = 0; facId < factors.size(); facId++){
+      xnumber_t const Z = sumMatrix(factorMarginals[facId]);
       factorMarginals[facId] *= 1/ Z;
+    }
   }
 
   // init data structures given in DFG.
