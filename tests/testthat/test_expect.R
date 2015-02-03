@@ -59,8 +59,8 @@ test_that("Bernoulli disconnected",{
   expect_equal(dtlogmgf(t), res[2]/res[1])
 })
 
-test_that("Expected score IS",{
-  N <- 1
+test_that("Expected score IS disconnected",{
+  N <- 4
   varDim <- rep(2L,N)
   facPot <- rep(list(matrix(c(0.5,0.5),1,2)),N)
   facPotFg <- rep(list(matrix(c(0.75,0.25),1,2)),N)
@@ -81,4 +81,30 @@ test_that("Expected score IS",{
   prob <- c(0.75,0.25)**0.5*c(0.5,0.5)**0.5; prob <- prob/sum(prob)
   expect_equal(dfg$dfgmodule$calculateExpectedScoreIS(0.5, facPotFg),
                sum(prob*score)*N)
+})
+
+test_that("Expect score IS connected",{
+  varDim <- rep(2L, 2)
+  facPot <- c(list(matrix(c(0.5,0.5),1,2)),
+              list(matrix(c(0.5,0.5,0.5,0.5),2,2)))
+  facPotFg <- c(list(matrix(c(0.5,0.5),1,2)),
+              list(matrix(c(0.75,0.25,0.25,0.75),2,2)))
+  facNbs <- c(list(c(1)),
+              list(c(1,2)))
+  
+  dfg <- dfg(varDim, facPot, facNbs)
+  
+  score <- log(c(0.75,0.25)/c(0.5,0.5))
+  
+  prob <- c(0.5, 0.5)
+  expect_equal(dfg$dfgmodule$calculateExpectedScoreIS(0, facPotFg),
+               sum(prob*score))
+  
+  prob <- c(0.75, 0.25)
+  expect_equal(dfg$dfgmodule$calculateExpectedScoreIS(1, facPotFg),
+               sum(prob*score))
+  
+  prob <- c(0.75,0.25)**1.5*c(0.5,0.5)**(-.5); prob <- prob/sum(prob)
+  expect_equal(dfg$dfgmodule$calculateExpectedScoreIS(1.5, facPotFg),
+               sum(prob*score))
 })
