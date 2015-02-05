@@ -19,7 +19,7 @@ tailIS <- function(x=NULL, n, q=NULL, alpha=0.5, dfg, facPotFg){
   #Check if compatible dimensions
   stopifnot( is.list(facPotFg), all(sapply(facPotFg, is.matrix)))
   stopifnot( length(facPotFg) == length(dfg$facPot))
-  stopifnot( all(sapply(seq_along(facPot), FUN=function(i){all(dim(facPot[[i]])==dim(facPotFg[[i]]))})) )
+  stopifnot( all(sapply(seq_along(dfg$facPot), FUN=function(i){all(dim(dfg$facPot[[i]])==dim(facPotFg[[i]]))})) )
   
   
   if(!is.null(x)){
