@@ -29,6 +29,16 @@ test_that("Wrong potential dimensions",{
   expect_error({mydfg <- dfg(varDim, facPot, facNbs)}) #If first commmand fails second command won't be evaluated 
 })
 
+test_that("Wrong potential dimensions",{
+  varDim <- c(2,2)
+  facPot <- c(list(matrix(0,2,2)),
+              list(matrix(0,2,2)))
+  facNbs <- c(list(1),
+              list(c(1,2)))
+  
+  expect_error({mydfg <- dfg(varDim, facPot, facNbs)}) #If first commmand fails second command won't be evaluated 
+})
+
 test_that("Too many neighbors",{
   varDim <- rep(2:5)
   facPot <- c(list(matrix(1,1,2)),

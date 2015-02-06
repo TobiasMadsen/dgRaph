@@ -12,7 +12,7 @@
 #' my_pgm <- dfg(varDim, facPot, facNbs)
 dfg <- function(varDim, facPot, facNbs, varNames=seq_along(varDim), facNames=(length(varDim)+seq_along(facPot))){
   #Check varDim is a vector of integers
-  stopifnot( is.vector(varDim, mode="numeric"),all(varDim %% 1 == 0))
+  stopifnot( is.vector(varDim, mode="numeric"), all(varDim %% 1 == 0))
   
   #Check facPot is a list of matrices
   stopifnot( is.list(facPot), sapply(facPot, is.matrix))
@@ -24,7 +24,7 @@ dfg <- function(varDim, facPot, facNbs, varNames=seq_along(varDim), facNames=(le
   stopifnot( length(facNbs) == length(facPot) )
   stopifnot( all(sapply(seq_along(facNbs), function(i){
     if(length(facNbs[[i]]) == 1){
-      return(varDim[ facNbs[[i]][1] ] == ncol(facPot[[i]]))
+      return( 1 == nrow(facPot[[i]]) & varDim[ facNbs[[i]][1] ] == ncol(facPot[[i]]))
     } else if(length(facNbs[[i]]) == 2){
       return(varDim[ facNbs[[i]][1] ] == nrow(facPot[[i]]) & varDim[ facNbs[[i]][2] ] == ncol(facPot[[i]]) )
     } else{ #Too many neighbors
