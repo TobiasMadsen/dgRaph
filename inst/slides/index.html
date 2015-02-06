@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Factor Graphs</title>
+  <meta name="description" content="">
+  <meta name="author" content="Tobias Madsen">
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="stylesheet" href="libraries/frameworks/revealjs/css/reveal.min.css">
+  <link rel="stylesheet" href="libraries/frameworks/revealjs/css/theme/Solarized.css" id="theme">
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/zenburn.css" id="theme">
+  <!--[if lt IE 9]>
+  <script src="lib/js/html5shiv.js"></script>
+  <![endif]-->  <link rel="stylesheet" href = "assets/css/ribbons.css">
+
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section class='' data-state='' id='slide-1'>
+  
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+<h1>FactorGraphs in R</h1>
+
+<h3>Jakob&#39;s library has made it to R</h3>
+
+</section>
+<section>
+   <section class='' data-state=''>
+    <h2>Discrete Factor Graphs</h2>
+    <ul>
+<li>Class of graphical models</li>
+<li>Specify relationship among variables</li>
+</ul>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <p><img src="../fig/mixture_fac.svg"  alt="some_text" width='50%' margin='100px 15% 0% 15%' style="background:none; border:none; box-shadow:none;"></p>
+
+<ul>
+<li>Consists of variables and factors</li>
+<li>Factors have potentials</li>
+<li>The likelihood is the product of potentials</li>
+</ul>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <p><img src="../fig/mixture_fac.svg"  alt="some_text" width='50%' margin='100px 15% 0% 15%' style="background:none; border:none; box-shadow:none;"></p>
+
+<p>\[
+p(x) = f_a(x_1)f_b(x_2)
+\]</p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+</section>
+<section>
+   <section class='' data-state=''>
+    <h2>Known models</h2>
+    <ul>
+<li>Cast known models into DFGs</li>
+</ul>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <p>Hidden Markov Model</p>
+
+<p><img src="../fig/hmm.svg"  alt="some_text" width='50%' margin='100px 15% 0% 15%' style="background:none; border:none; box-shadow:none;"></p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <p>Phylogenetic Models</p>
+
+<p><img src="../fig/phylo.svg"  alt="some_text" width='50%' margin='100px 15% 0% 15%' style="background:none; border:none; box-shadow:none;"></p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+</section>
+<section>
+   <section class='' data-state=''>
+    <h2>Local Examples</h2>
+    <ul>
+<li>Michals normal/cancer model</li>
+<li>SCFG</li>
+<li>Augmented motifs</li>
+<li>Malene, Johanna et al</li>
+</ul>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <h1>Micha&#322;</h1>
+
+<p><img src="../fig/michal.png"  alt="some_text" width='50%' margin='100px 15% 0% 15%'></p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <h1>Sudhakar</h1>
+
+<p><img src="../fig/sudhakar.png"  alt="some_text" width='50%' margin='100px 15% 0% 15%'></p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <h1>Myself</h1>
+
+<p><img src="../fig/cons.svg" alt="some_text" width='50%' margin='100px 15% 0% 15%'></p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <h1>Myself</h1>
+
+<p><img src="../fig/pwm.png"  alt="some_text" width='50%' margin='100px 15% 0% 15%'></p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+</section>
+<section>
+   <section class='' data-state=''>
+    <h2>R Interface</h2>
+    <h3>NB! Very imature</h3>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <h2>Specifying factor graph</h2>
+
+<pre><code class="r">library(PGMscore)
+varDim &lt;- rep(4,6)
+facPot &lt;- c(list(matrix(0.25,1,4)),
+            list(matrix(0.25,4,4)),
+            list(matrix(0.25,4,4)),
+            list(matrix(0.25,4,4)),
+            list(matrix(0.25,4,4)),
+            list(matrix(0.25,4,4)))
+facNbs &lt;- c(list(c(1L)),
+            list(c(1L,2L)),
+            list(c(1L,3L)),
+            list(c(3L,4L)),
+            list(c(3L,5L)),
+            list(c(5L,6L)) )
+facNames = c(&quot;Prior&quot;,rep(&quot;Int&quot;,5))
+varNames = c(&quot;Foo&quot;,&quot;Bar&quot;,&quot;Baz&quot;,&quot;Do&quot;,&quot;Re&quot;,&quot;Mi&quot;)
+mydfg &lt;- dfg(varDim, facPot, facNbs, varNames, facNames)
+</code></pre>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <h2>Plotting</h2>
+
+<pre><code class="r">plot(mydfg)
+</code></pre>
+
+<p><img src="assets/fig/unnamed-chunk-3-1.png" alt="plot of chunk unnamed-chunk-3"> </p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+</section>
+<section class='' data-state='' id='slide-6'>
+  <h2>Most Probable State</h2>
+  <pre><code class="r">varDim &lt;- rep(4,4)
+facPot &lt;- c(list(matrix(c(0.05,0.05,0.20,0.70),1,4)),
+            list(matrix(c(0.05,0.05,0.70,0.20),1,4)),
+            list(matrix(c(0.70,0.20,0.05,0.05),1,4)),
+            list(matrix(c(0.05,0.70,0.20,0.05),1,4)))
+facNbs &lt;- c(list(c(1L)),
+            list(c(2L)),
+            list(c(3L)),
+            list(c(4L)))
+
+mydfg2 &lt;- dfg(varDim, facPot, facNbs)
+mydfg2$dfgmodule$maxProbState(list(),c(0,0,1,0), c(F,F,T,F))+1
+</code></pre>
+
+<pre><code>## [1] 4 3 2 2
+</code></pre>
+
+</section>
+<section class='' data-state='' id='slide-7'>
+  <h2>Factor Expectation Counts</h2>
+  <pre><code class="r">varDim &lt;- rep(2L, 2)
+facPot &lt;- c(list(matrix(c(0.5, 0.5),1,2)),
+            list(matrix(c(0.75,0.25,0.25,0.75),2,2)))
+facNbs &lt;- c(list(c(1L)),
+            list(c(1L,2L)) )
+
+mydfg3 &lt;- dfg(varDim, facPot, facNbs)
+
+mydfg3$dfgmodule$facExpCounts(list(), matrix(c(NA,1,
+                                              0,1,
+                                              1,NA), 3, 2) )
+</code></pre>
+
+<pre><code>## [[1]]
+##      [,1] [,2]
+## [1,] 1.25 1.75
+## 
+## [[2]]
+##      [,1] [,2]
+## [1,] 0.75 0.50
+## [2,] 0.00 1.75
+</code></pre>
+
+</section>
+<section>
+   <section class='' data-state=''>
+    <h2>Comparing two models</h2>
+    <p>Use bayes factor, the ratio between likelihoods
+\[
+K = \frac{P(X|M_2)}{P(X|M_1)}
+\]</p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <h2>Tail Approximations</h2>
+
+<p>Same as comparing loglikelihood-ratio </p>
+
+<p>\[
+S(x) = \log \frac{\prod_{\mathcal{A}}f_a^\prime(x_a)}{\prod_{\mathcal{A}}f_a(x_a)} = \sum_{\mathcal{A}} \left[\log f_a^\prime(x_a) - \log f_a(x_a)\right]
+\]</p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <h2>Finding p-value</h2>
+
+<p>Assess the FDR given a score treshold</p>
+
+<ul class = "build incremental">
+<li>naive sampling</li>
+<li>importance sampling</li>
+<li>saddlepoint approximation</li>
+</ul>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+</section>
+<section>
+   <section class='' data-state=''>
+    <h2>Naive Sampling</h2>
+    
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <pre><code class="r">varDim &lt;- rep(4,6)
+facPot &lt;- c(list(matrix(0.25,1,4)),
+            list(matrix(0.25,4,4)),
+            list(matrix(0.25,4,4)),
+            list(matrix(0.25,4,4)),
+            list(matrix(0.25,4,4)),
+            list(matrix(0.25,4,4)))
+facNbs &lt;- c(list(c(1L)),
+            list(c(1L,2L)),
+            list(c(1L,3L)),
+            list(c(3L,4L)),
+            list(c(3L,5L)),
+            list(c(5L,6L)) )
+mydfg &lt;- dfg(varDim, facPot, facNbs)
+</code></pre>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <pre><code class="r">plot(mydfg)
+</code></pre>
+
+<p><img src="assets/fig/unnamed-chunk-7-1.png" alt="plot of chunk unnamed-chunk-7"> </p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <pre><code class="r">rndDist &lt;- function(row,col){
+  x &lt;- rexp(row*col,1/(c(1:row)+2))
+  mat &lt;- matrix(x, row, col, byrow = T)
+  mat/rowSums(mat)
+}
+set.seed(1)
+facPotFg &lt;- c(list(rndDist(1,4)),
+              list(rndDist(4,4)),
+              list(rndDist(4,4)),
+              list(rndDist(4,4)),
+              list(rndDist(4,4)),
+              list(rndDist(4,4)))
+</code></pre>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <pre><code class="r">x &lt;- seq(-3,4,0.01)
+dfnaive &lt;- tailIS(x, n=1000, alpha=0, dfg=mydfg, facPotFg=facPotFg)
+</code></pre>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <p><img src="assets/fig/unnamed-chunk-10-1.png" alt="plot of chunk unnamed-chunk-10"> </p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <h2>Naive sampling</h2>
+
+<p>Naive sampling s**cks at estimating tail probabilities because</p>
+
+<p class='fragment'><b>Rare events are rare</b></p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+</section>
+<section>
+   <section class='' data-state=''>
+    <h2>Importance sampling</h2>
+    <ul>
+<li>Sample from another distribution</li>
+<li>Reweight samples</li>
+</ul>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <pre><code class="r">#True value
+pnorm(4, 0, 1, lower.tail = F)
+</code></pre>
+
+<pre><code>## [1] 3.16712418331e-05
+</code></pre>
+
+<pre><code class="r">#Naive Sampling
+naive &lt;- rnorm(100000, 0,1) &gt; 4
+mean(naive)
+</code></pre>
+
+<pre><code>## [1] 1e-05
+</code></pre>
+
+<pre><code class="r">#Importance Sampling
+is    &lt;- rnorm(100000, 5, 1)
+is    &lt;- (dnorm(is, 0, 1)/dnorm(is, 5, 1))*(is&gt;4)
+mean(is)
+</code></pre>
+
+<pre><code>## [1] 3.15910435059e-05
+</code></pre>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <h2>Importance Sampling Distributions</h2>
+
+<p>Use a class of distributions parameterized by \(\alpha\)</p>
+
+<p>\[
+P^{IS}(X) = P_{M_1}(X)^{(1-\alpha)}P_{M_2}(X)^{\alpha}
+\]</p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <pre><code class="r">x &lt;- seq(-3,4,0.01)
+dfis &lt;- tailIS(x, n=1000, alpha=1.5, dfg=mydfg, facPotFg=facPotFg)
+</code></pre>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <p><img src="assets/fig/unnamed-chunk-14-1.png" alt="plot of chunk unnamed-chunk-14"> </p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+</section>
+<section>
+   <section class='' data-state=''>
+    <h2>Saddlepoint approximation</h2>
+    
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <h3>Moment generating function</h3>
+
+<p>\[
+P(S > s) = 
+\]</p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <pre><code class="r">x &lt;- seq(-3,4,0.01)
+dfsaddle &lt;- tailSaddle(x, mydfg, facPotFg)
+</code></pre>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <p><img src="assets/fig/unnamed-chunk-16-1.png" alt="plot of chunk unnamed-chunk-16"> </p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+</section>
+<section class='' data-state='' id='slide-12'>
+  <h2>Acknowledgements</h2>
+  <p><img src="../fig/finish.jpg"  alt="some_text" width='50%' margin='100px 15% 0% 15%' style="background:none; border:none; box-shadow:none;"></p>
+
+<h3>Jakob Skou</h3>
+
+<h3>Jens Ledet</h3>
+
+<h3>Asger Hobolth</h3>
+
+</section>
+    </div>
+  </div>
+</body>
+  <script src="libraries/frameworks/revealjs/lib/js/head.min.js"></script>
+  <script src="libraries/frameworks/revealjs/js/reveal.min.js"></script>
+  <script>
+  // Full list of configuration options available here:
+  // https://github.com/hakimel/reveal.js#configuration
+  Reveal.initialize({
+    controls: true,
+    progress: true,
+    history: true,
+    center: true,
+    theme: Reveal.getQueryHash().theme || 'Solarized', 
+    transition: Reveal.getQueryHash().transition || 'none', 
+    dependencies: [
+    // Cross-browser shim that fully implements classList -
+    // https://github.com/eligrey/classList.js/
+      { src: 'libraries/frameworks/revealjs/lib/js/classList.js', condition: function() { return !document.body.classList;}},
+      // Zoom in and out with Alt+click
+      { src: 'libraries/frameworks/revealjs/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      // Speaker notes
+      { src: 'libraries/frameworks/revealjs/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+      // Remote control your reveal.js presentation using a touch device
+      //{ src: 'libraries/frameworks/revealjs/plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+      ]
+  });
+  </script>  <!-- MathJax: Fall back to local if CDN offline but local image fonts are not supported (saves >100MB) -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [['$','$'], ['\\(','\\)']],
+      processEscapes: true
+    }
+  });
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<!-- <script src="https://c328740.ssl.cf1.rackcdn.com/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script> -->
+<script>window.MathJax || document.write('<script type="text/x-mathjax-config">MathJax.Hub.Config({"HTML-CSS":{imageFont:null}});<\/script><script src="libraries/widgets/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"><\/script>')
+</script>
+<!-- LOAD HIGHLIGHTER JS FILES -->
+<script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- DONE LOADING HIGHLIGHTER JS FILES -->
+ 
+
+</html>
