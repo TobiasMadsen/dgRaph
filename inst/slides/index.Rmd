@@ -10,7 +10,6 @@ bootstrap:
   theme: amelia
 widgets     : mathjax            # {mathjax, quiz, bootstrap}
 mode        : selfcontained # {standalone, draft}
-
 ---
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -19,8 +18,9 @@ mode        : selfcontained # {standalone, draft}
 library(ggplot2)
 ```
 
-# FactorGraphs in R
-### Jakob's library has made it to R
+# Factorgraph fun
+### Tobias Madsen
+<img src="../fig/AU_logo.png"  alt="some_text" width='50%' style="background:none; border:none; box-shadow:none;">
 
 --- &vertical
 
@@ -101,7 +101,11 @@ Phylogenetic Models
 
 ## Specifying factor graph
 
-```{r echo=TRUE, warning=FALSE}
+<!---
+NB! Caching code with Rcpp modules causes crashes
+-->
+
+```{r echo=TRUE, warning=FALSE, cache=FALSE}
 library(PGMscore)
 varDim <- rep(4,6)
 facPot <- c(list(matrix(0.25,1,4)),
@@ -133,7 +137,7 @@ plot(mydfg)
 
 ## Most Probable State
 
-```{r}
+```{r cache=FALSE}
 varDim <- rep(4,4)
 facPot <- c(list(matrix(c(0.05,0.05,0.20,0.70),1,4)),
             list(matrix(c(0.05,0.05,0.70,0.20),1,4)),
@@ -151,7 +155,7 @@ mydfg2$dfgmodule$maxProbState(list(),c(0,0,1,0), c(F,F,T,F))+1
 ---
 
 ## Factor Expectation Counts
-```{r}
+```{r cache=FALSE}
 varDim <- rep(2L, 2)
 facPot <- c(list(matrix(c(0.5, 0.5),1,2)),
             list(matrix(c(0.75,0.25,0.25,0.75),2,2)))
@@ -169,6 +173,7 @@ mydfg3$dfgmodule$facExpCounts(list(), matrix(c(NA,1,
 
 ## Comparing two models
 Use bayes factor, the ratio between likelihoods
+
 $$
 K = \frac{P(X|M_2)}{P(X|M_1)}
 $$
@@ -198,7 +203,7 @@ Assess the FDR given a score treshold
 
 ***
 
-```{r eval=T}
+```{r cache=FALSE}
 varDim <- rep(4,6)
 facPot <- c(list(matrix(0.25,1,4)),
             list(matrix(0.25,4,4)),
@@ -240,48 +245,15 @@ facPotFg <- c(list(rndDist(1,4)),
 
 ***
 
-```{r eval=F}
+```{r eval=T}
 x <- seq(-3,4,0.01)
 dfnaive <- tailIS(x, n=1000, alpha=0, dfg=mydfg, facPotFg=facPotFg)
 ```
 
 ***
 
-```{r echo=FALSE}
-varDim <- rep(4,6)
-facPot <- c(list(matrix(0.25,1,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)))
-facNbs <- c(list(c(1L)),
-            list(c(1L,2L)),
-            list(c(1L,3L)),
-            list(c(3L,4L)),
-            list(c(3L,5L)),
-            list(c(5L,6L)) )
-mydfg <- dfg(varDim, facPot, facNbs)
-
-rndDist <- function(row,col){
-  x <- rexp(row*col,1/(c(1:row)+2))
-  mat <- matrix(x, row, col, byrow = T)
-  mat/rowSums(mat)
-}
-set.seed(1)
-facPotFg <- c(list(rndDist(1,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)))
-
-x <- seq(-3,4,0.01)
-dfnaive <- tailIS(x, n=1000, alpha=0, dfg=mydfg, facPotFg=facPotFg)
-
-library(ggplot2)
-ggplot(dfnaive, aes(x=x,y=p)) + geom_line() +
-  theme_bw() +
+```{r echo=T}
+ggplot(dfnaive, aes(x=x,y=p)) + geom_line() + theme_bw() +
   scale_y_log10() + 
   geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="blue") +
   annotation_logticks(sides="l")
@@ -335,48 +307,33 @@ $$
 
 ***
 
-```{r eval=F}
+```{r}
 x <- seq(-3,4,0.01)
 dfis <- tailIS(x, n=1000, alpha=1.5, dfg=mydfg, facPotFg=facPotFg)
 ```
 
 ***
 
-```{r echo=FALSE}
-varDim <- rep(4,6)
-facPot <- c(list(matrix(0.25,1,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)))
-facNbs <- c(list(c(1L)),
-            list(c(1L,2L)),
-            list(c(1L,3L)),
-            list(c(3L,4L)),
-            list(c(3L,5L)),
-            list(c(5L,6L)) )
-mydfg <- dfg(varDim, facPot, facNbs)
+```{r}
+ggplot(dfis, aes(x=x,y=p)) + geom_line() + theme_bw() +
+  scale_y_log10() + 
+  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="red") +
+  annotation_logticks(sides="l")
+```
 
-rndDist <- function(row,col){
-  x <- rexp(row*col,1/(c(1:row)+2))
-  mat <- matrix(x, row, col, byrow = T)
-  mat/rowSums(mat)
-}
-set.seed(1)
-facPotFg <- c(list(rndDist(1,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)))
+***
 
+### Combining alphas
+
+```{r}
 x <- seq(-3,4,0.01)
-dfis <- tailIS(x, n=1000, alpha=1.5, dfg=mydfg, facPotFg=facPotFg)
+dfis_combined <- tailIS(x, n=1000, alpha=c(0,0.5,1.5), dfg=mydfg, facPotFg=facPotFg)
+```
 
-library(ggplot2)
-ggplot(dfis, aes(x=x,y=p)) + geom_line() +
-  theme_bw() +
+***
+
+```{r}
+ggplot(dfis_combined, aes(x=x,y=p)) + geom_line() + theme_bw() +
   scale_y_log10() + 
   geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="red") +
   annotation_logticks(sides="l")
@@ -396,52 +353,37 @@ $$
 
 ***
 
-```{r eval=FALSE}
+```{r}
 x <- seq(-3,4,0.01)
 dfsaddle <- tailSaddle(x, mydfg, facPotFg)
 ```
 
 ***
 
-```{r echo=FALSE}
-varDim <- rep(4,6)
-facPot <- c(list(matrix(0.25,1,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)))
-facNbs <- c(list(c(1L)),
-            list(c(1L,2L)),
-            list(c(1L,3L)),
-            list(c(3L,4L)),
-            list(c(3L,5L)),
-            list(c(5L,6L)) )
-mydfg <- dfg(varDim, facPot, facNbs)
+```{r}
+ggplot(dfsaddle, aes(x=x,y=p)) + geom_line() + theme_bw() + 
+  scale_y_log10() +
+  ylab("p-value") + xlab("score") +
+  ggtitle("Saddlepoint approximation of the upper tail")
+```
 
-rndDist <- function(row,col){
-  x <- rexp(row*col,1/(c(1:row)+2))
-  mat <- matrix(x, row, col, byrow = T)
-  mat/rowSums(mat)
-}
-set.seed(1)
-facPotFg <- c(list(rndDist(1,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)))
+---
 
-x <- seq(-3,4,0.01)
-dfsaddle <- tailSaddle(x, mydfg, facPotFg)
+### Comparison of all three methods
 
-library(ggplot2)
-ggplot(dfsaddle, aes(x=x,y=p)) + geom_line() +
+
+```{r, echo=FALSE}
+ggplot(dfsaddle, aes(x=x)) + geom_line(aes(y=p),linetype="longdash") +
+  geom_line(data=dfis, aes(y=p), colour="red") +
+  geom_line(data=dfnaive, aes(y=p), colour="blue") +
+  geom_ribbon(data=dfis, aes(ymin=pmax(low, 0.001),ymax=high),alpha=0.3,fill="red") +
+  geom_ribbon(data=dfnaive, aes(ymin=pmax(low, 0.001),ymax=high),alpha=0.3,fill="blue") +
   theme_bw() + 
   scale_y_log10() +
   ylab("p-value") + 
   xlab("score") +
-  ggtitle("Saddlepoint approximation of the upper tail")
+  ggtitle("Estimates of uppertail of score function") +
+  annotation_logticks(sides="l")
 ```
 
 ---
