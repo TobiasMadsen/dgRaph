@@ -27,7 +27,7 @@ tailIS <- function(x=NULL, n, q=NULL, alpha=0.5, dfg, facPotFg){
     expScore <- sapply( alpha, FUN=function(a){ dfg$dfgmodule$calculateExpectedScoreIS(a, facPotFg)})
     x_sample_assign <- sapply( x, FUN=function(x){ which.min(abs(x-expScore)) })#the estimate at each x will be calculated from 
     
-    ret <- data.frame(x = numeric(0), p = numeric(0), low = numeric(0), high = numeric(0))
+    ret <- data.frame(x = numeric(0), p = numeric(0), low = numeric(0), high = numeric(0), p_lower = numeric(0), alpha = numeric(0))
     
     for(i in seq_along(alpha)){
       x_alpha <- x[ which(x_sample_assign == i) ]
@@ -40,17 +40,25 @@ tailIS <- function(x=NULL, n, q=NULL, alpha=0.5, dfg, facPotFg){
       
       #Tail probabilities P(S > x)
       cdf_upper_tail <- sapply(x_alpha, function(s){
-        obs <- samples$weights*(samples$scores > s)
-        error <- qnorm(0.975)*sd(obs)/sqrt(n)
-        meanobs <- mean(obs)
-        c(meanobs-error, meanobs, meanobs+error)
+        if(a < 0){ #estimate lower tail
+          obs <- samples$weights*(samples$scores < s)
+          error <- qnorm(0.975)*sd(obs)/sqrt(n)
+          meanobs <- mean(obs)
+          c( 1-(meanobs+error), 1-meanobs, 1-(meanobs-error), meanobs )
+        } else{ #estimate upper tail
+          obs <- samples$weights*(samples$scores > s)
+          error <- qnorm(0.975)*sd(obs)/sqrt(n)
+          meanobs <- mean(obs)
+          return(c(meanobs-error, meanobs, meanobs+error, 1-meanobs))
+        }
       })
       
       ret <- rbind( ret, 
-                    data.frame(x=x_alpha, p=cdf_upper_tail[2,], low=cdf_upper_tail[1,], high=cdf_upper_tail[3,]) )
+                    data.frame(x=x_alpha, p=cdf_upper_tail[2,], low=cdf_upper_tail[1,], high=cdf_upper_tail[3,], 
+                               p_lower=cdf_upper_tail[4,], alpha=a) )
     }
    return(ret) 
-  } else if(!is.null(q)){
+  } else if(!is.null(q)){ #Find quantiles
     #Make samples
     samples <- dfg$dfgmodule$makeImportanceSamples(n, alpha, facPotFg)
     
