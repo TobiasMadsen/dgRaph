@@ -20,7 +20,7 @@ public:
   double calculateExpectedScoreIS(double alpha, List facPotentialsFg);
 
   //Calculate most probable state given partially observed data
-  Rcpp::IntegerVector maxProbState(Rcpp::List facPot, Rcpp::IntegerVector observations, Rcpp::LogicalVector observed);
+  Rcpp::IntegerVector maxProbState(Rcpp::IntegerVector observations, Rcpp::LogicalVector observed);
 
   //Calculate expectation counts
   //TODO: Potentially cater for variables that are always unobserved

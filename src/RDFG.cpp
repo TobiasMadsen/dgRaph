@@ -134,10 +134,9 @@ DataFrame RDFG::makeImportanceSamples(int N, double alpha, List facPotentialsFg)
 }
 
 // Preconditions
-// facPot either empty or length==factors.size()
 // observations either empty or length==variables.size()
 // observed either empty or length==variables.size()
-Rcpp::IntegerVector RDFG::maxProbState(Rcpp::List facPot, Rcpp::IntegerVector observations, Rcpp::LogicalVector observed){
+Rcpp::IntegerVector RDFG::maxProbState(Rcpp::IntegerVector observations, Rcpp::LogicalVector observed){
   //Create empty statemasks
   phy::stateMaskVec_t stateMasks( dfg.variables.size() );
   std::vector<phy::stateMask_t> stateMasksObj;
