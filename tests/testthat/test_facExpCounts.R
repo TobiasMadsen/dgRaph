@@ -1,4 +1,4 @@
-library(PGMscore)
+library(dgRaph)
 context("Factor Marginals")
 
 test_that("Factor marginals in disconnected graph",{

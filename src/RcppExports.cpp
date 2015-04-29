@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 // evalDFG
 double evalDFG(NumericVector x);
-RcppExport SEXP PGMscore_evalDFG(SEXP xSEXP) {
+RcppExport SEXP dgRaph_evalDFG(SEXP xSEXP) {
 BEGIN_RCPP
     SEXP __sexp_result;
     {
@@ -22,7 +22,7 @@ END_RCPP
 }
 // mgfDFG
 double mgfDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors);
-RcppExport SEXP PGMscore_mgfDFG(SEXP varDimensionsSEXP, SEXP facPotentialsSEXP, SEXP facNeighborsSEXP) {
+RcppExport SEXP dgRaph_mgfDFG(SEXP varDimensionsSEXP, SEXP facPotentialsSEXP, SEXP facNeighborsSEXP) {
 BEGIN_RCPP
     SEXP __sexp_result;
     {
@@ -39,7 +39,7 @@ END_RCPP
 }
 // PGMExpectCpp
 NumericVector PGMExpectCpp(IntegerVector varDimensions, List facPotentials1, List facPotentials2, List facNeighbors);
-RcppExport SEXP PGMscore_PGMExpectCpp(SEXP varDimensionsSEXP, SEXP facPotentials1SEXP, SEXP facPotentials2SEXP, SEXP facNeighborsSEXP) {
+RcppExport SEXP dgRaph_PGMExpectCpp(SEXP varDimensionsSEXP, SEXP facPotentials1SEXP, SEXP facPotentials2SEXP, SEXP facNeighborsSEXP) {
 BEGIN_RCPP
     SEXP __sexp_result;
     {
@@ -57,7 +57,7 @@ END_RCPP
 }
 // sampleISCpp
 DataFrame sampleISCpp(int N, double alpha, IntegerVector varDimensions, List facPotentialsNull, List facNeighbors, List facPotentialsFg);
-RcppExport SEXP PGMscore_sampleISCpp(SEXP NSEXP, SEXP alphaSEXP, SEXP varDimensionsSEXP, SEXP facPotentialsNullSEXP, SEXP facNeighborsSEXP, SEXP facPotentialsFgSEXP) {
+RcppExport SEXP dgRaph_sampleISCpp(SEXP NSEXP, SEXP alphaSEXP, SEXP varDimensionsSEXP, SEXP facPotentialsNullSEXP, SEXP facNeighborsSEXP, SEXP facPotentialsFgSEXP) {
 BEGIN_RCPP
     SEXP __sexp_result;
     {

@@ -1,4 +1,4 @@
-library(PGMscore)
+library(dgRaph)
 context("Tail approximations")
 
 test_that("NA when out of range saddlepoint",{

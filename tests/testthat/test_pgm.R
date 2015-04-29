@@ -1,4 +1,4 @@
-library(PGMscore)
+library(dgRaph)
 context("PGM class")
 
 test_that("Check potential dimensions",{

@@ -1,8 +1,12 @@
 .Rproj.user
+dgRaph.Rproj
 .Rhistory
 .RData
+.cache
 src/*.o
 src/*.so
 src/*.dll
 inst/doc
 inst/html
+inst/slides/assets
+inst/slides/libraries

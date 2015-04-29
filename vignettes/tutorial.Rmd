@@ -4,12 +4,12 @@
 -->
 ```{r setup, include=FALSE}
 library(knitr)
-library(PGMscore)
+library(dgRaph)
 require(igraph)
 library(ggplot2)
 ```
 
-## PGMscore tutorial
+## dgRaph tutorial
 A factorgraph consists of variables and factors. 
 
 ```{r echo=TRUE, warning=FALSE}

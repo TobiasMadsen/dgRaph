@@ -1,4 +1,4 @@
-library(PGMscore)
+library(dgRaph)
 context("Expect algorithm")
 
 test_that("Simple phylogenetic model",{

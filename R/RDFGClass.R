@@ -1,1 +1,1 @@
-RDFG <- setRcppClass("RDFG", module="phy")
+RDFG <- Rcpp::setRcppClass("RDFG", module="phy")

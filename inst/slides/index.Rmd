@@ -106,7 +106,7 @@ NB! Caching code with Rcpp modules causes crashes
 -->
 
 ```{r echo=TRUE, warning=FALSE, cache=FALSE}
-library(PGMscore)
+library(dgRaph)
 varDim <- rep(4,6)
 facPot <- c(list(matrix(0.25,1,4)),
             list(matrix(0.25,4,4)),

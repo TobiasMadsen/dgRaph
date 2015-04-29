@@ -2,18 +2,18 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 evalDFG <- function(x) {
-    .Call('PGMscore_evalDFG', PACKAGE = 'PGMscore', x)
+    .Call('dgRaph_evalDFG', PACKAGE = 'dgRaph', x)
 }
 
 mgfDFG <- function(varDimensions, facPotentials, facNeighbors) {
-    .Call('PGMscore_mgfDFG', PACKAGE = 'PGMscore', varDimensions, facPotentials, facNeighbors)
+    .Call('dgRaph_mgfDFG', PACKAGE = 'dgRaph', varDimensions, facPotentials, facNeighbors)
 }
 
 PGMExpectCpp <- function(varDimensions, facPotentials1, facPotentials2, facNeighbors) {
-    .Call('PGMscore_PGMExpectCpp', PACKAGE = 'PGMscore', varDimensions, facPotentials1, facPotentials2, facNeighbors)
+    .Call('dgRaph_PGMExpectCpp', PACKAGE = 'dgRaph', varDimensions, facPotentials1, facPotentials2, facNeighbors)
 }
 
 sampleISCpp <- function(N, alpha, varDimensions, facPotentialsNull, facNeighbors, facPotentialsFg) {
-    .Call('PGMscore_sampleISCpp', PACKAGE = 'PGMscore', N, alpha, varDimensions, facPotentialsNull, facNeighbors, facPotentialsFg)
+    .Call('dgRaph_sampleISCpp', PACKAGE = 'dgRaph', N, alpha, varDimensions, facPotentialsNull, facNeighbors, facPotentialsFg)
 }
 

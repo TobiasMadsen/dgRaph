@@ -1,1 +1,1 @@
-loadModule("phy", TRUE)
+Rcpp::loadModule("phy", TRUE)

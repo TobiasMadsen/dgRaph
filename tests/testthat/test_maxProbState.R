@@ -1,4 +1,4 @@
-library(PGMscore)
+library(dgRaph)
 context("Max probable state")
 
 test_that("Dependent variables R level",{

@@ -1,6 +1,6 @@
-\name{PGMscore-package}
-\alias{PGMscore-package}
-\alias{PGMscore}
+\name{dgRaph-package}
+\alias{dgRaph-package}
+\alias{dgRaph}
 \docType{package}
 \title{
 What the package does (short line)
@@ -11,7 +11,7 @@ More about what it does (maybe more than one line)
 }
 \details{
 \tabular{ll}{
-Package: \tab PGMscore\cr
+Package: \tab dgRaph\cr
 Type: \tab Package\cr
 Version: \tab 1.0\cr
 Date: \tab 2015-01-06\cr

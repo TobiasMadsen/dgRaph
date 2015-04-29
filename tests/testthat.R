@@ -1,4 +1,4 @@
 library(testthat)
-library(PGMscore)
+library(dgRaph)
 
-test_check("PGMscore")
+test_check("dgRaph")
