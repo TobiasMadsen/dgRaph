@@ -9,7 +9,7 @@ mps(data, dfg)
 \arguments{
 \item{data}{dataframe or matrix with observed data. The mapping between columns and rows will be performed automatically. NA will be interpreted as a missing variable}
 
-\item{x}{points to evaluate tail probabilities in}
+\item{dfg}{discrete factor graph object}
 }
 \value{
 A dataframe with a column for each variable and the most probable state for each observation

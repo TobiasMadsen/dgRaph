@@ -10,15 +10,15 @@ bootstrap:
   theme: amelia
 widgets     : mathjax            # {mathjax, quiz, bootstrap}
 mode        : selfcontained # {standalone, draft}
-
 ---
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 
 
 
-# FactorGraphs in R
-### Jakob's library has made it to R
+# Factorgraph fun
+### Tobias Madsen
+<img src="../fig/AU_logo.png"  alt="some_text" width='50%' style="background:none; border:none; box-shadow:none;">
 
 --- &vertical
 
@@ -99,9 +99,13 @@ Phylogenetic Models
 
 ## Specifying factor graph
 
+<!---
+NB! Caching code with Rcpp modules causes crashes
+-->
+
 
 ```r
-library(PGMscore)
+library(dgRaph)
 varDim <- rep(4,6)
 facPot <- c(list(matrix(0.25,1,4)),
             list(matrix(0.25,4,4)),
@@ -152,7 +156,7 @@ mydfg2$dfgmodule$maxProbState(list(),c(0,0,1,0), c(F,F,T,F))+1
 ```
 
 ```
-## [1] 4 3 2 2
+## Error in eval(expr, envir, enclos): could not find valid method
 ```
 
 ---
@@ -168,9 +172,9 @@ facNbs <- c(list(c(1L)),
 
 mydfg3 <- dfg(varDim, facPot, facNbs)
 
-mydfg3$dfgmodule$facExpCounts(list(), matrix(c(NA,1,
-                                              0,1,
-                                              1,NA), 3, 2) )
+mydfg3$dfgmodule$facExpCounts(matrix(c(NA,1,
+                                       0,1,
+                                       1,NA), 3, 2) )
 ```
 
 ```
@@ -188,6 +192,7 @@ mydfg3$dfgmodule$facExpCounts(list(), matrix(c(NA,1,
 
 ## Comparing two models
 Use bayes factor, the ratio between likelihoods
+
 $$
 K = \frac{P(X|M_2)}{P(X|M_1)}
 $$
@@ -272,6 +277,14 @@ dfnaive <- tailIS(x, n=1000, alpha=0, dfg=mydfg, facPotFg=facPotFg)
 
 ***
 
+
+```r
+ggplot(dfnaive, aes(x=x,y=p)) + geom_line() + theme_bw() +
+  scale_y_log10() + 
+  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="blue") +
+  annotation_logticks(sides="l")
+```
+
 ![plot of chunk unnamed-chunk-10](assets/fig/unnamed-chunk-10-1.png) 
 
 ***
@@ -344,7 +357,37 @@ dfis <- tailIS(x, n=1000, alpha=1.5, dfg=mydfg, facPotFg=facPotFg)
 
 ***
 
+
+```r
+ggplot(dfis, aes(x=x,y=p)) + geom_line() + theme_bw() +
+  scale_y_log10() + 
+  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="red") +
+  annotation_logticks(sides="l")
+```
+
 ![plot of chunk unnamed-chunk-14](assets/fig/unnamed-chunk-14-1.png) 
+
+***
+
+### Combining alphas
+
+
+```r
+x <- seq(-3,4,0.01)
+dfis_combined <- tailIS(x, n=1000, alpha=c(0,0.5,1.5), dfg=mydfg, facPotFg=facPotFg)
+```
+
+***
+
+
+```r
+ggplot(dfis_combined, aes(x=x,y=p)) + geom_line() + theme_bw() +
+  scale_y_log10() + 
+  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="red") +
+  annotation_logticks(sides="l")
+```
+
+![plot of chunk unnamed-chunk-16](assets/fig/unnamed-chunk-16-1.png) 
 
 --- &vertical
 
@@ -368,7 +411,22 @@ dfsaddle <- tailSaddle(x, mydfg, facPotFg)
 
 ***
 
-![plot of chunk unnamed-chunk-16](assets/fig/unnamed-chunk-16-1.png) 
+
+```r
+ggplot(dfsaddle, aes(x=x,y=p)) + geom_line() + theme_bw() + 
+  scale_y_log10() +
+  ylab("p-value") + xlab("score") +
+  ggtitle("Saddlepoint approximation of the upper tail")
+```
+
+![plot of chunk unnamed-chunk-18](assets/fig/unnamed-chunk-18-1.png) 
+
+---
+
+### Comparison of all three methods
+
+
+![plot of chunk unnamed-chunk-19](assets/fig/unnamed-chunk-19-1.png) 
 
 ---
 

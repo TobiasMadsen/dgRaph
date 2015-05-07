@@ -164,9 +164,9 @@ facNbs <- c(list(c(1L)),
 
 mydfg3 <- dfg(varDim, facPot, facNbs)
 
-mydfg3$dfgmodule$facExpCounts(list(), matrix(c(NA,1,
-                                              0,1,
-                                              1,NA), 3, 2) )
+mydfg3$dfgmodule$facExpCounts(matrix(c(NA,1,
+                                       0,1,
+                                       1,NA), 3, 2) )
 ```
 
 --- &vertical

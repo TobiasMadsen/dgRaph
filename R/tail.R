@@ -3,7 +3,7 @@
 #' @param n         number of samples
 #' @param q         find quantiles instead of probabilities see details
 #' @param alpha     Tuning parameter, alpha=0 is naive sampling the higher alpha the more extreme observations
-#' @param pgm       Probabilistic graphical model specifying null model
+#' @param dfg       Probabilistic graphical model specifying null model
 #' @param facPotFg  Foreground model
 #' @return A dataframe with columns, x, tail estimate and confidence intervals
 tailIS <- function(x=NULL, n, q=NULL, alpha=0.5, dfg, facPotFg){
@@ -97,7 +97,7 @@ tailIS <- function(x=NULL, n, q=NULL, alpha=0.5, dfg, facPotFg){
 
 #' Saddlepoint approximation for tail estimation
 #' @param x         points to evaluate tail probabilities in
-#' @param pgm       Probabilistic graphical model specifying null model
+#' @param dfg       Probabilistic graphical model specifying null model
 #' @param facPotFg  Foreground model
 #' @return A dataframe with columns, x, tail estimate and confidence intervals
 tailSaddle <- function(x, dfg, facPotFg){

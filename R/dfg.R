@@ -48,7 +48,14 @@ dfg <- function(varDim, facPot, facNbs, varNames=seq_along(varDim), facNames=(le
     warning("igraph not installed: Check manually that your graph is acyclic")
   }
   
-  structure(list(varDim=varDim, facPot=facPot, facNbs=facNbs, dfgmodule=new("RDFG", varDim, facPot, facNbs),varNames=varNames, facNames=facNames, graph=graph), class = "dfg")
+  structure(list(varDim=varDim,
+                 facPot=facPot,
+                 facNbs=facNbs,
+                 dfgmodule=new("RDFG", varDim, facPot, facNbs),
+                 varNames=varNames,
+                 facNames=facNames,
+                 graph=graph),
+            class = "dfg")
 }
 
 #' is.dfg

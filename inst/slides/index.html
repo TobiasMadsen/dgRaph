@@ -12,8 +12,7 @@
   <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/zenburn.css" id="theme">
   <!--[if lt IE 9]>
   <script src="lib/js/html5shiv.js"></script>
-  <![endif]-->  <link rel="stylesheet" href = "assets/css/ribbons.css">
-
+  <![endif]-->  
 </head>
 <body>
   <div class="reveal">
@@ -22,9 +21,11 @@
   
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 
-<h1>FactorGraphs in R</h1>
+<h1>Factorgraph fun</h1>
 
-<h3>Jakob&#39;s library has made it to R</h3>
+<h3>Tobias Madsen</h3>
+
+<p><img src="../fig/AU_logo.png"  alt="some_text" width='50%' style="background:none; border:none; box-shadow:none;"></p>
 
 </section>
 <section>
@@ -157,7 +158,11 @@ p(x) = f_a(x_1)f_b(x_2)
    <section class='' data-state=''>
     <h2>Specifying factor graph</h2>
 
-<pre><code class="r">library(PGMscore)
+<!---
+NB! Caching code with Rcpp modules causes crashes
+-->
+
+<pre><code class="r">library(dgRaph)
 varDim &lt;- rep(4,6)
 facPot &lt;- c(list(matrix(0.25,1,4)),
             list(matrix(0.25,4,4)),
@@ -209,7 +214,7 @@ mydfg2 &lt;- dfg(varDim, facPot, facNbs)
 mydfg2$dfgmodule$maxProbState(list(),c(0,0,1,0), c(F,F,T,F))+1
 </code></pre>
 
-<pre><code>## [1] 4 3 2 2
+<pre><code>## Error in eval(expr, envir, enclos): could not find valid method
 </code></pre>
 
 </section>
@@ -223,9 +228,9 @@ facNbs &lt;- c(list(c(1L)),
 
 mydfg3 &lt;- dfg(varDim, facPot, facNbs)
 
-mydfg3$dfgmodule$facExpCounts(list(), matrix(c(NA,1,
-                                              0,1,
-                                              1,NA), 3, 2) )
+mydfg3$dfgmodule$facExpCounts(matrix(c(NA,1,
+                                       0,1,
+                                       1,NA), 3, 2) )
 </code></pre>
 
 <pre><code>## [[1]]
@@ -242,8 +247,9 @@ mydfg3$dfgmodule$facExpCounts(list(), matrix(c(NA,1,
 <section>
    <section class='' data-state=''>
     <h2>Comparing two models</h2>
-    <p>Use bayes factor, the ratio between likelihoods
-\[
+    <p>Use bayes factor, the ratio between likelihoods</p>
+
+<p>\[
 K = \frac{P(X|M_2)}{P(X|M_1)}
 \]</p>
 
@@ -348,7 +354,13 @@ dfnaive &lt;- tailIS(x, n=1000, alpha=0, dfg=mydfg, facPotFg=facPotFg)
     </aside>
    </section>
    <section class='' data-state=''>
-    <p><img src="assets/fig/unnamed-chunk-10-1.png" alt="plot of chunk unnamed-chunk-10"> </p>
+    <pre><code class="r">ggplot(dfnaive, aes(x=x,y=p)) + geom_line() + theme_bw() +
+  scale_y_log10() + 
+  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill=&quot;blue&quot;) +
+  annotation_logticks(sides=&quot;l&quot;)
+</code></pre>
+
+<p><img src="assets/fig/unnamed-chunk-10-1.png" alt="plot of chunk unnamed-chunk-10"> </p>
 
     <aside class='notes'>
       
@@ -430,7 +442,37 @@ dfis &lt;- tailIS(x, n=1000, alpha=1.5, dfg=mydfg, facPotFg=facPotFg)
     </aside>
    </section>
    <section class='' data-state=''>
-    <p><img src="assets/fig/unnamed-chunk-14-1.png" alt="plot of chunk unnamed-chunk-14"> </p>
+    <pre><code class="r">ggplot(dfis, aes(x=x,y=p)) + geom_line() + theme_bw() +
+  scale_y_log10() + 
+  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill=&quot;red&quot;) +
+  annotation_logticks(sides=&quot;l&quot;)
+</code></pre>
+
+<p><img src="assets/fig/unnamed-chunk-14-1.png" alt="plot of chunk unnamed-chunk-14"> </p>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <h3>Combining alphas</h3>
+
+<pre><code class="r">x &lt;- seq(-3,4,0.01)
+dfis_combined &lt;- tailIS(x, n=1000, alpha=c(0,0.5,1.5), dfg=mydfg, facPotFg=facPotFg)
+</code></pre>
+
+    <aside class='notes'>
+      
+    </aside>
+   </section>
+   <section class='' data-state=''>
+    <pre><code class="r">ggplot(dfis_combined, aes(x=x,y=p)) + geom_line() + theme_bw() +
+  scale_y_log10() + 
+  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill=&quot;red&quot;) +
+  annotation_logticks(sides=&quot;l&quot;)
+</code></pre>
+
+<p><img src="assets/fig/unnamed-chunk-16-1.png" alt="plot of chunk unnamed-chunk-16"> </p>
 
     <aside class='notes'>
       
@@ -466,7 +508,13 @@ dfsaddle &lt;- tailSaddle(x, mydfg, facPotFg)
     </aside>
    </section>
    <section class='' data-state=''>
-    <p><img src="assets/fig/unnamed-chunk-16-1.png" alt="plot of chunk unnamed-chunk-16"> </p>
+    <pre><code class="r">ggplot(dfsaddle, aes(x=x,y=p)) + geom_line() + theme_bw() + 
+  scale_y_log10() +
+  ylab(&quot;p-value&quot;) + xlab(&quot;score&quot;) +
+  ggtitle(&quot;Saddlepoint approximation of the upper tail&quot;)
+</code></pre>
+
+<p><img src="assets/fig/unnamed-chunk-18-1.png" alt="plot of chunk unnamed-chunk-18"> </p>
 
     <aside class='notes'>
       
@@ -474,6 +522,11 @@ dfsaddle &lt;- tailSaddle(x, mydfg, facPotFg)
    </section>
 </section>
 <section class='' data-state='' id='slide-12'>
+  <h3>Comparison of all three methods</h3>
+  <p><img src="assets/fig/unnamed-chunk-19-1.png" alt="plot of chunk unnamed-chunk-19"> </p>
+
+</section>
+<section class='' data-state='' id='slide-13'>
   <h2>Acknowledgements</h2>
   <p><img src="../fig/finish.jpg"  alt="some_text" width='50%' margin='100px 15% 0% 15%' style="background:none; border:none; box-shadow:none;"></p>
 
