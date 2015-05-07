@@ -149,7 +149,7 @@ facNbs <- c(list(c(1L)),
             list(c(4L)))
 
 mydfg2 <- dfg(varDim, facPot, facNbs)
-mydfg2$dfgmodule$maxProbState(list(),c(0,0,1,0), c(F,F,T,F))+1
+mydfg2$dfgmodule$maxProbState(c(0,0,1,0), c(F,F,T,F))+1
 ```
 
 ---
