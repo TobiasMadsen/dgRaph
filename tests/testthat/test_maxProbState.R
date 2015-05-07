@@ -9,8 +9,8 @@ test_that("Dependent variables R level",{
               list(c(1L,2L)))
   mydfg <- dfg(varDim, facPot, facNbs, varNames = c('x', 'y'))
   
-  df <- data.frame(x = c(1,0,NA,NA,0), y = c(NA,NA,NA,1,1))
-  df_mps <- data.frame(x = c(1,0,0,1,0), y = c(1,0,0,1,1))
+  df <- data.frame(x = c(2,1,NA,NA,1), y = c(NA,NA,NA,2,2))
+  df_mps <- data.frame(x = c(2,1,1,2,1), y = c(2,1,1,2,2))
   df_calc_mps <- mps(df, mydfg)
   expect_equal(df_calc_mps, df_mps)
 })
@@ -28,8 +28,8 @@ test_that("Independent variables R level",{
   
   mydfg <- dfg(varDim, facPot, facNbs, varNames = c('x', 'y', 'z', 'w'))
   
-  df <- data.frame(x = 0:2, y = c(NA, 1, NA), z = 2:0, w = rep(1,3))
-  df_mps <- data.frame(x = 0:2, y = c(2, 1, 2), z = 2:0, w = rep(1,3))
+  df <- data.frame(x = 1:3, y = c(NA, 2, NA), z = 3:1, w = rep(2,3))
+  df_mps <- data.frame(x = 1:3, y = c(3, 2, 3), z = 3:1, w = rep(2,3))
   df_calc_mps <- mps(df, mydfg)
   expect_equal(df_calc_mps, df_mps)
 })
@@ -48,7 +48,7 @@ test_that("Independent variables cpp level",{
   mydfg <- dfg(varDim, facPot, facNbs)
   
   mps <- mydfg$dfgmodule$maxProbState(integer(0), logical(0))
-  expect_equal( mps, c(3,2,0,1)) 
+  expect_equal( mps, c(4,3,1,2)) 
 })
 
 test_that("Independent variables cpp level with observed variables",{
@@ -63,6 +63,6 @@ test_that("Independent variables cpp level with observed variables",{
               list(c(4L)))
   
   mydfg2 <- dfg(varDim, facPot, facNbs)
-  mps <- mydfg2$dfgmodule$maxProbState(c(0,0,1,0), c(F,F,T,F))
-  expect_equal( mps, c(3,2,1,1) )
+  mps <- mydfg2$dfgmodule$maxProbState(c(1,1,2,1), c(F,F,T,F))
+  expect_equal( mps, c(4,3,2,2) )
 })

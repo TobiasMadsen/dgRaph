@@ -16,7 +16,7 @@ mps <- function(data, dfg){
   # Calculate mps
   res <- apply(data, 1, FUN=function(x){
     obs <- x
-    obs[is.na(obs)] <- 0
+    obs[is.na(obs)] <- 1
     dfg$dfgmodule$maxProbState(obs ,!is.na(x))
   })
   

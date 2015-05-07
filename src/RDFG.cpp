@@ -147,7 +147,8 @@ Rcpp::IntegerVector RDFG::maxProbState(Rcpp::IntegerVector observations, Rcpp::L
     for(int i = 0; i < dfg.variables.size(); ++i){
       if(observed[i]){
 	stateMasksObj.push_back( phy::stateMask_t( dfg.getVariable(i).dimension, 0 ) );
-	stateMasksObj.back()( observations[i] ) = 1;
+	// 1-0 R-C++ index conversion
+	stateMasksObj.back()( observations[i] - 1 ) = 1;
 	stateMasks.at(i) = & stateMasksObj.back();
       }
     }
@@ -158,6 +159,10 @@ Rcpp::IntegerVector RDFG::maxProbState(Rcpp::IntegerVector observations, Rcpp::L
 
   //Calculate most probable state
   dfg.runMaxSum(stateMasks, maxVarStates);
+  
+  // 0-1 C++-R index conversion
+  for(std::vector<unsigned>::iterator it = maxVarStates.begin(); it != maxVarStates.end(); ++it )
+    (*it)++;
 
   return Rcpp::wrap(maxVarStates);
 }
@@ -180,7 +185,8 @@ Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
     for(int j = 0; j < observations.ncol(); ++j){
       if( ! IntegerMatrix::is_na(observations(i, j))){
 	stateMasksObj.push_back(  phy::stateMask_t( dfg.getVariable(j).dimension, 0 ) );
-	stateMasksObj.back()( observations(i, j)) = 1;
+	// 1-0 R-C++ index conversion
+	stateMasksObj.back()( observations(i, j) - 1) = 1;
 	stateMasks.at(j) = & stateMasksObj.back();
       }
     }
