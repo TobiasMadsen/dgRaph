@@ -2,15 +2,18 @@ library(dgRaph)
 context("Likelihood Calculation")
 
 test_that("Likelihood Calculation 1",{
-  varDim <- rep(2L, 2)
-  facPot <- c(list(matrix(c(0.5, 0.5),1,2)),
-              list(matrix(c(0.75,0.25,0.25,0.75),2,2)))
-  facNbs <- c(list(c(1L)),
-              list(c(1L,2L)) )
-  
-  mydfg <- dfg(varDim, facPot, facNbs)
+  source("cases/twoDepedentVariables.R")
+  mydfg <- twoDependentVariables()
   
   data <- data.frame(O1 = c(1, 2, NA, NA), O2 = c(NA, 1, NA, 2))
   
-  expect_equal(likelihood(data = data, dfg = mydfg), c(0.5, 0.125, 1, 0.5))
+  expect_equal(likelihood(data = data, dfg = mydfg), c(0.7, 0.3*0.25, 1, 0.7*0.25+0.3*0.75))
+})
+
+test_that("Likelihood Calculation 2",{
+  source("cases/fourIndependentVariables.R")
+  mydfg <- fourIndependentVariables()
+  
+  data <- data.frame(O1 = c(1,NA), O2 = c(NA,3), O3 = c(3,4), O4 = c(NA,NA))  
+  expect_equal(likelihood(data = data, dfg = mydfg), c(0.05*1*0.05*1, 1*0.7*0.05*1))
 })
