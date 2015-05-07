@@ -8,10 +8,6 @@ RCPP_MODULE(phy) {
 
       .constructor<IntegerVector, List, List>()
 
-      .field("x", &RDFG::x_)
-
-      .method("two", &RDFG::two)
-
       .method("makeImportanceSamples", &RDFG::makeImportanceSamples)
 
       .method("calculateExpectedScoreIS", &RDFG::calculateExpectedScoreIS)
@@ -19,5 +15,7 @@ RCPP_MODULE(phy) {
       .method("maxProbState", &RDFG::maxProbState)
 
       .method("facExpCounts", &RDFG::facExpCounts)
+      
+      .method("calcLikelihood", &RDFG::calcLikelihood);
     ;
 }

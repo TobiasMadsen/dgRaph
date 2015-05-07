@@ -162,7 +162,7 @@ Rcpp::IntegerVector RDFG::maxProbState(Rcpp::IntegerVector observations, Rcpp::L
   return Rcpp::wrap(maxVarStates);
 }
 
-Rcpp::List RDFG::facExpCounts(Rcpp::List facPot, Rcpp::IntegerMatrix observations ){
+Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
   if(observations.ncol() != dfg.variables.size() )
     phy::errorAbort("ncol != variables.size");
 
@@ -210,4 +210,28 @@ Rcpp::List RDFG::facExpCounts(Rcpp::List facPot, Rcpp::IntegerMatrix observation
 
 
   return ret;
+}
+
+// Preconditions
+// observations either empty or length==variables.size()
+// observed either empty or length==variables.size()
+double RDFG::calcLikelihood(Rcpp::IntegerVector observations, Rcpp::LogicalVector observed){
+  // Create empty statemasks
+  phy::stateMaskVec_t stateMasks( dfg.variables.size() );
+  std::vector<phy::stateMask_t> stateMasksObj;
+  stateMasksObj.reserve( dfg.variables.size() );
+
+  // Observed variables
+  if(observed.size() == dfg.variables.size()){
+    for(int i = 0; i < dfg.variables.size(); ++i){
+      if(observed[i]){
+	stateMasksObj.push_back( phy::stateMask_t( dfg.getVariable(i).dimension, 0 ) );
+	// Remember: Take care of 1-0 index-conversion on C++ side
+	stateMasksObj.back()( observations[i] - 1) = 1;
+	stateMasks.at(i) = & stateMasksObj.back();
+      }
+    }
+  }
+
+  return dfg.calcNormConst(stateMasks);
 }

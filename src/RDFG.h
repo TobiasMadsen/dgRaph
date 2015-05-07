@@ -15,6 +15,9 @@ public:
   //Constructors
   RDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors);
 
+  // Calculate likelihood of of data frame
+  double calcLikelihood(IntegerVector observations, LogicalVector observed);
+
   //Importance sampling
   DataFrame makeImportanceSamples(int N, double alpha, List facPotentialsFg);
   double calculateExpectedScoreIS(double alpha, List facPotentialsFg);
@@ -24,10 +27,9 @@ public:
 
   //Calculate expectation counts
   //TODO: Potentially cater for variables that are always unobserved
-  Rcpp::List facExpCounts(Rcpp::List facPot, Rcpp::IntegerMatrix observations );
+  Rcpp::List facExpCounts(Rcpp::IntegerMatrix observations );
 
-  double two(){ return 2;}
-  int x_;
+
 
 private:
   phy::DFG dfg;
