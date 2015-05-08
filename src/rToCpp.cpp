@@ -25,6 +25,22 @@ std::vector<phy::xmatrix_t> rFacPotToFacPot(List const & facPot){
   return ret;
 }
 
+List facPotToRFacPot(std::vector<phy::xmatrix_t> const & facPot){
+  List ret(facPot.size());
+  int fcount = 0;
+  for(std::vector<phy::xmatrix_t>::const_iterator it = facPot.begin(); it != facPot.end(); ++it){
+    NumericMatrix m( it->size1(), it->size2() );
+    for(int i = 0; i < it->size1(); ++i){
+      for(int j = 0; j < it->size2(); ++j){
+	m(i,j) = (*it)(i,j);
+      }
+    }
+    ret[fcount] = m;
+    fcount++;
+  }
+  return ret;
+}
+
 std::vector<std::vector<unsigned> > rNbsToNbs(List const & rNbs){
   std::vector< std::vector<unsigned> > ret(rNbs.size());
 

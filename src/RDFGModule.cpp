@@ -15,7 +15,11 @@ RCPP_MODULE(phy) {
       .method("maxProbState", &RDFG::maxProbState)
 
       .method("facExpCounts", &RDFG::facExpCounts)
+
+      .method("resetFactorPotentials", &RDFG::resetFactorPotentials)
       
+      .method("getFactorPotentials", &RDFG::getFactorPotentials)
+
       .method("calcLikelihood", &RDFG::calcLikelihood);
     ;
 }

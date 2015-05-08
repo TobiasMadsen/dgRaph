@@ -12,6 +12,8 @@ phy::xmatrix_t rMatToMat(NumericMatrix const & rmat);
 
 std::vector<phy::xmatrix_t> rFacPotToFacPot(List const & facPot);
 
+List facPotToRFacPot(std::vector<phy::xmatrix_t> const & facPot);
+
 std::vector<std::vector<unsigned> > rNbsToNbs(List const & rNbs);
 
 

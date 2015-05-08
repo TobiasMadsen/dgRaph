@@ -218,6 +218,30 @@ Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
   return ret;
 }
 
+// Accessors
+void RDFG::resetFactorPotentials(List facPotentials){
+  // Convert to xmatrix
+  std::vector<phy::xmatrix_t> facPot;
+  for(int k = 0; k < facPotentials.size(); ++k){
+    facPot.push_back( rMatToMat( facPotentials[k] ));
+  }
+
+  // Set factor potentials
+  dfg.resetFactorPotentials( facPot);
+}
+
+List RDFG::getFactorPotentials(){
+  // Loop over factor nodes
+  std::vector<phy::xmatrix_t> ret;
+  ret.reserve( dfg.factors.size());
+  for(std::vector<unsigned>::iterator it = dfg.factors.begin(); it != dfg.factors.end(); ++it){
+    // Put potentials in list
+    ret.push_back( dfg.nodes.at(*it).potential);
+  }
+  return facPotToRFacPot( ret);
+}
+
+
 // Preconditions
 // observations either empty or length==variables.size()
 // observed either empty or length==variables.size()

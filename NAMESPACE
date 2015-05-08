@@ -1,3 +1,16 @@
 useDynLib(dgRaph)
-exportPattern("^[[:alpha:]]+")
+
 importFrom(Rcpp, loadModule)
+
+export(PGMExpectCpp)
+export(dfg)
+export(facExpectations)
+export(is.dfg)
+export(likelihood)
+export(mps)
+export(plot.dfg)
+export(potentials)
+export(saddlePointTails)
+export(tailIS)
+export(tailSaddle)
+

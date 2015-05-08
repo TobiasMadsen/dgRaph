@@ -29,6 +29,10 @@ public:
   //TODO: Potentially cater for variables that are always unobserved
   Rcpp::List facExpCounts(Rcpp::IntegerMatrix observations );
 
+  // Accessors
+  List getFactorPotentials();
+  void resetFactorPotentials(List facPotentials);
+  
 
 
 private:
