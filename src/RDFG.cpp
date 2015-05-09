@@ -11,7 +11,7 @@ phy::DFG rToDFG(IntegerVector varDimensions, List facPotentials, List facNeighbo
     //Make conversions
   std::vector<unsigned> varDim(varDimensions.begin(), varDimensions.end() );
 
-  std::vector<phy::xmatrix_t> facPot;
+  std::vector<phy::matrix_t> facPot;
   for(int k = 0; k < facPotentials.size(); ++k){
     facPot.push_back( rMatToMat( facPotentials[k] ));
   }
@@ -27,21 +27,21 @@ RDFG::RDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors)
 
 double RDFG::calculateExpectedScoreIS(double alpha, List facPotentialsFg){
   //Make conversions
-  std::vector<phy::xmatrix_t> facPotFg;
+  std::vector<phy::matrix_t> facPotFg;
   for(int k = 0; k < facPotentialsFg.size(); ++k){
     facPotFg.push_back( rMatToMat( facPotentialsFg[k] ));
   }
 
   //Calculate IS distribution and score contributions
-  std::vector<phy::xmatrix_t> facPotIS( dfg.factors.size() );
-  std::vector<phy::xmatrix_t> score( dfg.factors.size() );
+  std::vector<phy::matrix_t> facPotIS( dfg.factors.size() );
+  std::vector<phy::matrix_t> score( dfg.factors.size() );
 
   for(int f = 0; f < dfg.factors.size(); ++f){
-    phy::xmatrix_t const & potNull = dfg.getFactor(f).potential;
-    phy::xmatrix_t const & potFg   = facPotFg.at(f);
+    phy::matrix_t const & potNull = dfg.getFactor(f).potential;
+    phy::matrix_t const & potFg   = facPotFg.at(f);
 
-    phy::xmatrix_t potIS(potNull.size1(), potNull.size2());
-    phy::xmatrix_t matScore( potNull.size1(), potNull.size2() );
+    phy::matrix_t potIS(potNull.size1(), potNull.size2());
+    phy::matrix_t matScore( potNull.size1(), potNull.size2() );
 
     for(int i = 0; i < potIS.size1(); ++i){
       for(int j = 0; j < potIS.size2(); ++j){
@@ -54,24 +54,24 @@ double RDFG::calculateExpectedScoreIS(double alpha, List facPotentialsFg){
   }
 
   phy::stateMaskVec_t stateMasks( dfg.variables.size() );
-  std::pair<phy::xnumber_t, phy::xnumber_t> res = dfg.calcExpect(facPotIS, score, stateMasks);
+  std::pair<phy::number_t, phy::number_t> res = dfg.calcExpect(facPotIS, score, stateMasks);
   return (res.second / res.first);
 }
 
 DataFrame RDFG::makeImportanceSamples(int N, double alpha, List facPotentialsFg){
   //Make conversions
-  std::vector<phy::xmatrix_t> facPotFg;
+  std::vector<phy::matrix_t> facPotFg;
   for(int k = 0; k < facPotentialsFg.size(); ++k){
     facPotFg.push_back( rMatToMat( facPotentialsFg[k] ));
   }
 
   //Calculate IS distribution
-  std::vector<phy::xmatrix_t> facPotIS( dfg.factors.size() );
+  std::vector<phy::matrix_t> facPotIS( dfg.factors.size() );
   for(int f = 0; f < dfg.factors.size(); ++f){
-    phy::xmatrix_t const & potNull = dfg.getFactor(f).potential;
-    phy::xmatrix_t const & potFg   = facPotFg.at(f);
+    phy::matrix_t const & potNull = dfg.getFactor(f).potential;
+    phy::matrix_t const & potFg   = facPotFg.at(f);
 
-    phy::xmatrix_t potIS(potNull.size1(), potNull.size2());
+    phy::matrix_t potIS(potNull.size1(), potNull.size2());
     for(int i = 0; i < potIS.size1(); ++i){
       for(int j = 0; j < potIS.size2(); ++j){
 	potIS(i,j) = phy::power(potNull(i,j), 1-alpha)*phy::power(potFg(i,j), alpha);
@@ -192,13 +192,13 @@ Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
     }
 
     //calculation
-    std::vector<phy::xmatrix_t> tmpFacMar;
+    std::vector<phy::matrix_t> tmpFacMar;
     dfg.initFactorMarginals( tmpFacMar );
     dfg.runSumProduct( stateMasks );
     dfg.calcFactorMarginals( tmpFacMar );
 
     for(int f = 0; f < dfg.factors.size(); ++f)
-      facExpCounts[f] += phy::toNumber( tmpFacMar[f] );
+      facExpCounts[f] += tmpFacMar[f];
 
   }
 
@@ -220,8 +220,8 @@ Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
 
 // Accessors
 void RDFG::resetFactorPotentials(List facPotentials){
-  // Convert to xmatrix
-  std::vector<phy::xmatrix_t> facPot;
+  // Convert to matrix
+  std::vector<phy::matrix_t> facPot;
   for(int k = 0; k < facPotentials.size(); ++k){
     facPot.push_back( rMatToMat( facPotentials[k] ));
   }
@@ -232,7 +232,7 @@ void RDFG::resetFactorPotentials(List facPotentials){
 
 List RDFG::getFactorPotentials(){
   // Loop over factor nodes
-  std::vector<phy::xmatrix_t> ret;
+  std::vector<phy::matrix_t> ret;
   ret.reserve( dfg.factors.size());
   for(std::vector<unsigned>::iterator it = dfg.factors.begin(); it != dfg.factors.end(); ++it){
     // Put potentials in list

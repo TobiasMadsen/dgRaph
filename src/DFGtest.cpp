@@ -64,9 +64,9 @@ double mgfDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors
 NumericVector PGMExpectCpp(IntegerVector varDimensions, List facPotentials1, List facPotentials2, List facNeighbors){
   //Convert varDimensions to std::vector<unsigned>
   std::vector<unsigned> varDim(varDimensions.begin(), varDimensions.end());
-  //Convert both sets of factorPotentials to std::vector<xmatrix_t>
-  std::vector<phy::xmatrix_t> facPot1;
-  std::vector<phy::xmatrix_t> facPot2;
+  //Convert both sets of factorPotentials to std::vector<matrix_t>
+  std::vector<phy::matrix_t> facPot1;
+  std::vector<phy::matrix_t> facPot2;
   for(int k = 0; k < facPotentials1.size(); ++k){
     facPot1.push_back( rMatToMat( facPotentials1[k] ));
     facPot2.push_back( rMatToMat( facPotentials2[k] ));
@@ -77,7 +77,7 @@ NumericVector PGMExpectCpp(IntegerVector varDimensions, List facPotentials1, Lis
   //Calculate fun_a and fun_b
   phy::DFG dfg(varDim, facPot1, facNbs);
   phy::stateMaskVec_t stateMasks(varDimensions.size());
-  std::pair<phy::xnumber_t, phy::xnumber_t> res = dfg.calcExpect( facPot1, facPot2, stateMasks);
+  std::pair<phy::number_t, phy::number_t> res = dfg.calcExpect( facPot1, facPot2, stateMasks);
 
   NumericVector ret(2);
   ret(0) = res.first;

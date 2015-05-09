@@ -19,7 +19,7 @@ namespace phy {
   isFactor(false), dimension(dimension) {}
 
 
-  DFGNode::DFGNode(xmatrix_t const & potential) : 
+  DFGNode::DFGNode(matrix_t const & potential) : 
     isFactor(true), potential(potential)
     {
       if (potential.size1() == 1)
@@ -46,23 +46,13 @@ namespace phy {
 
 
   DFG::DFG(vector<unsigned> const & varDimensions, 
-	   vector<xmatrix_t> const & facPotentials, 
+	   vector<matrix_t> const & facPotentials, 
 	   vector<vector<unsigned> > const & facNeighbors)
   {
     init(varDimensions, facPotentials, facNeighbors);
   }
 
-  DFG::DFG(vector<unsigned> const & varDimensions, 
-	   vector<matrix_t> const & facPotentials, 
-	   vector<vector<unsigned> > const & facNeighbors)
-  {
-    vector<xmatrix_t> v;
-    BOOST_FOREACH(matrix_t const & m, facPotentials)
-      v.push_back( toXNumber(m) );
-    init(varDimensions, v, facNeighbors);
-  }
-
-  void DFG::resetFactorPotential(xmatrix_t const & pot, unsigned facId)
+  void DFG::resetFactorPotential(matrix_t const & pot, unsigned facId)
   {
     DFGNode & nd = nodes[ convFacToNode(facId) ];
     if( nd.potential.size1() != pot.size1() )
@@ -73,7 +63,7 @@ namespace phy {
   }
 
 
-  void DFG::resetFactorPotentials(vector<xmatrix_t> const & facPotVecSubSet, vector<unsigned> const & facMap)
+  void DFG::resetFactorPotentials(vector<matrix_t> const & facPotVecSubSet, vector<unsigned> const & facMap)
   {
     assert(facPotVecSubSet.size() == facMap.size() );
     for (unsigned i = 0; i < facMap.size(); i++)
@@ -81,33 +71,11 @@ namespace phy {
   }
 
 
-  void DFG::resetFactorPotentials(vector<xmatrix_t> const & facPotVec)
-  {
-    assert(facPotVec.size() == factors.size() );
-    for (unsigned i = 0; i < facPotVec.size(); i++)
-      resetFactorPotential(facPotVec[i], i);
-  }
-
-
-  void DFG::resetFactorPotential(matrix_t const & facPotVec, unsigned facId)
-  {
-    resetFactorPotential( toXNumber(facPotVec), facId );
-  }
-
-
-  void DFG::resetFactorPotentials(vector<matrix_t> const & facPotVecSubSet, vector<unsigned> const & facMap)
-  {
-    assert(facPotVecSubSet.size() == facMap.size() );
-    for (unsigned i = 0; i < facMap.size(); i++)
-      resetFactorPotential(facPotVecSubSet[i], facMap[i]);
-  }
-
-
   void DFG::resetFactorPotentials(vector<matrix_t> const & facPotVec)
   {
     assert(facPotVec.size() == factors.size() );
     for (unsigned i = 0; i < facPotVec.size(); i++)
-      resetFactorPotential(toXNumber(facPotVec[i]), i);
+      resetFactorPotential(facPotVec[i], i);
   }
 
   // Begining of  write dot
@@ -259,13 +227,13 @@ namespace phy {
   }
 
 
-  xnumber_t DFG::calcNormConst2(stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages) const 
+  number_t DFG::calcNormConst2(stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages) const 
   {
     return calcNormConst(0, stateMasks[0], inMessages[0]);
   }
 
 
-  xnumber_t DFG::calcNormConst2(stateMaskVec_t const & stateMasks) const 
+  number_t DFG::calcNormConst2(stateMaskVec_t const & stateMasks) const 
   {
     return calcNormConst(0, stateMasks[0], inMessages_[0]);
   }
@@ -280,7 +248,7 @@ namespace phy {
   }
 
 
-  void DFG::runSumProduct(stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const
+  void DFG::runSumProduct(stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const
   {
     if(roots.size() == 0)
       errorAbort("DiscreFactorGraph.cpp::runSumProduct: No root nodes");
@@ -292,7 +260,7 @@ namespace phy {
   }
 
 
-  void DFG::calcSumProductMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const
+  void DFG::calcSumProductMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const
   {
     if (nodes[current].isFactor)
       calcSumProductMessageFactor(current, receiver, inMessages, outMessages);
@@ -304,7 +272,7 @@ namespace phy {
   // send requests from the root out, returns messages from the leaves
   // inwards. Note that messages are passed implicitly through the
   // tables of outMessages (and pointers of inMessages)
-  void DFG::runSumProductInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const
+  void DFG::runSumProductInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const
   {
     vector<unsigned> const & nbs = neighbors[current];
     // recursively call all nodes
@@ -322,7 +290,7 @@ namespace phy {
 
 
   // send messages from the root outwards to the leaves. Precondition: DFG::runSumProductInwardsRec must have been run on inMessages and outMessages.
-  void DFG::runSumProductOutwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const
+  void DFG::runSumProductOutwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const
   {
     vector<unsigned> const & nbs = neighbors[current];
     // recursively call all nodes
@@ -337,7 +305,7 @@ namespace phy {
 
 
 
-  xnumber_t DFG::runMaxSum(stateMaskVec_t const & stateMasks, vector<unsigned> & maxVariables)
+  number_t DFG::runMaxSum(stateMaskVec_t const & stateMasks, vector<unsigned> & maxVariables)
   {
     // init data structures
     if (inMessages_.size() == 0)
@@ -349,7 +317,7 @@ namespace phy {
   }
 
 
-  xnumber_t DFG::runMaxSum(stateMaskVec_t const & stateMasks, vector<unsigned> & maxVariables, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const
+  number_t DFG::runMaxSum(stateMaskVec_t const & stateMasks, vector<unsigned> & maxVariables, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const
   {
     if(roots.size() == 0)
       errorAbort("DiscreFactorGraph.cpp::runMaxSum: No root nodes");
@@ -357,7 +325,7 @@ namespace phy {
     if (maxVariables.size() == 0)
       initMaxVariables(maxVariables);
 
-    xnumber_t maxVal = 1;
+    number_t maxVal = 1;
 
     for(int i = 0; i < roots.size(); ++i){
       unsigned root = roots.at(i);
@@ -365,7 +333,7 @@ namespace phy {
 
       // find max at root node
       unsigned dim = nodes[root].dimension;
-      xvector_t v(dim);
+      vector_t v(dim);
       calcSumProductMessageVariable(root, root, stateMasks[root], inMessages[root], v);  // sumProduct and maxSum perform the same calculations for variables
       unsigned maxState = ublas::index_norm_inf(v);
       maxVal *= v[maxState];
@@ -377,7 +345,7 @@ namespace phy {
   }
 
 
-  void DFG::runMaxSumInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const
+  void DFG::runMaxSumInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const
   {
     vector<unsigned> const & nbs = neighbors[current];
     // recursively call all nodes
@@ -394,7 +362,7 @@ namespace phy {
   }
 
 
-  void DFG::calcMaxSumMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const
+  void DFG::calcMaxSumMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const
   {
     if (nodes[current].isFactor)
       calcMaxSumMessageFactor(current, receiver, inMessages, outMessages, maxNeighborStates);
@@ -403,22 +371,22 @@ namespace phy {
   };
 
 
-  void DFG::calcMaxSumMessageFactor(unsigned current, unsigned receiver, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const
+  void DFG::calcMaxSumMessageFactor(unsigned current, unsigned receiver, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const
   {
     vector<unsigned> const & nbs = neighbors[current];
-    xvector_t & outMes = outMessages[current][ getIndex( nbs, receiver) ];  // identify message
-    vector< xvector_t const *> const & inMes( inMessages[current] );
+    vector_t & outMes = outMessages[current][ getIndex( nbs, receiver) ];  // identify message
+    vector< vector_t const *> const & inMes( inMessages[current] );
     vector<vector<unsigned> > & maxNBStates = maxNeighborStates[ convNodeToFac(current) ];
 
     calcMaxSumMessageFactor(current, receiver, inMes, outMes, maxNBStates);
   }
 
 
-  void DFG::calcMaxSumMessageFactor(unsigned current, unsigned receiver, vector<xvector_t const *> const & inMes, xvector_t & outMes, vector<vector<unsigned> > & maxNBStates) const
+  void DFG::calcMaxSumMessageFactor(unsigned current, unsigned receiver, vector<vector_t const *> const & inMes, vector_t & outMes, vector<vector<unsigned> > & maxNBStates) const
   {
     vector<unsigned> const & nbs = neighbors[current];
     DFGNode const & nd = nodes[current];
-    xmatrix_t const & pot = nd.potential;
+    matrix_t const & pot = nd.potential;
 
     // one neighbor 
     if (nd.dimension == 1) {
@@ -432,7 +400,7 @@ namespace phy {
       if (nbs[0] == receiver) {
 	unsigned nbIdx = 1;
 	for (unsigned i = 0; i < pot.size1(); i++) {
-	  xvector_t v = elemProd<xvector_t>(*inMes[nbIdx], ublas::matrix_row<xmatrix_t const>(pot, i));
+	  vector_t v = elemProd<vector_t>(*inMes[nbIdx], ublas::matrix_row<matrix_t const>(pot, i));
 	  unsigned maxIdx = ublas::index_norm_inf(v);
 	  maxNBStates[nbIdx][i] = maxIdx;
 	  outMes[i] = v[maxIdx];
@@ -441,7 +409,7 @@ namespace phy {
       else { // nbs[1] == receiver
 	unsigned nbIdx = 0;
 	for (unsigned i = 0; i < pot.size2(); i++) {
-	  xvector_t v = elemProd<xvector_t>(*inMes[nbIdx], ublas::matrix_column<xmatrix_t const>(pot, i) );
+	  vector_t v = elemProd<vector_t>(*inMes[nbIdx], ublas::matrix_column<matrix_t const>(pot, i) );
 	  unsigned maxIdx = ublas::index_norm_inf(v);
 	  maxNBStates[nbIdx][i] = maxIdx;
 	  outMes[i] = v[maxIdx];
@@ -477,7 +445,7 @@ namespace phy {
   }
 
 
-  xnumber_t DFG::calcNormConst(stateMaskVec_t const & stateMasks)
+  number_t DFG::calcNormConst(stateMaskVec_t const & stateMasks)
   {
     if (inMessages_.size() == 0)
       initMessages();
@@ -486,9 +454,9 @@ namespace phy {
   }
 
 
-  xnumber_t DFG::calcNormConst(stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const
+  number_t DFG::calcNormConst(stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const
   {
-    xnumber_t res = 1;
+    number_t res = 1;
     if(roots.size() == 0)
       errorAbort("DiscreFactorGraph.cpp::calcNormConst: No root nodes");
 
@@ -501,38 +469,30 @@ namespace phy {
   }
 
 
-  xnumber_t DFG::calcNormConst(unsigned varId, stateMask_t const * stateMask, vector<xvector_t const *> const & inMes) const
+  number_t DFG::calcNormConst(unsigned varId, stateMask_t const * stateMask, vector<vector_t const *> const & inMes) const
   {
     assert( varId < variables.size() );
     unsigned dim = nodes[ variables[varId] ].dimension;
-    xvector_t v(dim);
+    vector_t v(dim);
     calcSumProductMessageVariable(varId, varId, stateMask, inMes, v);
     return ublas::sum(v);
   }
 
   void DFG::calcVariableMarginals(stateMaskVec_t const & stateMasks){
-    calcVariableMarginals( xVariableMarginals, stateMasks);
-
-    mVariableMarginals.resize( xVariableMarginals.size() );
-    for(int i = 0; i < xVariableMarginals.size(); ++i){
-      mVariableMarginals.at(i) = toNumber(xVariableMarginals.at(i));
-      //assertion
-      if(mVariableMarginals.at(i).size() != xVariableMarginals.at(i).size() )
-	errorAbort("Developer: VariableMarginals don't have same size");
-    }
+    calcVariableMarginals( variableMarginals_, stateMasks);
   }
 
-  void DFG::calcVariableMarginals(vector<xvector_t> & variableMarginals, stateMaskVec_t const & stateMasks)
+  void DFG::calcVariableMarginals(vector<vector_t> & variableMarginals, stateMaskVec_t const & stateMasks)
   {
     calcVariableMarginals(variableMarginals, stateMasks, inMessages_);
   }
 
 
-  void DFG::calcVariableMarginals(vector<xvector_t> & variableMarginals, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages) const
+  void DFG::calcVariableMarginals(vector<vector_t> & variableMarginals, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages) const
   {
     if (variableMarginals.size() == 0)
       initVariableMarginals(variableMarginals);
-    xnumber_t const Z = calcNormConst(0, stateMasks[0], inMessages[0]);
+    number_t const Z = calcNormConst(0, stateMasks[0], inMessages[0]);
     for (unsigned i = 0; i < variables.size(); i++) {
       calcSumProductMessageVariable(i, i, stateMasks[i], inMessages[i], variableMarginals[i]);
       variableMarginals[i] *= 1/ Z;
@@ -540,29 +500,24 @@ namespace phy {
   }
 
   void DFG::calcFactorMarginals(){
-    calcFactorMarginals( xFactorMarginals);
-
-    mFactorMarginals.resize( xFactorMarginals.size() );
-    for(int i = 0; i < xFactorMarginals.size(); ++i){
-      mFactorMarginals.at(i) = toNumber(xFactorMarginals.at(i));
-    }
+    calcFactorMarginals( factorMarginals_);
   }
 
-  void DFG::calcFactorMarginals(vector<xmatrix_t> & factorMarginals)
+  void DFG::calcFactorMarginals(vector<matrix_t> & factorMarginals)
   {
     calcFactorMarginals(factorMarginals, inMessages_);
   }
 
 
-  void DFG::calcFactorMarginals(vector<xmatrix_t> & factorMarginals, vector<vector<xvector_t const *> > & inMessages) const
+  void DFG::calcFactorMarginals(vector<matrix_t> & factorMarginals, vector<vector<vector_t const *> > & inMessages) const
   {
     if (factorMarginals.size() == 0)
       initFactorMarginals(factorMarginals);
 
     for (unsigned facId = 0; facId < factors.size(); facId++) {
       unsigned ndId = convFacToNode(facId);
-      vector<xvector_t const *> const & inMes = inMessages[ndId];
-      xmatrix_t & m = factorMarginals[facId];
+      vector<vector_t const *> const & inMes = inMessages[ndId];
+      matrix_t & m = factorMarginals[facId];
       m = nodes[ndId].potential;  // set facMar = potential
       if (nodes[ndId].dimension == 1)
 	for (unsigned i = 0; i < m.size2(); i++)
@@ -577,7 +532,7 @@ namespace phy {
 
     //Not same normalization constant for all factors when graph is disconnected
     for (unsigned facId = 0; facId < factors.size(); facId++){
-      xnumber_t const Z = sumMatrix(factorMarginals[facId]);
+      number_t const Z = sumMatrix(factorMarginals[facId]);
       factorMarginals[facId] *= 1/ Z;
     }
   }
@@ -595,7 +550,7 @@ namespace phy {
   }
 
 
-  void DFG::initMessages(vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const
+  void DFG::initMessages(vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const
   {
     // outMessages
     // outMessages[i][j] is a the outmessage for the j'th neighbor of node i. It's dimension equals the dimension of the linking variable node.
@@ -607,13 +562,13 @@ namespace phy {
       if (nd.isFactor) {
 	for (unsigned j = 0; j < neighbors[i].size(); j++) {
 	  unsigned const dim = nodes[ neighbors[i][j] ].dimension; // all neighbors are variables
-	  outMessages[i].push_back(xvector_t(dim, 0) ); 
+	  outMessages[i].push_back(vector_t(dim, 0) ); 
 	}
       }
       else {  // is variable
 	unsigned const dim = nodes[i].dimension; 
 	for (unsigned j = 0; j < neighbors[i].size(); j++)
-	  outMessages[i].push_back(xvector_t(dim , 0) ); 
+	  outMessages[i].push_back(vector_t(dim , 0) ); 
       }
     }
 
@@ -630,7 +585,7 @@ namespace phy {
   }
   
 
-  void DFG::initVariableMarginals(vector<xvector_t> & variableMarginals) const
+  void DFG::initVariableMarginals(vector<vector_t> & variableMarginals) const
   {
     initGenericVariableMarginals(variableMarginals, *this);
 //
@@ -644,7 +599,7 @@ namespace phy {
   }
   
 
-  void DFG::initFactorMarginals(vector<xmatrix_t> & factorMarginals) const
+  void DFG::initFactorMarginals(vector<matrix_t> & factorMarginals) const
   {
     initGenericFactorMarginals(factorMarginals, *this);
 //    factorMarginals.clear();
@@ -902,14 +857,14 @@ namespace phy {
     maxVariables.resize( variables.size() );
   }
 
-  vector<xnumber_t> calcNormConsMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
+  vector<number_t> calcNormConsMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
   {
-    vector<xnumber_t> result( stateMask2DVec.size() );
+    vector<number_t> result( stateMask2DVec.size() );
     calcNormConsMultObs(result, stateMask2DVec, dfg);
     return result;
   }
 
-  void DFG::init(vector<unsigned> const & varDimensions, vector<xmatrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors)
+  void DFG::init(vector<unsigned> const & varDimensions, vector<matrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors)
   {
     // reserve memory
     nodes.reserve( varDimensions.size() + facPotentials.size() ); 
@@ -926,7 +881,7 @@ namespace phy {
     }
       
     // define factor nodes
-    BOOST_FOREACH(xmatrix_t const & pot, facPotentials) {
+    BOOST_FOREACH(matrix_t const & pot, facPotentials) {
       nodes.push_back( DFGNode( pot ) );
       factors.push_back(idx);
       idx++;
@@ -946,6 +901,7 @@ namespace phy {
     if( sample.size() != variables.size())
       errorAbort("DFG::calcFullLikelihood: Not full sample");
     number_t res = 1; 
+
     //Loop over all factors
     for(int facId = 0; facId < factors.size(); ++facId){
       //Find neighbors      
@@ -953,23 +909,23 @@ namespace phy {
 
       //convtovar read in sample 
       if( nbs.size() == 1)
-	res *= toNumber(nodes[ convFacToNode(facId) ].potential(0, sample.at( convNodeToVar(nbs[0]) )));
+	res *= nodes[ convFacToNode(facId) ].potential(0, sample.at( convNodeToVar(nbs[0]) ));
       if( nbs.size() == 2)
-	res *= toNumber(nodes[ convFacToNode(facId) ].potential( sample.at( convNodeToVar(nbs[0])), sample.at( convNodeToVar(nbs[1])) ));
+	res *= nodes[ convFacToNode(facId) ].potential( sample.at( convNodeToVar(nbs[0])), sample.at( convNodeToVar(nbs[1])) );
     }
     return res;
   }
 
   //Calculate expectancies
-  pair<xnumber_t,xnumber_t> DFG::calcExpect(vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks){
+  pair<number_t,number_t> DFG::calcExpect(vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks){
     //Initialize messages
     if( inMu_.size() == 0)
       initMessages(inMu_, outMu_);
     if( inLambda_.size() == 0)
       initMessages(inLambda_, outLambda_);
 
-    xnumber_t res_lik = 1; //Likelihood type 
-    xnumber_t res_exp = 0; //Expectancy type
+    number_t res_lik = 1; //Likelihood type 
+    number_t res_exp = 0; //Expectancy type
 
     for(int i = 0; i < roots.size(); ++i){
       //Calc inward recursion
@@ -979,7 +935,7 @@ namespace phy {
       //use incoming messages to root to calculate expectancy
       stateMask_t const * stateMask = stateMasks[ convNodeToVar(root) ];
       
-      xnumber_t lik_com = calcNormConst(root, stateMask, inMu_[root]);
+      number_t lik_com = calcNormConst(root, stateMask, inMu_[root]);
       res_lik *= lik_com;
 
       if(!nodes[root].isFactor){
@@ -987,7 +943,7 @@ namespace phy {
 	
 	for(unsigned k = 0; k < nodes[root].dimension; ++k){
 	  for(unsigned i = 0; i < nbs.size(); ++i){
-	    xnumber_t add_exp = (*inLambda_[root][i])[k];
+	    number_t add_exp = (*inLambda_[root][i])[k];
 	    if( stateMask)
 	      add_exp *= (*stateMask)[k];
 
@@ -1005,7 +961,7 @@ namespace phy {
     return make_pair(res_lik, res_exp*res_lik);
   }
 
-  void DFG::runExpectInwardsRec(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const{
+  void DFG::runExpectInwardsRec(unsigned current, unsigned sender, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMu, vector<vector<vector_t> > & outMu, vector<vector<vector_t const *> > & inLambda, vector<vector<vector_t> > & outLambda) const{
     // recursively call all nodes
     vector<unsigned> const & nbs = neighbors[current];
     for(unsigned i = 0; i < nbs.size(); ++i){
@@ -1020,30 +976,30 @@ namespace phy {
     calcExpectMessage(current, sender, fun_a, fun_b, stateMasks, inMu, outMu, inLambda, outLambda);
   }
 
-  void DFG::calcExpectMessage(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const {
+  void DFG::calcExpectMessage(unsigned current, unsigned receiver, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMu, vector<vector<vector_t> > & outMu, vector<vector<vector_t const *> > & inLambda, vector<vector<vector_t> > & outLambda) const {
     if(nodes[current].isFactor)
       calcExpectMessageFactor(current, receiver, fun_a, fun_b, inMu, outMu, inLambda, outLambda);
     else
       calcExpectMessageVariable(current, receiver, stateMasks, inMu, outMu, inLambda, outLambda);
   }
 
-  void DFG::calcExpectMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const
+  void DFG::calcExpectMessageFactor(unsigned current, unsigned receiver, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, vector<vector<vector_t const *> > & inMu, vector<vector<vector_t> > & outMu, vector<vector<vector_t const *> > & inLambda, vector<vector<vector_t> > & outLambda) const
   {
     vector<unsigned> const & nbs = neighbors[current];
-    vector< xvector_t const *> const & inMesMu( inMu[current] );
-    xvector_t & outMesMu = outMu[current][ getIndex( nbs, receiver) ]; //identify message
-    vector< xvector_t const *> const & inMesLambda( inLambda[current] );
-    xvector_t & outMesLambda = outLambda[current][ getIndex( nbs, receiver) ]; //identify message
+    vector< vector_t const *> const & inMesMu( inMu[current] );
+    vector_t & outMesMu = outMu[current][ getIndex( nbs, receiver) ]; //identify message
+    vector< vector_t const *> const & inMesLambda( inLambda[current] );
+    vector_t & outMesLambda = outLambda[current][ getIndex( nbs, receiver) ]; //identify message
 
     calcExpectMessageFactor(current, receiver, fun_a, fun_b, inMesMu, outMesMu, inMesLambda, outMesLambda);
   }
 
-  void DFG::calcExpectMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const
+  void DFG::calcExpectMessageFactor(unsigned current, unsigned receiver, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, vector<vector_t const *> const & inMesMu, vector_t & outMesMu, vector<vector_t const *> const & inMesLambda, vector_t & outMesLambda) const
   {
     vector<unsigned> const & nbs = neighbors[current];
     DFGNode const & nd = nodes[current];
-    xmatrix_t pot_a = fun_a.at( convNodeToFac(current));
-    xmatrix_t pot_b = fun_b.at( convNodeToFac(current));
+    matrix_t pot_a = fun_a.at( convNodeToFac(current));
+    matrix_t pot_b = fun_b.at( convNodeToFac(current));
 
     //One neighbor
     if(nd.dimension == 1){
@@ -1082,20 +1038,20 @@ namespace phy {
     }
   }
 
-  void DFG::calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const
+  void DFG::calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMu, vector<vector<vector_t> > & outMu, vector<vector<vector_t const *> > & inLambda, vector<vector<vector_t> > & outLambda) const
   {
     vector<unsigned> const & nbs = neighbors[current];
-    vector< xvector_t const *> const & inMesMu( inMu[current]); //Relies on precondition, possibly do assertion
-    xvector_t & outMesMu = outMu[current][ getIndex( nbs, receiver) ];
-    vector< xvector_t const *> const & inMesLambda( inLambda[current]);
-    xvector_t & outMesLambda = outLambda[current][ getIndex( nbs, receiver) ];
+    vector< vector_t const *> const & inMesMu( inMu[current]); //Relies on precondition, possibly do assertion
+    vector_t & outMesMu = outMu[current][ getIndex( nbs, receiver) ];
+    vector< vector_t const *> const & inMesLambda( inLambda[current]);
+    vector_t & outMesLambda = outLambda[current][ getIndex( nbs, receiver) ];
 
     stateMask_t const * stateMask = stateMasks[ convNodeToVar(current) ];
 
     calcExpectMessageVariable(current, receiver, stateMask, inMesMu, outMesMu, inMesLambda, outMesLambda);
   }
 
-  void DFG::calcExpectMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const
+  void DFG::calcExpectMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<vector_t const *> const & inMesMu, vector_t & outMesMu, vector<vector_t const *> const & inMesLambda, vector_t & outMesLambda) const
   {
     vector<unsigned> const & nbs = neighbors[current];
 
@@ -1123,7 +1079,7 @@ namespace phy {
       for(unsigned i = 0; i < nbs.size(); ++i){
 	if(nbs[i] == receiver)
 	  continue;
-	xnumber_t add = (*inMesLambda[i])[k];
+	number_t add = (*inMesLambda[i])[k];
 	for(unsigned j = 0; j < nbs.size(); ++j){
 	  if(j==i or nbs[j] == receiver)
 	    continue;
@@ -1138,7 +1094,7 @@ namespace phy {
     }
   }
 
-  void calcNormConsMultObs(vector<xnumber_t> & result, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
+  void calcNormConsMultObs(vector<number_t> & result, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
   {
     for (unsigned i = 0; i < stateMask2DVec.size(); i++)
       result[i] = dfg.calcNormConst(stateMask2DVec[i]);
@@ -1160,13 +1116,13 @@ namespace phy {
     unsigned varCount = dfg.variables.size();
     assert(result.size() == varCount);
 
-    vector<xvector_t> tmpVarMar;
+    vector<vector_t> tmpVarMar;
     dfg.initVariableMarginals(tmpVarMar);
     for (unsigned i = 0; i < stateMask2DVec.size(); i++) {
       dfg.runSumProduct(stateMask2DVec[i]);
       dfg.calcVariableMarginals(tmpVarMar, stateMask2DVec[i]);
       for (unsigned j = 0; j < varCount; j++)
-	result[j] += toNumber( tmpVarMar[j] ); // need to convert xnumber_t to number_t
+	result[j] += tmpVarMar[j]; 
     }
   }
 
@@ -1186,13 +1142,13 @@ namespace phy {
     unsigned facCount = dfg.factors.size();
     assert(result.size() == facCount);
 
-    vector<xmatrix_t> tmpFacMar;
+    vector<matrix_t> tmpFacMar;
     dfg.initFactorMarginals(tmpFacMar);
     for (unsigned i = 0; i < stateMask2DVec.size(); i++) {
       dfg.runSumProduct(stateMask2DVec[i]);
       dfg.calcFactorMarginals(tmpFacMar);
       for (unsigned j = 0; j < facCount; j++)
-	result[j] += toNumber( tmpFacMar[j] );
+	result[j] += tmpFacMar[j];
     }
   }
 
@@ -1205,23 +1161,23 @@ namespace phy {
     unsigned facCount = dfg.factors.size();
     assert(facResult.size() == facCount);
 
-    vector<xvector_t> tmpVarMar;
+    vector<vector_t> tmpVarMar;
     dfg.initVariableMarginals(tmpVarMar);
-    vector<xmatrix_t> tmpFacMar;
+    vector<matrix_t> tmpFacMar;
     dfg.initFactorMarginals(tmpFacMar);
     for (unsigned i = 0; i < stateMask2DVec.size(); i++) {
       dfg.runSumProduct(stateMask2DVec[i]);
       dfg.calcVariableMarginals(tmpVarMar, stateMask2DVec[i]);
       for (unsigned j = 0; j < varCount; j++)
-	varResult[j] += toNumber( tmpVarMar[j] );
+	varResult[j] += tmpVarMar[j];
       dfg.calcFactorMarginals(tmpFacMar);
       for (unsigned j = 0; j < facCount; j++)
-	facResult[j] += toNumber( tmpFacMar[j] );
+	facResult[j] += tmpFacMar[j];
     }
   }
 
 
-  void calcMaxProbStatesMultObs(vector<xnumber_t> & maxProbResult, vector<vector<unsigned> > & maxVarResult, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
+  void calcMaxProbStatesMultObs(vector<number_t> & maxProbResult, vector<vector<unsigned> > & maxVarResult, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
   {
     unsigned long stateMaskVecCount = stateMask2DVec.size();
     unsigned varCount = dfg.variables.size();
@@ -1243,11 +1199,11 @@ namespace phy {
   }
 
 
-  pair<vector<xnumber_t>, vector<vector<unsigned> > > calcMaxProbStatesMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
+  pair<vector<number_t>, vector<vector<unsigned> > > calcMaxProbStatesMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
   {
     long stateMaskVecCount = stateMask2DVec.size();
     unsigned varCount = dfg.variables.size();
-    vector<xnumber_t> maxProbResult(stateMaskVecCount);
+    vector<number_t> maxProbResult(stateMaskVecCount);
     vector<vector<unsigned> > maxVarResult(stateMaskVecCount, vector<unsigned>(varCount) );
 
     calcMaxProbStatesMultObs(maxProbResult, maxVarResult, stateMask2DVec, dfg);
@@ -1255,17 +1211,17 @@ namespace phy {
   }
 
   // tmpFacMar is used as workspace. accFacMar must be of correct size (use dfg.initFactorMarginals(tmpFacMar) )
-  void calcFacAccMarAndNormConst(vector<matrix_t> & accFacMar, vector<xmatrix_t> & tmpFacMar, xnumber_t & normConst, stateMaskVec_t const & stateMaskVec, DFG & dfg)
+  void calcFacAccMarAndNormConst(vector<matrix_t> & accFacMar, vector<matrix_t> & tmpFacMar, number_t & normConst, stateMaskVec_t const & stateMaskVec, DFG & dfg)
   {
     dfg.runSumProduct(stateMaskVec);
     dfg.calcFactorMarginals(tmpFacMar);
     for (unsigned j = 0; j < dfg.factors.size(); j++)
-      accFacMar[j] += toNumber( tmpFacMar[j] );
+      accFacMar[j] += tmpFacMar[j];
     normConst = dfg.calcNormConst2(stateMaskVec);
   }
 
 
-  void calcFacAccMarAndNormConstMultObs(vector<matrix_t> & accFacMar, xvector_t & normConstVec, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
+  void calcFacAccMarAndNormConstMultObs(vector<matrix_t> & accFacMar, vector_t & normConstVec, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
   {
     // check data structures
     long unsigned stateMaskVecCount = stateMask2DVec.size();
@@ -1274,7 +1230,7 @@ namespace phy {
       normConstVec.resize( stateMaskVecCount );
 
     // calculations
-    vector<xmatrix_t> tmpFacMar;
+    vector<matrix_t> tmpFacMar;
     dfg.initFactorMarginals(tmpFacMar);
     for (unsigned i = 0; i < stateMaskVecCount; i++) {
       calcFacAccMarAndNormConst(accFacMar, tmpFacMar, normConstVec[i], stateMask2DVec[i], dfg);

@@ -6,13 +6,13 @@
 
 using namespace Rcpp;
 
-void rMatToMat(NumericMatrix const & rmat, phy::xmatrix_t & mat);
+void rMatToMat(NumericMatrix const & rmat, phy::matrix_t & mat);
 
-phy::xmatrix_t rMatToMat(NumericMatrix const & rmat);
+phy::matrix_t rMatToMat(NumericMatrix const & rmat);
 
-std::vector<phy::xmatrix_t> rFacPotToFacPot(List const & facPot);
+std::vector<phy::matrix_t> rFacPotToFacPot(List const & facPot);
 
-List facPotToRFacPot(std::vector<phy::xmatrix_t> const & facPot);
+List facPotToRFacPot(std::vector<phy::matrix_t> const & facPot);
 
 std::vector<std::vector<unsigned> > rNbsToNbs(List const & rNbs);
 

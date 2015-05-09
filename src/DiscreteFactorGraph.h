@@ -31,11 +31,11 @@ using namespace std;
     DFGNode(unsigned dimension);
     
     /**Factor node constructor*/
-    DFGNode(xmatrix_t const & potential);
+    DFGNode(matrix_t const & potential);
 
     bool isFactor;      // true if factor node, false if variable node
     unsigned dimension; // dimension of variable or dimension of potential
-    xmatrix_t potential; // n * m dimensional matrix defining factor potential. If n == 1, then the potential is treated as one-dimensional. n = m = 0 for variable nodes.
+    matrix_t potential; // n * m dimensional matrix defining factor potential. If n == 1, then the potential is treated as one-dimensional. n = m = 0 for variable nodes.
   };
 
   class DFG 
@@ -43,7 +43,7 @@ using namespace std;
   public: 
 
     DFG(vector<unsigned> const & varDimensions, // dimensions of random variables. Their enumeration is implicit
-	vector<xmatrix_t> const & facPotentials, // factor potentials (see definition in DFGNode)
+	vector<matrix_t> const & facPotentials, // factor potentials (see definition in DFGNode)
 	vector<vector<unsigned> > const & facNeighbors);  // see below
     // facNeighbors[i] (nbs) defines the node neighbors of the i'th
     // factor. Currently, factors can have at most two
@@ -57,11 +57,6 @@ using namespace std;
     // potential matrix is a 1xn matrix, where n is the dimension of
     // the nbs[0] node). This is checked by consistencyCheck(), which is
     // called by the constructor.
-
-    // same as above but allows factor potentials to be defined as matrix_t types.
-    DFG(vector<unsigned> const & varDimensions, // dimensions of random variables. Their enumeration is implicit
-	vector<matrix_t> const & facPotentials, // factor potentials (see definition in DFGNode)
-	vector<vector<unsigned> > const & facNeighbors);  // see below
 
     /** The copy constructor is defined explicitly to ensure the
 	inMessages_ pointers are wiped out on copy. This means that
@@ -78,29 +73,21 @@ using namespace std;
     vector<unsigned> roots; // a root node in each component
 
     // Read-only accessors
-    const vector<xmatrix_t> & getXFactorMarginals(){ return xFactorMarginals;}
-    const vector<xvector_t> & getXVariableMarginals(){ return xVariableMarginals;}
-    const vector<matrix_t> & getFactorMarginals(){ return mFactorMarginals;}
-    const vector<vector_t> & getVariableMarginals(){ return mVariableMarginals;}
+    const vector<matrix_t> & getFactorMarginals(){ return factorMarginals_;}
+    const vector<vector_t> & getVariableMarginals(){ return variableMarginals_;}
 
     /** Reset specific or all factor potentials. Useful with factor optimization, e.g., by EM. */
-    // xmatrix_t versions
-    void resetFactorPotential(xmatrix_t const & facPotVec, unsigned facId);
-    void resetFactorPotentials(vector<xmatrix_t> const & facPotVecSubSet, vector<unsigned> const & facMap);  // facMap maps positions of facPotVecSubSet onto facPotVec
-    void resetFactorPotentials(vector<xmatrix_t> const & facPotVec);
-    
-    // overloaded matrix_t versions
     void resetFactorPotential(matrix_t const & facPotVec, unsigned facId);
     void resetFactorPotentials(vector<matrix_t> const & facPotVecSubSet, vector<unsigned> const & facMap);  // facMap maps positions of facPotVecSubSet onto facPotVec
     void resetFactorPotentials(vector<matrix_t> const & facPotVec);
-
+    
     /** Calc the normalization constant (Z) for the factor graph: Z =
 	sum p(x_root). Runs a single pass of the sum-product algorithm
 	(half the computations of the full sumProduct algorithm needed
 	for calculating all local marginals). Not sufficient if
 	variable marginals are also needed.  */
-    xnumber_t calcNormConst(stateMaskVec_t const & stateMasks);
-    xnumber_t calcNormConst(stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const;
+    number_t calcNormConst(stateMaskVec_t const & stateMasks);
+    number_t calcNormConst(stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const;
  
     /** Run the sum product algorithm. Postcondition: all inMessages
 	and outMessages are computed. The stateMask: Observed data is
@@ -109,21 +96,21 @@ using namespace std;
 	stateMasks[i] points to a stateMask with value one if a state
 	is observed and zero otherwise. */
     void runSumProduct(stateMaskVec_t const & stateMasks);  
-    void runSumProduct(stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const;
+    void runSumProduct(stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const;
 
     /** Precondition: runSumProduct has been called (setting all out/inMessages). Calc the normalization constant (Z). */
-    xnumber_t calcNormConst2(stateMaskVec_t const & stateMasks) const;
-    xnumber_t calcNormConst2(stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages) const;
+    number_t calcNormConst2(stateMaskVec_t const & stateMasks) const;
+    number_t calcNormConst2(stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages) const;
 
     /** Precondition: runSumProcut has been called (setting all out/inMessages). If variableMarginals is an empty vector ::initVariableMarginals will be called*/
     void calcVariableMarginals(stateMaskVec_t const & stateMasks);
-    void calcVariableMarginals(vector<xvector_t> & variableMarginals, stateMaskVec_t const & stateMasks);
-    void calcVariableMarginals(vector<xvector_t> & variableMarginals, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages) const;
+    void calcVariableMarginals(vector<vector_t> & variableMarginals, stateMaskVec_t const & stateMasks);
+    void calcVariableMarginals(vector<vector_t> & variableMarginals, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages) const;
 
     /** Precondition: runSumProcut has been called (setting all out/inMessages). If factorMarginals is an empty vector ::initFactorMarginals will be called*/
     void calcFactorMarginals();
-    void calcFactorMarginals(vector<xmatrix_t> & factorMarginals);
-    void calcFactorMarginals(vector<xmatrix_t> & factorMarginals, vector<vector<xvector_t const *> > & inMessages) const;
+    void calcFactorMarginals(vector<matrix_t> & factorMarginals);
+    void calcFactorMarginals(vector<matrix_t> & factorMarginals, vector<vector<vector_t const *> > & inMessages) const;
 
     /** Run the max sum algorithm (should be called max product, since
 	computation is not done in log space as is usually the
@@ -131,14 +118,14 @@ using namespace std;
 	algorithm. Returns the probability of the most probable
 	outcome. Postcondition: maxVariable defines the most probable
 	outcome, maxVariable[i] is the state of variable i. */
-    xnumber_t runMaxSum(stateMaskVec_t const & stateMasks, vector<unsigned> & maxVariables);
-    xnumber_t runMaxSum(stateMaskVec_t const & stateMasks, vector<unsigned> & maxVariables, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const; 
+    number_t runMaxSum(stateMaskVec_t const & stateMasks, vector<unsigned> & maxVariables);
+    number_t runMaxSum(stateMaskVec_t const & stateMasks, vector<unsigned> & maxVariables, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const; 
 
     /** Calculate likelihood for a full observation */
     number_t calcFullLikelihood( vector<unsigned> const & sample);
 
     /** No preconditions. Give the two kinds of potentials*/
-    pair<xnumber_t,xnumber_t> calcExpect(vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks);
+    pair<number_t,number_t> calcExpect(vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks);
 
     /** write factor graph in dot format (convert to ps using: cat out.dot | dot -Tps -o out.ps ) */
     void writeDot(string const & fileName);
@@ -155,9 +142,9 @@ using namespace std;
 
     // functions aiding in setting up data structures. Useful if external data structures are used.
     /** Initialize outMessages to be of the right size and inMessages to point to the corresponding out messages */
-    void initMessages(vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const;
-    void initVariableMarginals(vector<xvector_t> & variableMarginals) const;
-    void initFactorMarginals(vector<xmatrix_t> & factorMarginals) const;
+    void initMessages(vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const;
+    void initVariableMarginals(vector<vector_t> & variableMarginals) const;
+    void initFactorMarginals(vector<matrix_t> & factorMarginals) const;
     /** Sets up the data structure needed for maxSum. Indexing:
 	maxNeighborStates[i][j] returns a vector of unsigned (states)
 	corresponding to the j'th neigbor of the i'th factor. */
@@ -186,39 +173,39 @@ using namespace std;
   protected:
 
     // initialization called by constructors
-    void init(vector<unsigned> const & varDimensions, vector<xmatrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors);
+    void init(vector<unsigned> const & varDimensions, vector<matrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors);
 
     // return string with info on factor i
     string factorInfoStr( unsigned const i, vector<string> varNames = vector<string>(), vector<string> facNames = vector<string>() );
     string variableInfoStr( unsigned const i, vector<string> varNames = vector<string>(), vector<string> facNames = vector<string>() );
 
     // helper functions for sumProduct();
-    void runSumProductInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const;
-    void runSumProductOutwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const;
-    void calcSumProductMessageFactor(unsigned current, unsigned receiver, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const;
-    void calcSumProductMessageFactor(unsigned current, unsigned receiver, vector<xvector_t const *> const & inMes, xvector_t & outMes) const;
-    void calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const;
-    void calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<xvector_t const *> const & inMes, xvector_t & outMes) const;
-    void calcSumProductMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const;
-    xnumber_t calcNormConst(unsigned varId, stateMask_t const * stateMask, vector<xvector_t const *> const & inMes) const;
+    void runSumProductInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const;
+    void runSumProductOutwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const;
+    void calcSumProductMessageFactor(unsigned current, unsigned receiver, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const;
+    void calcSumProductMessageFactor(unsigned current, unsigned receiver, vector<vector_t const *> const & inMes, vector_t & outMes) const;
+    void calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const;
+    void calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<vector_t const *> const & inMes, vector_t & outMes) const;
+    void calcSumProductMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const;
+    number_t calcNormConst(unsigned varId, stateMask_t const * stateMask, vector<vector_t const *> const & inMes) const;
 
     // helper functions for maxSum();
     unsigned maxNeighborDimension(vector<unsigned> const & nbs) const;
-    void runMaxSumInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const;
-    void calcMaxSumMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const;
-    void calcMaxSumMessageFactor(unsigned current, unsigned receiver, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const;
-    void calcMaxSumMessageFactor(unsigned current, unsigned receiver, vector<xvector_t const *> const & inMes, xvector_t & outMes, vector<vector<unsigned> > & maxNBStates) const;
+    void runMaxSumInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const;
+    void calcMaxSumMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const;
+    void calcMaxSumMessageFactor(unsigned current, unsigned receiver, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages, vector<vector<vector<unsigned> > > & maxNeighborStates) const;
+    void calcMaxSumMessageFactor(unsigned current, unsigned receiver, vector<vector_t const *> const & inMes, vector_t & outMes, vector<vector<unsigned> > & maxNBStates) const;
     void backtrackMaxSumOutwardsRec(vector<unsigned> & maxVariables, unsigned current, unsigned sender, unsigned maxState, vector<vector<vector<unsigned> > > & maxNeighborStates) const;
 
     //Functions for calculating expectancies
     //See note: sumProduct.pdf
-    void runExpectInwardsRec(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
-//void runExpectOutwardsRec(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
-    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
-    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const;
-    void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
-    void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<xvector_t const *> const & inMesMu, xvector_t & outMesMu, vector<xvector_t const *> const & inMesLambda, xvector_t & outMesLambda) const;
-    void calcExpectMessage(unsigned current, unsigned sender, vector<xmatrix_t> const & fun_a, vector<xmatrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMu, vector<vector<xvector_t> > & outMu, vector<vector<xvector_t const *> > & inLambda, vector<vector<xvector_t> > & outLambda) const;
+    void runExpectInwardsRec(unsigned current, unsigned sender, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMu, vector<vector<vector_t> > & outMu, vector<vector<vector_t const *> > & inLambda, vector<vector<vector_t> > & outLambda) const;
+//void runExpectOutwardsRec(unsigned current, unsigned sender, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMu, vector<vector<vector_t> > & outMu, vector<vector<vector_t const *> > & inLambda, vector<vector<vector_t> > & outLambda) const;
+    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, vector<vector<vector_t const *> > & inMu, vector<vector<vector_t> > & outMu, vector<vector<vector_t const *> > & inLambda, vector<vector<vector_t> > & outLambda) const;
+    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, vector<vector_t const *> const & inMesMu, vector_t & outMesMu, vector<vector_t const *> const & inMesLambda, vector_t & outMesLambda) const;
+    void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMu, vector<vector<vector_t> > & outMu, vector<vector<vector_t const *> > & inLambda, vector<vector<vector_t> > & outLambda) const;
+    void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<vector_t const *> const & inMesMu, vector_t & outMesMu, vector<vector_t const *> const & inMesLambda, vector_t & outMesLambda) const;
+    void calcExpectMessage(unsigned current, unsigned sender, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMu, vector<vector<vector_t> > & outMu, vector<vector<vector_t const *> > & inLambda, vector<vector<vector_t> > & outLambda) const;
 
 
     /** Convert to boost factor graph (only captures graph structure */ 
@@ -234,24 +221,22 @@ using namespace std;
 
     // private data
     // convenience data structures -- perhaps make public
-    vector<vector<xvector_t const *> > inMessages_;
-    vector<vector<xvector_t> > outMessages_;
+    vector<vector<vector_t const *> > inMessages_;
+    vector<vector<vector_t> > outMessages_;
     vector<vector<vector<unsigned> > > maxNeighborStates_;
 
-    vector<vector<xvector_t const *> > inMessages2_; //For messages of the second type
-    vector<vector<xvector_t> > outMessages2_;
+    vector<vector<vector_t const *> > inMessages2_; //For messages of the second type
+    vector<vector<vector_t> > outMessages2_;
 
     //Structures for calculation of expectancies
     //See note sumproduct.pdf
-    vector<vector<xvector_t const *> > inMu_;
-    vector<vector<xvector_t> > outMu_;
-    vector<vector<xvector_t const *> > inLambda_;
-    vector<vector<xvector_t> > outLambda_;
+    vector<vector<vector_t const *> > inMu_;
+    vector<vector<vector_t> > outMu_;
+    vector<vector<vector_t const *> > inLambda_;
+    vector<vector<vector_t> > outLambda_;
 
-    vector<vector_t> mVariableMarginals;
-    vector<matrix_t> mFactorMarginals;
-    vector<xvector_t> xVariableMarginals;
-    vector<xmatrix_t> xFactorMarginals;
+    vector<vector_t> variableMarginals_;
+    vector<matrix_t> factorMarginals_;
   };
 
   // free functions for dealing vith a vector of observation sets
@@ -260,8 +245,8 @@ using namespace std;
       (observations). If the factors represent proper probability
       distributions, the norm constant equal the likelihood of the
       observations under the model */
-  vector<xnumber_t> calcNormConsMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
-  void calcNormConsMultObs(vector<xnumber_t> & result, stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
+  vector<number_t> calcNormConsMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
+  void calcNormConsMultObs(vector<number_t> & result, stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
 
   /** Calculates the accumulated variable marginals over all
       stateMask vectors. Useful for EM based parameter estimation,
@@ -283,8 +268,8 @@ using namespace std;
   void calcVarAndFacAccMarMultObs(vector<matrix_t> & varResult, vector<matrix_t> & facResult, stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
 
   /** Calculates the most probable combined state assignment to variables for multiple stateMask (observation) vectors. For ease of use, size of result references will be adjusted is of wrong size. */
-  void calcMaxProbStatesMultObs(vector<xnumber_t> & maxProbResult, vector<vector<unsigned> > & maxVarResult, stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
-  pair<vector<xnumber_t>, vector<vector<unsigned> > > calcMaxProbStatesMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
+  void calcMaxProbStatesMultObs(vector<number_t> & maxProbResult, vector<vector<unsigned> > & maxVarResult, stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
+  pair<vector<number_t>, vector<vector<unsigned> > > calcMaxProbStatesMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
 
   /** Calculates the accumulated factor marginals as well as the
       normalization constants (Z) for multiple (second version) or
@@ -292,8 +277,8 @@ using namespace std;
       therefore reset to zero as needed (use reset*Vec below). Useful
       for EM based parameter estimation. */
   // tmpFacMar is used as workspace. accFacMar must be of correct size (use dfg.initFactorMarginals(tmpFacMar) )
-  void calcFacAccMarAndNormConst(vector<matrix_t> & accFacMar, vector<xmatrix_t> & tmpFacMar, xnumber_t & normConst, stateMaskVec_t const & stateMaskVec, DFG & dfg);
-  void calcFacAccMarAndNormConstMultObs(vector<matrix_t> & accFacMar, xvector_t & normConstVec, stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
+  void calcFacAccMarAndNormConst(vector<matrix_t> & accFacMar, vector<matrix_t> & tmpFacMar, number_t & normConst, stateMaskVec_t const & stateMaskVec, DFG & dfg);
+  void calcFacAccMarAndNormConstMultObs(vector<matrix_t> & accFacMar, vector_t & normConstVec, stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
 
   /* Initiate data structure for accumulated marginals */
   void initAccVariableMarginals(vector<vector_t> & variableMarginals, DFG const & dfg);
@@ -331,18 +316,18 @@ using namespace std;
   // the member functions below are made inline for efficiency
 
 
-  inline void DFG::calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const
+  inline void DFG::calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const
   {
     vector<unsigned> const & nbs = neighbors[current];
-    xvector_t & outMes = outMessages[current][ getIndex( nbs, receiver) ];  // identify message
-    vector< xvector_t const *> const & inMes( inMessages[current] );
+    vector_t & outMes = outMessages[current][ getIndex( nbs, receiver) ];  // identify message
+    vector< vector_t const *> const & inMes( inMessages[current] );
     stateMask_t const * stateMask = stateMasks[ convNodeToVar(current) ]; 
 
     calcSumProductMessageVariable(current, receiver, stateMask, inMes, outMes);
   }
 
 
-  inline void DFG::calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<xvector_t const *> const & inMes, xvector_t & outMes) const
+  inline void DFG::calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<vector_t const *> const & inMes, vector_t & outMes) const
   {
     vector<unsigned> const & nbs = neighbors[current];
 
@@ -361,17 +346,17 @@ using namespace std;
   }
 
 
-  inline void DFG::calcSumProductMessageFactor(unsigned current, unsigned receiver, vector<vector<xvector_t const *> > & inMessages, vector<vector<xvector_t> > & outMessages) const
+  inline void DFG::calcSumProductMessageFactor(unsigned current, unsigned receiver, vector<vector<vector_t const *> > & inMessages, vector<vector<vector_t> > & outMessages) const
   {
     vector<unsigned> const & nbs = neighbors[current];
-    xvector_t & outMes = outMessages[current][ getIndex( nbs, receiver) ];  // identify message
-    vector< xvector_t const *> const & inMes( inMessages[current] );
+    vector_t & outMes = outMessages[current][ getIndex( nbs, receiver) ];  // identify message
+    vector< vector_t const *> const & inMes( inMessages[current] );
 
     calcSumProductMessageFactor(current, receiver, inMes, outMes);
   }
 
 
-  inline void DFG::calcSumProductMessageFactor(unsigned current, unsigned receiver, vector<xvector_t const *> const & inMes, xvector_t & outMes) const
+  inline void DFG::calcSumProductMessageFactor(unsigned current, unsigned receiver, vector<vector_t const *> const & inMes, vector_t & outMes) const
   {
     vector<unsigned> const & nbs = neighbors[current];
     DFGNode const & nd = nodes[current];

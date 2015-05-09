@@ -10,8 +10,8 @@ DataFrame sampleISCpp(int N, double alpha, IntegerVector varDimensions, List fac
   //Make conversions
   std::vector<unsigned> varDim(varDimensions.begin(), varDimensions.end() );
 
-  std::vector<phy::xmatrix_t> facPotNull;
-  std::vector<phy::xmatrix_t> facPotFg;
+  std::vector<phy::matrix_t> facPotNull;
+  std::vector<phy::matrix_t> facPotFg;
   for(int k = 0; k < facPotentialsNull.size(); ++k){
     facPotNull.push_back( rMatToMat( facPotentialsNull[k] ));
     facPotFg.push_back( rMatToMat( facPotentialsFg[k] ));
@@ -25,12 +25,12 @@ DataFrame sampleISCpp(int N, double alpha, IntegerVector varDimensions, List fac
   phy::DFG dfgFg(varDim, facPotFg, facNbs);
 
   //Calculate IS distribution
-  std::vector<phy::xmatrix_t> facPotIS( facPotNull.size() );
+  std::vector<phy::matrix_t> facPotIS( facPotNull.size() );
   for(int f = 0; f < facPotNull.size(); ++f){
-    phy::xmatrix_t const & potNull = facPotNull.at(f);
-    phy::xmatrix_t const & potFg   = facPotFg.at(f);
+    phy::matrix_t const & potNull = facPotNull.at(f);
+    phy::matrix_t const & potFg   = facPotFg.at(f);
 
-    phy::xmatrix_t potIS(potNull.size1(), potNull.size2());
+    phy::matrix_t potIS(potNull.size1(), potNull.size2());
     for(int i = 0; i < potIS.size1(); ++i){
       for(int j = 0; j < potIS.size2(); ++j){
 	potIS(i,j) = phy::power(potNull(i,j), 1-alpha)*phy::power(potFg(i,j), alpha);

@@ -3,21 +3,21 @@
 
 using namespace Rcpp;
 
-void rMatToMat(NumericMatrix const & rmat, phy::xmatrix_t & mat){
+void rMatToMat(NumericMatrix const & rmat, phy::matrix_t & mat){
   mat.resize( rmat.nrow(), rmat.ncol());
   for(int i = 0; i < rmat.nrow(); ++i)
     for(int j = 0; j < rmat.ncol(); ++j)
       mat(i,j) = rmat(i,j);
 }
 
-phy::xmatrix_t rMatToMat(NumericMatrix const & rmat){
-  phy::xmatrix_t ret;
+phy::matrix_t rMatToMat(NumericMatrix const & rmat){
+  phy::matrix_t ret;
   rMatToMat(rmat, ret);
   return ret;
 }
 
-std::vector<phy::xmatrix_t> rFacPotToFacPot(List const & facPot){
-  std::vector<phy::xmatrix_t> ret;
+std::vector<phy::matrix_t> rFacPotToFacPot(List const & facPot){
+  std::vector<phy::matrix_t> ret;
   for(int k = 0; k < facPot.size(); ++k){
     ret.push_back( rMatToMat( facPot[k] ));
   }
@@ -25,10 +25,10 @@ std::vector<phy::xmatrix_t> rFacPotToFacPot(List const & facPot){
   return ret;
 }
 
-List facPotToRFacPot(std::vector<phy::xmatrix_t> const & facPot){
+List facPotToRFacPot(std::vector<phy::matrix_t> const & facPot){
   List ret(facPot.size());
   int fcount = 0;
-  for(std::vector<phy::xmatrix_t>::const_iterator it = facPot.begin(); it != facPot.end(); ++it){
+  for(std::vector<phy::matrix_t>::const_iterator it = facPot.begin(); it != facPot.end(); ++it){
     NumericMatrix m( it->size1(), it->size2() );
     for(int i = 0; i < it->size1(); ++i){
       for(int j = 0; j < it->size2(); ++j){
