@@ -10,6 +10,7 @@
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/vector.hpp>
+#include <utility>
 
 namespace phy {
 
@@ -21,6 +22,9 @@ namespace phy {
 
   /** Vector types holding number_t and xnumber_t types */
   typedef ublas::vector<number_t> vector_t;
+
+  /** Message type, a vector with a log transformed normalization constant */
+  typedef std::pair<vector_t, double> message_t;
   
   /** Matrix types holding number_t and xnumber_t types */
   typedef ublas::matrix<number_t> matrix_t;
