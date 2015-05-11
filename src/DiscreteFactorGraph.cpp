@@ -938,26 +938,17 @@ namespace phy {
       //use incoming messages to root to calculate expectancy
       stateMask_t const * stateMask = stateMasks[ convNodeToVar(root) ];
       
+      // calculate the likelihood of current component
       number_t lik_com = calcNormConst(root, stateMask, inMu_[root]);
       res_lik *= lik_com;
 
       if(!nodes[root].isFactor){
-	vector<unsigned> const & nbs = neighbors[ root ];
-	
-	for(unsigned i = 0; i < nbs.size(); ++i){
-	  vector_t add_exp = inLambda_[root][i]->first * std::exp(inMu_[root][i]->second);
-	  if( stateMask)
-	    for(unsigned k = 0; k < nodes[root].dimension; ++k)
-	      add_exp[k] *= (*stateMask)[k];
+	unsigned dim = nodes[root].dimension;
+	message_t mu(vector_t(dim), 0);
+	message_t lambda(vector_t(dim), 0);
 
-	  for(unsigned j = 0; j < nbs.size(); ++j){
-	    if(i == j)
-	      continue;
-	    add_exp = elemProd<vector_t>( inMu_[root][j]->first, add_exp) * std::exp(inMu_[root][j]->second);
-	  }
-	  res_exp += sum(add_exp)/lik_com;
-	}
-
+	calcExpectMessageVariable(root, root, stateMask, inMu_[root], mu, inLambda_[root], lambda);
+	res_exp += sum(lambda.first)*std::exp(mu.second)/lik_com;
       }
     
     }//Ends loop over roots
@@ -1085,24 +1076,21 @@ namespace phy {
     outMesMu.first /= nc;
     outMesMu.second += std::log(nc);
 
-    //Calculate lambda messages
-    for( unsigned i = 0; i < outMesLambda.first.size(); ++i){
-      outMesLambda.first[i] = 0;
+    // Calculate lambda messages
+    outMesLambda.first *= 0;
+
+    for(unsigned i = 0; i < nbs.size(); ++i){
+      if(nbs[i] == receiver)
+	continue;
+      vector_t add = inMesLambda[i]->first;
+      for(unsigned j = 0; j < nbs.size(); ++j){
+	if(j==i or nbs[j] == receiver)
+	  continue;
+	add = elemProd<vector_t>(inMesMu[j]->first, add);
+      }
+      outMesLambda.first += add;
     }
 
-    for(unsigned k = 0; k < outMesLambda.first.size(); ++k){
-      for(unsigned i = 0; i < nbs.size(); ++i){
-	if(nbs[i] == receiver)
-	  continue;
-	number_t add = inMesLambda[i]->first[k];
-	for(unsigned j = 0; j < nbs.size(); ++j){
-	  if(j==i or nbs[j] == receiver)
-	    continue;
-	  add *= inMesMu[j]->first[k];
-	}
-	outMesLambda.first[k] += add;
-      }
-    }
     if(stateMask){//observed variable
       for(unsigned i = 0; i < outMesLambda.first.size(); ++i)
 	outMesLambda.first[i] *= (*stateMask)[i];
