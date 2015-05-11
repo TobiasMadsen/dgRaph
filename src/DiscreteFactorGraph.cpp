@@ -400,19 +400,21 @@ namespace phy {
       if (nbs[0] == receiver) {
 	unsigned nbIdx = 1;
 	for (unsigned i = 0; i < pot.size1(); i++) {
-	  message_t v(elemProd<vector_t>( inMes[nbIdx]->first, ublas::matrix_row<matrix_t const>(pot, i)), 0);
+	  message_t v(elemProd<vector_t>( inMes[nbIdx]->first, ublas::matrix_row<matrix_t const>(pot, i)), inMes[nbIdx]->second);
 	  unsigned maxIdx = ublas::index_norm_inf(v.first);
 	  maxNBStates[nbIdx][i] = maxIdx;
 	  outMes.first[i] = v.first[maxIdx];
+	  outMes.second = v.second;
 	}
       }
       else { // nbs[1] == receiver
 	unsigned nbIdx = 0;
 	for (unsigned i = 0; i < pot.size2(); i++) {
-	  message_t v( elemProd<vector_t>( inMes[nbIdx]->first, ublas::matrix_column<matrix_t const>(pot, i) ), 0);
+	  message_t v( elemProd<vector_t>( inMes[nbIdx]->first, ublas::matrix_column<matrix_t const>(pot, i) ), inMes[nbIdx]->second);
 	  unsigned maxIdx = ublas::index_norm_inf(v.first);
 	  maxNBStates[nbIdx][i] = maxIdx;
 	  outMes.first[i] = v.first[maxIdx];
+	  outMes.second = v.second;
 	}
       }
       return;
@@ -475,7 +477,7 @@ namespace phy {
     unsigned dim = nodes[ variables[varId] ].dimension;
     message_t v(vector_t(dim), 0);
     calcSumProductMessageVariable(varId, varId, stateMask, inMes, v);
-    return ublas::sum(v.first);
+    return ublas::sum(v.first)*std::exp(v.second);
   }
 
   void DFG::calcVariableMarginals(stateMaskVec_t const & stateMasks){
@@ -492,11 +494,11 @@ namespace phy {
   {
     if (variableMarginals.size() == 0)
       initVariableMarginals(variableMarginals);
-    number_t const Z = calcNormConst(0, stateMasks[0], inMessages[0]);
+
     for (unsigned i = 0; i < variables.size(); i++) {
       message_t v( vector_t(variableMarginals[i].size()), 0);
       calcSumProductMessageVariable(i, i, stateMasks[i], inMessages[i], v);
-      variableMarginals[i] = v.first / Z;
+      variableMarginals[i] = v.first;
     }
   }
 
@@ -925,7 +927,7 @@ namespace phy {
     if( inLambda_.size() == 0)
       initMessages(inLambda_, outLambda_);
 
-    number_t res_lik = 1; //Likelihood type 
+    number_t res_lik = 1; // Likelihood type
     number_t res_exp = 0; //Expectancy type
 
     for(int i = 0; i < roots.size(); ++i){
@@ -942,21 +944,22 @@ namespace phy {
       if(!nodes[root].isFactor){
 	vector<unsigned> const & nbs = neighbors[ root ];
 	
-	for(unsigned k = 0; k < nodes[root].dimension; ++k){
-	  for(unsigned i = 0; i < nbs.size(); ++i){
-	    number_t add_exp = inLambda_[root][i]->first[k];
-	    if( stateMask)
-	      add_exp *= (*stateMask)[k];
+	for(unsigned i = 0; i < nbs.size(); ++i){
+	  vector_t add_exp = inLambda_[root][i]->first * std::exp(inMu_[root][i]->second);
+	  if( stateMask)
+	    for(unsigned k = 0; k < nodes[root].dimension; ++k)
+	      add_exp[k] *= (*stateMask)[k];
 
-	    for(unsigned j = 0; j < nbs.size(); ++j){
-	      if(i == j)
-		continue;
-	      add_exp *= inMu_[root][j]->first[k];
-	    }
-	    res_exp += add_exp/lik_com;
+	  for(unsigned j = 0; j < nbs.size(); ++j){
+	    if(i == j)
+	      continue;
+	    add_exp = elemProd<vector_t>( inMu_[root][j]->first, add_exp) * std::exp(inMu_[root][j]->second);
 	  }
+	  res_exp += sum(add_exp)/lik_com;
 	}
+
       }
+    
     }//Ends loop over roots
 
     return make_pair(res_lik, res_exp*res_lik);
@@ -1007,6 +1010,7 @@ namespace phy {
       for( unsigned i = 0; i < nd.potential.size2(); ++i){
 	outMesMu.first[i] = pot_a(0,i);
 	outMesLambda.first[i] = pot_a(0,i)*pot_b(0,i);
+	outMesMu.second = 0; // Use same normalization constant for both types of messages
       }
     }
 
@@ -1014,6 +1018,7 @@ namespace phy {
     if(nd.dimension == 2){
       if(nbs[0] == receiver){ // rows are receivers
 	outMesMu.first = prod(pot_a, inMesMu[1]->first);
+	outMesMu.second = inMesMu[1]->second;
 	
 	//TODO Vectorize the following computations
 	for(unsigned i = 0; i < pot_a.size1(); ++i){
@@ -1026,6 +1031,7 @@ namespace phy {
       }
       else{ // nbs[1] == receiver, columns are receivers
 	outMesMu.first = prod(inMesMu[0]->first, pot_a);
+	outMesMu.second = inMesMu[0]->second;
 
 	//TODO Vectorize the following computations
 	for(unsigned j = 0; j < pot_a.size2(); ++j){
@@ -1057,6 +1063,7 @@ namespace phy {
     vector<unsigned> const & nbs = neighbors[current];
 
     //Calculate mu messages
+    outMesMu.second = 0;
     if (stateMask){
       for(unsigned i = 0; i < outMesMu.first.size(); ++i)
 	outMesMu.first[i] = (*stateMask)[i];
@@ -1066,10 +1073,17 @@ namespace phy {
 	outMesMu.first[i] = 1;
     }
 
-    for(unsigned i = 0; i < nbs.size(); ++i)
-      if(nbs[i] != receiver)
-	for(unsigned j = 0; j < outMesMu.first.size(); ++j)
-	  outMesMu.first[j] *= inMesMu[i]->first[j];
+    for(unsigned i = 0; i < nbs.size(); ++i){
+      if(nbs[i] != receiver){
+	outMesMu.second += inMesMu[i]->second;
+	outMesMu.first = elemProd<vector_t>( inMesMu[i]->first, outMesMu.first);
+      }
+    }
+
+    // Normalize message
+    double nc = sum(outMesMu.first);
+    outMesMu.first /= nc;
+    outMesMu.second += std::log(nc);
 
     //Calculate lambda messages
     for( unsigned i = 0; i < outMesLambda.first.size(); ++i){
@@ -1093,6 +1107,9 @@ namespace phy {
       for(unsigned i = 0; i < outMesLambda.first.size(); ++i)
 	outMesLambda.first[i] *= (*stateMask)[i];
     }
+
+    // Normalize 
+    outMesLambda.first /= nc;
   }
 
   void calcNormConsMultObs(vector<number_t> & result, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)

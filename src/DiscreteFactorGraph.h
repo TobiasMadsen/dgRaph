@@ -20,6 +20,7 @@
 #include <vector>
 #include <utility>
 #include <algorithm>
+#include <cmath>
 
 namespace phy {
 
@@ -331,18 +332,27 @@ using namespace std;
   {
     vector<unsigned> const & nbs = neighbors[current];
 
-    if (stateMask) {  // observed variable?
+    outMes.second = 0;
+    if (stateMask) {   // observed variable?
       for (unsigned i = 0; i < outMes.first.size(); i++)
-	outMes.first[i] = (*stateMask)[i];
+	outMes.first[i] = (*stateMask)[i]; 
     }
-    else  // init to 1
+    else{  // init to 1
       for (unsigned i = 0; i < outMes.first.size(); i++)
 	outMes.first[i] = 1;
-      
-    for (unsigned i = 0; i < nbs.size(); i++)
-      if (nbs[i] != receiver) 
-	for (unsigned j = 0; j < outMes.first.size(); j++)
-	  outMes.first[j] *= inMes[i]->first[j];
+    }
+
+    for (unsigned i = 0; i < nbs.size(); i++){
+      if (nbs[i] != receiver){
+	outMes.second += inMes[i]->second;
+	outMes.first = elemProd<vector_t>( inMes[i]->first, outMes.first);
+      }
+    }
+
+    // Normalize message
+    double nc = sum(outMes.first);
+    outMes.first /= nc;
+    outMes.second += std::log(nc);
   }
 
 
@@ -363,17 +373,23 @@ using namespace std;
 
     // one neighbor 
     if (nd.dimension == 1) {
-      for (unsigned i = 0; i < nd.potential.size2(); i++)
+      for (unsigned i = 0; i < nd.potential.size2(); i++){
 	outMes.first[i] = nd.potential(0, i);
+	outMes.second = 0;
+      }
       return;
     }
 
     // two neighbors  (this is were most time is normally spent in normConst calculations)
     if (nd.dimension == 2) {
-      if (nbs[0] == receiver) // factor neighbor closests to root (for directed graphs)
+      if (nbs[0] == receiver){ // factor neighbor closests to root (for directed graphs)
 	outMes.first = prod(nd.potential, inMes[1]->first);  // note that *inMes[1] is column-vector (as are all ublas vectors)
-      else // nbs[1] == receiver  // factor neighbor furthest away from root (for directed graphs)
+	outMes.second = inMes[1]->second;
+      }
+      else{ // nbs[1] == receiver  // factor neighbor furthest away from root (for directed graphs)
 	outMes.first = prod(inMes[0]->first, nd.potential);
+	outMes.second = inMes[0]->second;
+      }
       return;
     }
 
