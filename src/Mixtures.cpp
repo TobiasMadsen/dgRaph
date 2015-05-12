@@ -4,7 +4,6 @@
  * See README_license.txt for license agreement.
  *******************************************************************/
 
-#include <Rcpp.h>
 #include "Mixtures.h"
 #include "utils.h"
 #include <boost/math/distributions/normal.hpp>
@@ -276,8 +275,8 @@ namespace phy {
     //If p is Beta(alpha, beta) distributed
     //And we observe X ~ Binomial(N, p)
     //the post. dist. of p ~ Beta(alpha+X, beta+N-X)
-    if(alphas_.size() > 1)
-      Rcpp::Rcout << "BetaMixture::update Warning:: only first component is updated" << std::endl;
+    //if(alphas_.size() > 1)
+    //      Rcpp::Rcout << "BetaMixture::update Warning:: only first component is updated" << std::endl;
     if(var.size() > 1){
       int N = boost::lexical_cast<int>(var.at(0));
       int X = boost::lexical_cast<int>(var.at(1));

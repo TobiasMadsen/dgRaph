@@ -10,7 +10,6 @@
 #include "utils.h"
 #include "utilsLinAlg.h"
 #include "Mixtures.h"
-#include <Rcpp.h>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
@@ -82,7 +81,7 @@ namespace phy {
 
     /** generic update method to change parameters at each observation. The factor maintains it self an update type that specifies how to parse the input and update parameters */
     virtual void update(vector<symbol_t>& var){
-      Rcpp::Rcout << "AbstractBaseFactor::update: Warning: update has not been implemented for your factor" << std::endl;
+      errorAbort("AbstractBaseFactor::update: Warning: update has not been implemented for your factor");
     }
     
     /** get vector of variables names that the factor subscribes to */

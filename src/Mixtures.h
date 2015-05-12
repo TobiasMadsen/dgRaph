@@ -6,7 +6,6 @@
 #ifndef __Mixtures_h
 #define __Mixtures_h
 
-#include <Rcpp.h>
 #include "PhyDef.h"
 #include "utils.h"
 #include <vector>
@@ -45,7 +44,7 @@ namespace phy {
     virtual int optimizeParameters(matrix_t & counts) = 0;
     
     virtual void update(vector<symbol_t>& var){
-      Rcpp::Rcout << "Mixture::update Warning: This particular mixture does not implement update" << std::endl;
+      errorAbort("Mixture::update Warning: This particular mixture does not implement update");
     }
 
     virtual void setUpdateType(int t){
