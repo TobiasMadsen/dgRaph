@@ -336,7 +336,7 @@ namespace phy {
       message_t v(vector_t(dim), 0);
       calcSumProductMessageVariable(root, root, stateMasks[root], inMessages[root], v);  // sumProduct and maxSum perform the same calculations for variables
       unsigned maxState = ublas::index_norm_inf(v.first);
-      maxVal *= v.first[maxState];
+      maxVal *= v.first[maxState] * std::exp(v.second);
 
       //  backtrack
       backtrackMaxSumOutwardsRec(maxVariables, root, root, maxState, maxNeighborStates);

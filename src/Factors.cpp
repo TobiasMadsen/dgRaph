@@ -5,7 +5,6 @@
  *******************************************************************/
 #include "Factors.h"
 #include "utils.h"
-#include <Rcpp.h>
 #include <boost/math/distributions/normal.hpp>
 #include <boost/math/distributions/binomial.hpp>
 #include <boost/numeric/ublas/io.hpp>
@@ -209,8 +208,7 @@ namespace phy {
 	N_ = boost::lexical_cast<int>(var.at(0));
       }
       catch(boost::bad_lexical_cast &){
-	Rcpp::Rcout << "BinomialFactor::update Warning: Variable '" << var.at(0) << "' could not be converted to int" << std::endl;
-	Rcpp::stop("Failed conversion");
+	errorAbort("BinomialFactor::update Warning: Variable '" + toString(var.at(0)) + "' could not be converted to int");
       }
       return;
     }
@@ -220,8 +218,7 @@ namespace phy {
 	prob_ = boost::lexical_cast<double>(var.at(0));
       }
       catch(boost::bad_lexical_cast &){
-	Rcpp::Rcout << "BinomialFactor::update Warning: Variable '" << var.at(0) << "'could not be converted to double" << std::endl;
-	Rcpp::stop("Failed conversion");
+	errorAbort("BinomialFactor::update Warning: Variable '" + toString(var.at(0)) + "'could not be converted to double");
       }
       return;
     }
@@ -232,11 +229,11 @@ namespace phy {
 	prob_ = boost::lexical_cast<double>(var.at(1));
       }
       catch(boost::bad_lexical_cast &){
-	Rcpp::Rcout << "BinomialFactor::update Warning: Variables '" << var.at(0) << "' and '" << var.at(1) << "'could not be converted to int and double respectively" << std::endl;
+	errorAbort("BinomialFactor::update Warning: Variables '" + toString(var.at(0)) + "' and '" + toString(var.at(1)) + "'could not be converted to int and double respectively");
       }
       return;
     }
-    Rcpp::Rcout << "BinomialFactor::update Warning: no update performed" << std::endl;
+    errorAbort("BinomialFactor::update Warning: no update performed");
   }
 
   NormalMeanPostFactor::NormalMeanPostFactor(string const & name, number_t const & var, number_t const & minv, number_t const & maxv, unsigned bins, vector<string> subs) : AbstractBaseFactor("normalMeanPost", name, 1, bins), var_(var), minv_(minv), maxv_(maxv), bins_(bins)

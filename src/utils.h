@@ -21,7 +21,11 @@
 #include <utility>
 #include <algorithm>
 #include "PhyDef.h"
+
+#ifndef BOOST_TEST
 #include <Rcpp.h>
+#endif
+
 namespace phy {
 
   // ERROR CALLS
@@ -167,8 +171,13 @@ namespace phy {
 
   inline void errorAbort(string const & message)
   {
+    #ifdef BOOST_TEST
+    std::cout << "Error. Program terminating. " << message << endl;
+    exit(1);
+    #else
     Rcpp::Rcout << "Error. Program terminating. " << message << endl;
     Rcpp::stop("Error");
+    #endif
   }
 
   template <class T>
