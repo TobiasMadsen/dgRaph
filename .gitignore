@@ -6,8 +6,11 @@ dgRaph.Rproj
 src/*.o
 src/*.so
 src/*.dll
+test/boost/*.o
 inst/doc
 inst/html
 inst/slides/assets
 inst/slides/libraries
 vignettes/assets
+.deps
+.dirstamp

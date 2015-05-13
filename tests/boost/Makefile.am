@@ -2,4 +2,8 @@ AUTOMAKE_OPTIONS = subdir-objects
 AM_CXXFLAGS=-DBOOST_TEST
 
 bin_PROGRAMS=test
-test_SOURCES=DiscreteFactorGraph_test.cpp ../../src/DiscreteFactorGraph.cpp
+test_SOURCES=test.cpp DiscreteFactorGraph_test.cpp Factors_test.cpp \ 
+	../../src/DiscreteFactorGraph.cpp \
+	../../src/Factors.cpp \
+	 ../../src/Mixtures.cpp \
+	../../src/utils.cpp 

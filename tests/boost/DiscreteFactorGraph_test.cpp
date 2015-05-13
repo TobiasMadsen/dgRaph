@@ -1,7 +1,5 @@
 #define BOOST_TEST_DYN_LINK
 
-#define BOOST_TEST_MODULE DiscreteFactorGraph
-
 #include <cmath>
 
 // tested code ( the defines allow access to private data

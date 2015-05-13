@@ -30,7 +30,7 @@ namespace phy {
     getFeatureAndSkipLine(str, "MEANS:", means_);
     getFeatureAndSkipLine(str, "VARS:", vars_);
     if(means_.size() != vars_.size() )
-      Rcpp::stop("NormalMixture: The two parameter vectors must have same length");
+      errorAbort("NormalMixture: The two parameter vectors must have same length");
 
     states_ = means_.size();
 
@@ -185,7 +185,7 @@ namespace phy {
       val2ss >> betas_;
 
       if(alphas_.size() != betas_.size() )
-	Rcpp::stop("BetaMixture: The two parameter vectors must have same length");
+	errorAbort("BetaMixture: The two parameter vectors must have same length");
     }
     else if(tag1 == "N:" and tag2 == "X:"){
       alphas_ = vector_t(1,1);
@@ -195,7 +195,7 @@ namespace phy {
       subscriptions_.push_back(val2);
     }
     else{
-      Rcpp::stop("BetaMixture: Specify either ALPHAS and BETAS or N and X");
+      errorAbort("BetaMixture: Specify either ALPHAS and BETAS or N and X");
     }
 
     states_ = alphas_.size();
@@ -310,7 +310,7 @@ namespace phy {
 	return MixPtr_t( new BetaMixture(states, minv, maxv, bins));
     }
     else{
-      Rcpp::stop("readMixture: Unrecognized distribution type: " + dist + "\n");
+      errorAbort("readMixture: Unrecognized distribution type: " + dist + "\n");
     }
   }
 
