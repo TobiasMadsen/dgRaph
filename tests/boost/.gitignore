@@ -1,0 +1,24 @@
+# Autotools stuff
+AUTHORS
+COPYING
+INSTALL
+ChangeLog
+Makefile.in
+Makefile
+NEWS
+README
+aclocal.m4
+autom4te.cache
+autoscan.log
+config.h
+config.h.in
+config.log
+config.status
+configure
+depcomp
+install-sh
+missing
+stamp-h1
+compile
+test
+
