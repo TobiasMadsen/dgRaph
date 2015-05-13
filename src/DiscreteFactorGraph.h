@@ -99,10 +99,6 @@ using namespace std;
     void runSumProduct(stateMaskVec_t const & stateMasks);  
     void runSumProduct(stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMessages, vector<vector<message_t> > & outMessages) const;
 
-    /** Precondition: runSumProduct has been called (setting all out/inMessages). Calc the normalization constant (Z). */
-    number_t calcNormConst2(stateMaskVec_t const & stateMasks) const;
-    number_t calcNormConst2(stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMessages) const;
-
     /** Precondition: runSumProcut has been called (setting all out/inMessages). If variableMarginals is an empty vector ::initVariableMarginals will be called*/
     void calcVariableMarginals(stateMaskVec_t const & stateMasks);
     void calcVariableMarginals(vector<vector_t> & variableMarginals, stateMaskVec_t const & stateMasks);
@@ -188,7 +184,7 @@ using namespace std;
     void calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMessages, vector<vector<message_t> > & outMessages) const;
     void calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<message_t const *> const & inMes, message_t & outMes) const;
     void calcSumProductMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMessages, vector<vector<message_t> > & outMessages) const;
-    number_t calcNormConst(unsigned varId, stateMask_t const * stateMask, vector<message_t const *> const & inMes) const;
+    number_t calcNormConstComponent(unsigned varId, stateMask_t const * stateMask, vector<message_t const *> const & inMes) const;
 
     // helper functions for maxSum();
     unsigned maxNeighborDimension(vector<unsigned> const & nbs) const;
@@ -290,7 +286,7 @@ using namespace std;
 
   /** helper functions. Interface provided above*/
   template <class T>
-  void initGenericVariableMarginals(vector<T> & variableMarginals, DFG const & dfg)
+  void initoGenericVariableMarginals(vector<T> & variableMarginals, DFG const & dfg)
   {
     variableMarginals.clear();
     variableMarginals.resize( dfg.variables.size() );

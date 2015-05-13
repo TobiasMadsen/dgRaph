@@ -226,19 +226,6 @@ namespace phy {
     }
   }
 
-
-  number_t DFG::calcNormConst2(stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMessages) const 
-  {
-    return calcNormConst(0, stateMasks[0], inMessages[0]);
-  }
-
-
-  number_t DFG::calcNormConst2(stateMaskVec_t const & stateMasks) const 
-  {
-    return calcNormConst(0, stateMasks[0], inMessages_[0]);
-  }
-
-
   void DFG::runSumProduct(stateMaskVec_t const & stateMasks)
   {
     if (inMessages_.size() == 0) 
@@ -465,14 +452,15 @@ namespace phy {
     for(int i = 0; i < roots.size(); ++i){
       unsigned const root = roots.at(i);
       runSumProductInwardsRec(root, root, stateMasks, inMessages, outMessages);
-      res *= calcNormConst(root, stateMasks[root], inMessages[root]);
+      res *= calcNormConstComponent(root, stateMasks[root], inMessages[root]);
     }
     return res;
   }
 
 
-  number_t DFG::calcNormConst(unsigned varId, stateMask_t const * stateMask, vector<message_t const *> const & inMes) const
+  number_t DFG::calcNormConstComponent(unsigned varId, stateMask_t const * stateMask, vector<message_t const *> const & inMes) const
   {
+    // Calculates Normalizing Constant for the component that contains varId
     assert( varId < variables.size() );
     unsigned dim = nodes[ variables[varId] ].dimension;
     message_t v(vector_t(dim), 0);
@@ -939,7 +927,7 @@ namespace phy {
       stateMask_t const * stateMask = stateMasks[ convNodeToVar(root) ];
       
       // calculate the likelihood of current component
-      number_t lik_com = calcNormConst(root, stateMask, inMu_[root]);
+      number_t lik_com = calcNormConstComponent(root, stateMask, inMu_[root]);
       res_lik *= lik_com;
 
       if(!nodes[root].isFactor){
@@ -1223,7 +1211,7 @@ namespace phy {
     dfg.calcFactorMarginals(tmpFacMar);
     for (unsigned j = 0; j < dfg.factors.size(); j++)
       accFacMar[j] += tmpFacMar[j];
-    normConst = dfg.calcNormConst2(stateMaskVec);
+    normConst = dfg.calcNormConst(stateMaskVec);
   }
 
 
