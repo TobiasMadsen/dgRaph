@@ -1,3 +1,6 @@
+# Binaries
+*.o
+
 # Autotools stuff
 AUTHORS
 COPYING
