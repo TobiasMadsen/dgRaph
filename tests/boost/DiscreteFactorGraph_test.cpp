@@ -91,10 +91,10 @@ BOOST_AUTO_TEST_CASE(DFGNode_1)
   unsigned dim = 4;
   DFGNode varNode(dim);
   
-  BOOST_CHECK( varNode.dimension == dim );
-  BOOST_CHECK( varNode.isFactor == false );
-  BOOST_CHECK( varNode.potential.size1() == 0);
-  BOOST_CHECK( varNode.potential.size2() == 0);
+  BOOST_CHECK( varNode.getDimension() == dim );
+  BOOST_CHECK( varNode.isFactor() == false );
+  BOOST_CHECK( varNode.getPotential().size1() == 0);
+  BOOST_CHECK( varNode.getPotential().size2() == 0);
 }
 
 
@@ -104,12 +104,12 @@ BOOST_AUTO_TEST_CASE(DFGNode_2)
   unsigned size = 4;
   matrix_t potential(1, size);
 
-  DFGNode varNode(potential);
+  DFGNode facNode(potential);
   
-  BOOST_CHECK( varNode.dimension == 1 );
-  BOOST_CHECK( varNode.isFactor == true );
-  BOOST_CHECK( varNode.potential.size1() == 1);
-  BOOST_CHECK( varNode.potential.size2() == size);
+  BOOST_CHECK( facNode.getDimension() == 1 );
+  BOOST_CHECK( facNode.isFactor() == true );
+  BOOST_CHECK( facNode.getPotential().size1() == 1);
+  BOOST_CHECK( facNode.getPotential().size2() == size);
 }
 
 
@@ -121,10 +121,10 @@ BOOST_AUTO_TEST_CASE(DFGNode_3)
 
   DFGNode varNode(potential);
   
-  BOOST_CHECK( varNode.dimension == 2 );
-  BOOST_CHECK( varNode.isFactor == true );
-  BOOST_CHECK( varNode.potential.size1() == size);
-  BOOST_CHECK( varNode.potential.size2() == size);
+  BOOST_CHECK( varNode.getDimension() == 2 );
+  BOOST_CHECK( varNode.isFactor() == true );
+  BOOST_CHECK( varNode.getPotential().size1() == size);
+  BOOST_CHECK( varNode.getPotential().size2() == size);
 }
 
 BOOST_AUTO_TEST_CASE(DFG_1) 
@@ -160,12 +160,12 @@ BOOST_AUTO_TEST_CASE(DFG_1)
   BOOST_CHECK( not ( find( nb.begin(), nb.end(), fg.factors[1] ) < nb.end() ) ); // var 1 does not link fac 1
 
   //check potentials
-  BOOST_CHECK( fg.getFactor(0).potential.size1() == 4 );
-  BOOST_CHECK( fg.getFactor(0).potential.size2() == 4 );
-  BOOST_CHECK( fg.getFactor(1).potential.size1() == 4 );
-  BOOST_CHECK( fg.getFactor(1).potential.size2() == 4 );
-  BOOST_CHECK( fg.getFactor(2).potential.size1() == 1 );
-  BOOST_CHECK( fg.getFactor(2).potential.size2() == 4 );
+  BOOST_CHECK( fg.getFactor(0).getPotential().size1() == 4 );
+  BOOST_CHECK( fg.getFactor(0).getPotential().size2() == 4 );
+  BOOST_CHECK( fg.getFactor(1).getPotential().size1() == 4 );
+  BOOST_CHECK( fg.getFactor(1).getPotential().size2() == 4 );
+  BOOST_CHECK( fg.getFactor(2).getPotential().size1() == 1 );
+  BOOST_CHECK( fg.getFactor(2).getPotential().size2() == 4 );
 }
 
 BOOST_AUTO_TEST_CASE(initMessages_1) 

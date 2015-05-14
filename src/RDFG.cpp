@@ -37,7 +37,7 @@ double RDFG::calculateExpectedScoreIS(double alpha, List facPotentialsFg){
   std::vector<phy::matrix_t> score( dfg.factors.size() );
 
   for(int f = 0; f < dfg.factors.size(); ++f){
-    phy::matrix_t const & potNull = dfg.getFactor(f).potential;
+    phy::matrix_t const & potNull = dfg.getFactor(f).getPotential();
     phy::matrix_t const & potFg   = facPotFg.at(f);
 
     phy::matrix_t potIS(potNull.size1(), potNull.size2());
@@ -68,7 +68,7 @@ DataFrame RDFG::makeImportanceSamples(int N, double alpha, List facPotentialsFg)
   //Calculate IS distribution
   std::vector<phy::matrix_t> facPotIS( dfg.factors.size() );
   for(int f = 0; f < dfg.factors.size(); ++f){
-    phy::matrix_t const & potNull = dfg.getFactor(f).potential;
+    phy::matrix_t const & potNull = dfg.getFactor(f).getPotential();
     phy::matrix_t const & potFg   = facPotFg.at(f);
 
     phy::matrix_t potIS(potNull.size1(), potNull.size2());
@@ -146,7 +146,7 @@ Rcpp::IntegerVector RDFG::maxProbState(Rcpp::IntegerVector observations, Rcpp::L
   if(observed.size() == dfg.variables.size()){
     for(int i = 0; i < dfg.variables.size(); ++i){
       if(observed[i]){
-	stateMasksObj.push_back( phy::stateMask_t( dfg.getVariable(i).dimension, 0 ) );
+	stateMasksObj.push_back( phy::stateMask_t( dfg.getVariable(i).getDimension(), 0 ) );
 	// 1-0 R-C++ index conversion
 	stateMasksObj.back()( observations[i] - 1 ) = 1;
 	stateMasks.at(i) = & stateMasksObj.back();
@@ -184,7 +184,7 @@ Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
 
     for(int j = 0; j < observations.ncol(); ++j){
       if( ! IntegerMatrix::is_na(observations(i, j))){
-	stateMasksObj.push_back(  phy::stateMask_t( dfg.getVariable(j).dimension, 0 ) );
+	stateMasksObj.push_back(  phy::stateMask_t( dfg.getVariable(j).getDimension(), 0 ) );
 	// 1-0 R-C++ index conversion
 	stateMasksObj.back()( observations(i, j) - 1) = 1;
 	stateMasks.at(j) = & stateMasksObj.back();
@@ -236,7 +236,7 @@ List RDFG::getFactorPotentials(){
   ret.reserve( dfg.factors.size());
   for(std::vector<unsigned>::iterator it = dfg.factors.begin(); it != dfg.factors.end(); ++it){
     // Put potentials in list
-    ret.push_back( dfg.nodes.at(*it).potential);
+    ret.push_back( dfg.nodes.at(*it).getPotential());
   }
   return facPotToRFacPot( ret);
 }
@@ -255,7 +255,7 @@ double RDFG::calcLikelihood(Rcpp::IntegerVector observations, Rcpp::LogicalVecto
   if(observed.size() == dfg.variables.size()){
     for(int i = 0; i < dfg.variables.size(); ++i){
       if(observed[i]){
-	stateMasksObj.push_back( phy::stateMask_t( dfg.getVariable(i).dimension, 0 ) );
+	stateMasksObj.push_back( phy::stateMask_t( dfg.getVariable(i).getDimension(), 0 ) );
 	// Remember: Take care of 1-0 index-conversion on C++ side
 	stateMasksObj.back()( observations[i] - 1) = 1;
 	stateMasks.at(i) = & stateMasksObj.back();

@@ -26,15 +26,24 @@ namespace phy {
 
 using namespace std;
 
-  struct DFGNode
+  class DFGNode
   {
+  public:
     /**Variable node constructor*/
     DFGNode(unsigned dimension);
     
     /**Factor node constructor*/
     DFGNode(matrix_t const & potential);
 
-    bool isFactor;      // true if factor node, false if variable node
+    bool isFactor() const;
+
+    unsigned getDimension() const;
+
+    matrix_t getPotential() const;
+
+    void setPotential(matrix_t const & pot);
+  private:
+    bool isFactor_;      // true if factor node, false if variable node
     unsigned dimension; // dimension of variable or dimension of potential
     matrix_t potential; // n * m dimensional matrix defining factor potential. If n == 1, then the potential is treated as one-dimensional. n = m = 0 for variable nodes.
   };
@@ -286,12 +295,12 @@ using namespace std;
 
   /** helper functions. Interface provided above*/
   template <class T>
-  void initoGenericVariableMarginals(vector<T> & variableMarginals, DFG const & dfg)
+  void initGenericVariableMarginals(vector<T> & variableMarginals, DFG const & dfg)
   {
     variableMarginals.clear();
     variableMarginals.resize( dfg.variables.size() );
     for (unsigned i = 0; i < dfg.variables.size(); i++) {
-      unsigned dim = dfg.nodes[ dfg.variables[i] ].dimension;
+      unsigned dim = dfg.nodes[ dfg.variables[i] ].getDimension();
       variableMarginals[i].resize(dim);
     }
     reset(variableMarginals);
@@ -303,8 +312,8 @@ using namespace std;
     factorMarginals.clear();
     factorMarginals.resize( dfg.factors.size() );
     for (unsigned i = 0; i < dfg.factors.size(); i++) {
-      unsigned size1 = dfg.nodes[ dfg.factors[i] ].potential.size1();
-      unsigned size2 = dfg.nodes[ dfg.factors[i] ].potential.size2();
+      unsigned size1 = dfg.nodes[ dfg.factors[i] ].getPotential().size1();
+      unsigned size2 = dfg.nodes[ dfg.factors[i] ].getPotential().size2();
       factorMarginals[i].resize(size1, size2);
     }
     reset(factorMarginals);
@@ -368,22 +377,22 @@ using namespace std;
     DFGNode const & nd = nodes[current];
 
     // one neighbor 
-    if (nd.dimension == 1) {
-      for (unsigned i = 0; i < nd.potential.size2(); i++){
-	outMes.first[i] = nd.potential(0, i);
+    if (nd.getDimension() == 1) {
+      for (unsigned i = 0; i < nd.getPotential().size2(); i++){
+	outMes.first[i] = nd.getPotential()(0, i);
 	outMes.second = 0;
       }
       return;
     }
 
     // two neighbors  (this is were most time is normally spent in normConst calculations)
-    if (nd.dimension == 2) {
+    if (nd.getDimension() == 2) {
       if (nbs[0] == receiver){ // factor neighbor closests to root (for directed graphs)
-	outMes.first = prod(nd.potential, inMes[1]->first);  // note that *inMes[1] is column-vector (as are all ublas vectors)
+	outMes.first = prod(nd.getPotential(), inMes[1]->first);  // note that *inMes[1] is column-vector (as are all ublas vectors)
 	outMes.second = inMes[1]->second;
       }
       else{ // nbs[1] == receiver  // factor neighbor furthest away from root (for directed graphs)
-	outMes.first = prod(inMes[0]->first, nd.potential);
+	outMes.first = prod(inMes[0]->first, nd.getPotential());
 	outMes.second = inMes[0]->second;
       }
       return;
