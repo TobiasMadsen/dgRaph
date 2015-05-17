@@ -19,14 +19,14 @@ namespace phy {
   isFactor_(false), dimension(dimension) {}
 
 
-  DFGNode::DFGNode(matrix_t const & potential) : 
-    isFactor_(true), potential(potential)
-    {
-      if (potential.size1() == 1)
-	dimension = 1;
-      else
-	dimension = 2;
-    }
+  DFGNode::DFGNode(PotentialPtr_t pot) :
+    isFactor_(true), potential(pot)
+  {
+    if (potential->potential.size1() == 1)
+      dimension = 1;
+    else
+      dimension = 2;
+  }
 
   bool DFGNode::isFactor() const{
     return isFactor_;
@@ -37,12 +37,17 @@ namespace phy {
   }
 
   matrix_t DFGNode::getPotential() const{
-    return potential;
+    if(isFactor_)
+      return potential->potential;
+    else
+      return potentialDummy;
   }
 
   void DFGNode::setPotential(matrix_t const & pot){
-    potential = pot;
+    potential->potential = pot;
   }
+
+  matrix_t DFGNode::potentialDummy(0,0);
 
   // The graph is defined in terms of the factor neighbors. We want
   // links to be represented both ways, i.e., also from var nodes to
@@ -65,7 +70,19 @@ namespace phy {
 	   vector<matrix_t> const & facPotentials, 
 	   vector<vector<unsigned> > const & facNeighbors)
   {
-    init(varDimensions, facPotentials, facNeighbors);
+    // Default potential map
+    vector<unsigned> potMap( facNeighbors.size() );
+    for(unsigned i = 0; i < facNeighbors.size(); ++i)
+      potMap.at(i) = i;
+
+    init(varDimensions, facPotentials, facNeighbors, potMap);
+  }
+
+  DFG::DFG(vector<unsigned> const & varDimensions,
+	   vector<matrix_t> const & facPotentials,
+	   vector<vector<unsigned> > const & facNeighbors,
+	   vector<unsigned> const & potMap){
+    init(varDimensions, facPotentials, facNeighbors, potMap);
   }
 
   void DFG::resetFactorPotential(matrix_t const & pot, unsigned facId)
@@ -92,6 +109,50 @@ namespace phy {
     assert(facPotVec.size() == factors.size() );
     for (unsigned i = 0; i < facPotVec.size(); i++)
       resetFactorPotential(facPotVec[i], i);
+  }
+
+  void DFG::resetPotentials(matrix_t const & pot, unsigned potIdx){
+    PotentialPtr_t p = potentials.at(potIdx);
+    if( p->potential.size1() != pot.size1() )
+      errorAbort("DFG::resetFactorPotential: p.potential.size1()="+toString(p->potential.size1())+" does not match pot.size1()="+toString(pot.size1()) );
+    if( p->potential.size2() != pot.size2() )
+      errorAbort("DFG::resetFactorPotential: p->potential.size2()="+toString(p->potential.size2())+" does not match pot.size2()="+toString(pot.size2()) );
+    p->potential = pot;
+  }
+
+  void DFG::resetPotentials(vector<matrix_t> const & potVec){
+    assert( potVec.size() == potentials.size() ) ;
+    for(int i = 0; i < potentials.size(); ++i)
+      resetPotentials( potVec[i], i );
+  }
+
+  void DFG::getPotentials(vector<matrix_t> & potVec){
+    potVec.clear();
+    potVec.reserve( potentials.size() );
+    for(unsigned i = 0; i < potentials.size(); ++i){
+      potVec.push_back( potentials.at(i)->potential);
+    }
+  }
+
+
+  void DFG::submitCounts(vector<matrix_t> const & countsVec){
+    if( countsVec.size() != potentialMap.size() )
+      errorAbort("DFG::submitCounts: countsVec.size() != potMap.size()");
+    for(unsigned i = 0; i < countsVec.size(); ++i)
+      potentials.at( potentialMap.at(i) )->submitCounts( countsVec.at(i) );
+  }
+
+  void DFG::clearCounts(){
+    for( unsigned i = 0; i < potentials.size(); ++i )
+      potentials.at(i)->clearCounts();
+  }
+
+  void DFG::getCounts(vector<matrix_t> & counts){
+    counts.clear();
+    counts.reserve( potentials.size() );
+    for(unsigned i = 0; i < potentials.size(); ++i){
+      counts.push_back( potentials.at(i)->expCounts);
+    }
   }
 
   // Begining of  write dot
@@ -854,13 +915,15 @@ namespace phy {
     return result;
   }
 
-  void DFG::init(vector<unsigned> const & varDimensions, vector<matrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors)
+  void DFG::init(vector<unsigned> const & varDimensions, vector<matrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors, vector<unsigned> const & potMap)
   {
     // reserve memory
     nodes.reserve( varDimensions.size() + facPotentials.size() ); 
     neighbors.reserve( varDimensions.size() + facPotentials.size() ); 
     variables.reserve( varDimensions.size() );
-    factors.reserve( facPotentials.size() );
+    factors.reserve( potMap.size() );
+    potentials.reserve( facPotentials.size() );
+    potentialMap = potMap;
 
     // define variable nodes
     unsigned idx = 0;
@@ -869,16 +932,18 @@ namespace phy {
       variables.push_back(idx);
       idx++;
     }
+
+    // define potentials
+    BOOST_FOREACH(matrix_t const & pot, facPotentials){
+      potentials.push_back( std::make_shared<Potential>( pot ) );
+    }
       
     // define factor nodes
-    BOOST_FOREACH(matrix_t const & pot, facPotentials) {
-      nodes.push_back( DFGNode( pot ) );
+    BOOST_FOREACH(unsigned potIdx, potMap) {
+      nodes.push_back( DFGNode( potentials.at(potIdx) ) );
       factors.push_back(idx);
       idx++;
     }
-
-    // runSumProduct
-    
 
     neighbors.resize( variables.size() ); // placeholder for var neighbors
     neighbors.insert(neighbors.end(), facNeighbors.begin(), facNeighbors.end());  // all facNeighbors refer to variables, which have not changed indices

@@ -104,7 +104,8 @@ BOOST_AUTO_TEST_CASE(DFGNode_2)
   unsigned size = 4;
   matrix_t potential(1, size);
 
-  DFGNode facNode(potential);
+  PotentialPtr_t pot = std::make_shared<Potential>(potential);
+  DFGNode facNode(pot);
   
   BOOST_CHECK( facNode.getDimension() == 1 );
   BOOST_CHECK( facNode.isFactor() == true );
@@ -119,12 +120,13 @@ BOOST_AUTO_TEST_CASE(DFGNode_3)
   unsigned size = 4;
   matrix_t potential(size, size,0);
 
-  DFGNode varNode(potential);
+  PotentialPtr_t pot = std::make_shared<Potential>(potential);
+  DFGNode facNode(pot);
   
-  BOOST_CHECK( varNode.getDimension() == 2 );
-  BOOST_CHECK( varNode.isFactor() == true );
-  BOOST_CHECK( varNode.getPotential().size1() == size);
-  BOOST_CHECK( varNode.getPotential().size2() == size);
+  BOOST_CHECK( facNode.getDimension() == 2 );
+  BOOST_CHECK( facNode.isFactor() == true );
+  BOOST_CHECK( facNode.getPotential().size1() == size);
+  BOOST_CHECK( facNode.getPotential().size2() == size);
 }
 
 BOOST_AUTO_TEST_CASE(DFG_1) 

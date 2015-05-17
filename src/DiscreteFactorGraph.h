@@ -7,8 +7,10 @@
 #define __DiscreteFactorGraph_h
 
 #include "PhyDef.h"
+#include "Potential.h"
 #include "utils.h"
 #include "utilsLinAlg.h"
+
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <boost/numeric/ublas/vector.hpp>
@@ -33,7 +35,7 @@ using namespace std;
     DFGNode(unsigned dimension);
     
     /**Factor node constructor*/
-    DFGNode(matrix_t const & potential);
+    DFGNode(PotentialPtr_t pot);
 
     bool isFactor() const;
 
@@ -43,9 +45,10 @@ using namespace std;
 
     void setPotential(matrix_t const & pot);
   private:
+    static matrix_t potentialDummy;
     bool isFactor_;      // true if factor node, false if variable node
     unsigned dimension; // dimension of variable or dimension of potential
-    matrix_t potential; // n * m dimensional matrix defining factor potential. If n == 1, then the potential is treated as one-dimensional. n = m = 0 for variable nodes.
+    PotentialPtr_t potential;
   };
 
   class DFG 
@@ -68,11 +71,17 @@ using namespace std;
     // the nbs[0] node). This is checked by consistencyCheck(), which is
     // called by the constructor.
 
+    DFG(vector<unsigned> const & varDimensions,
+	vector<matrix_t> const & facPotentials,
+	vector<vector<unsigned> > const & facNeighbors,
+	vector<unsigned> const & potMap);
+
+
     /** The copy constructor is defined explicitly to ensure the
 	inMessages_ pointers are wiped out on copy. This means that
 	the states of the dynammic programming tables are not kept on
 	copy.*/
-    DFG(DFG const & rhs) : nodes(rhs.nodes), neighbors(rhs.neighbors), variables(rhs.variables), factors(rhs.factors), components(rhs.components), roots(rhs.roots) {}
+    DFG(DFG const & rhs) : nodes(rhs.nodes), neighbors(rhs.neighbors), variables(rhs.variables), factors(rhs.factors), components(rhs.components), roots(rhs.roots), potentials(rhs.potentials) {}
 
     // public data
     vector<DFGNode> nodes;       // Contains and enumerates all the nodes of the graph.
@@ -90,6 +99,16 @@ using namespace std;
     void resetFactorPotential(matrix_t const & facPotVec, unsigned facId);
     void resetFactorPotentials(vector<matrix_t> const & facPotVecSubSet, vector<unsigned> const & facMap);  // facMap maps positions of facPotVecSubSet onto facPotVec
     void resetFactorPotentials(vector<matrix_t> const & facPotVec);
+
+    void resetPotentials(matrix_t const & pot, unsigned potIdx);
+    void resetPotentials(vector<matrix_t> const & potVec);
+    void getPotentials(vector<matrix_t> & potVec);
+
+    /** Sum up expectation counts for each potential. Counts is a vector with same length as number of factors
+     */
+    void submitCounts(vector<matrix_t> const & counts);
+    void clearCounts();
+    void getCounts(vector<matrix_t> & counts);
     
     /** Calc the normalization constant (Z) for the factor graph: Z =
 	sum p(x_root). Runs a single pass of the sum-product algorithm
@@ -179,7 +198,7 @@ using namespace std;
   protected:
 
     // initialization called by constructors
-    void init(vector<unsigned> const & varDimensions, vector<matrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors);
+    void init(vector<unsigned> const & varDimensions, vector<matrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors, vector<unsigned> const & potMap);
 
     // return string with info on factor i
     string factorInfoStr( unsigned const i, vector<string> varNames = vector<string>(), vector<string> facNames = vector<string>() );
@@ -224,6 +243,10 @@ using namespace std;
     void initMessages();
     void initMaxNeighbourStates();
     void initComponents();
+
+    // Potentials
+    vector<PotentialPtr_t> potentials;
+    vector<unsigned> potentialMap;
 
     // private data
     // convenience data structures -- perhaps make public
