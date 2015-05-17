@@ -13,4 +13,5 @@ export(potentials)
 export(saddlePointTails)
 export(tailIS)
 export(tailSaddle)
+export(train)
 
