@@ -19,7 +19,7 @@ namespace phy {
   isFactor_(false), dimension(dimension) {}
 
 
-  DFGNode::DFGNode(PotentialPtr_t pot) :
+  DFGNode::DFGNode(Potential * pot) :
     isFactor_(true), potential(pot)
   {
     if (potential->potential.size1() == 1)
@@ -112,12 +112,12 @@ namespace phy {
   }
 
   void DFG::resetPotentials(matrix_t const & pot, unsigned potIdx){
-    PotentialPtr_t p = potentials.at(potIdx);
-    if( p->potential.size1() != pot.size1() )
-      errorAbort("DFG::resetFactorPotential: p.potential.size1()="+toString(p->potential.size1())+" does not match pot.size1()="+toString(pot.size1()) );
-    if( p->potential.size2() != pot.size2() )
-      errorAbort("DFG::resetFactorPotential: p->potential.size2()="+toString(p->potential.size2())+" does not match pot.size2()="+toString(pot.size2()) );
-    p->potential = pot;
+    Potential & p = potentials.at(potIdx);
+    if( p.potential.size1() != pot.size1() )
+      errorAbort("DFG::resetFactorPotential: p.potential.size1()="+toString(p.potential.size1())+" does not match pot.size1()="+toString(pot.size1()) );
+    if( p.potential.size2() != pot.size2() )
+      errorAbort("DFG::resetFactorPotential: p->potential.size2()="+toString(p.potential.size2())+" does not match pot.size2()="+toString(pot.size2()) );
+    p.potential = pot;
   }
 
   void DFG::resetPotentials(vector<matrix_t> const & potVec){
@@ -130,7 +130,7 @@ namespace phy {
     potVec.clear();
     potVec.reserve( potentials.size() );
     for(unsigned i = 0; i < potentials.size(); ++i){
-      potVec.push_back( potentials.at(i)->potential);
+      potVec.push_back( potentials.at(i).potential);
     }
   }
 
@@ -139,19 +139,19 @@ namespace phy {
     if( countsVec.size() != potentialMap.size() )
       errorAbort("DFG::submitCounts: countsVec.size() != potMap.size()");
     for(unsigned i = 0; i < countsVec.size(); ++i)
-      potentials.at( potentialMap.at(i) )->submitCounts( countsVec.at(i) );
+      potentials.at( potentialMap.at(i) ).submitCounts( countsVec.at(i) );
   }
 
   void DFG::clearCounts(){
     for( unsigned i = 0; i < potentials.size(); ++i )
-      potentials.at(i)->clearCounts();
+      potentials.at(i).clearCounts();
   }
 
   void DFG::getCounts(vector<matrix_t> & counts){
     counts.clear();
     counts.reserve( potentials.size() );
     for(unsigned i = 0; i < potentials.size(); ++i){
-      counts.push_back( potentials.at(i)->expCounts);
+      counts.push_back( potentials.at(i).expCounts);
     }
   }
 
@@ -935,12 +935,12 @@ namespace phy {
 
     // define potentials
     BOOST_FOREACH(matrix_t const & pot, facPotentials){
-      potentials.push_back( std::make_shared<Potential>( pot ) );
+      potentials.push_back( Potential( pot ) );
     }
       
     // define factor nodes
     BOOST_FOREACH(unsigned potIdx, potMap) {
-      nodes.push_back( DFGNode( potentials.at(potIdx) ) );
+      nodes.push_back( DFGNode( & potentials.at(potIdx) ) );
       factors.push_back(idx);
       idx++;
     }

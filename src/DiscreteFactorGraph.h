@@ -35,7 +35,7 @@ using namespace std;
     DFGNode(unsigned dimension);
     
     /**Factor node constructor*/
-    DFGNode(PotentialPtr_t pot);
+    DFGNode(Potential * pot);
 
     bool isFactor() const;
 
@@ -48,7 +48,7 @@ using namespace std;
     static matrix_t potentialDummy;
     bool isFactor_;      // true if factor node, false if variable node
     unsigned dimension; // dimension of variable or dimension of potential
-    PotentialPtr_t potential;
+    Potential * potential;
   };
 
   class DFG 
@@ -245,7 +245,7 @@ using namespace std;
     void initComponents();
 
     // Potentials
-    vector<PotentialPtr_t> potentials;
+    vector<Potential> potentials;
     vector<unsigned> potentialMap;
 
     // private data
