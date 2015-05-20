@@ -1,6 +1,42 @@
 library(dgRaph)
 context("Potentials")
 
+test_that("Beta potential",{
+  # Generate a beta potential
+  for(i in 1:10){
+    set.seed(i)
+    pot <- betaPotential(dim = c(2,100))
+    expect_true(is.matrix(pot))
+    expect_equal(dim(pot), c(2,100))
+    expect_equal(rowSums(pot), c(1,1))
+    expect_true(min(pot) >= 0)
+  }
+})
+
+test_that("Multinomial potential",{
+  # Generate a multinomial potential
+  for(i in 1:10){
+    set.seed(i)
+    pot <- multinomialPotential(dim = c(2,4))
+    expect_true(is.matrix(pot))
+    expect_equal(dim(pot), c(2,4))
+    expect_equal(rowSums(pot), c(1,1))
+    expect_true(min(pot) >= 0)
+  }
+})
+
+test_that("Normal potential", {
+  # Generate a normal potential
+  for(i in 1:10){
+    set.seed(i)
+    pot <- normalPotential(dim = c(3,100))
+    expect_true(is.matrix(pot))
+    expect_equal(dim(pot), c(3,100))
+    expect_equal(rowSums(pot), c(1,1,1))
+    expect_true(min(pot) >= 0)
+  }
+})
+
 test_that("Get potentials",{
   source("cases/twoDepedentVariables.R")
   mydfg <- twoDependentVariables()
