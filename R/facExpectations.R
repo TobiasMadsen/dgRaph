@@ -9,6 +9,6 @@ facExpectations <- function(data, dfg){
 
     # Calculate expectation counts
     res <- dfg$dfgmodule$facExpCounts(as.matrix(data))
-    names(res) <- dfg$facNames
+    #names(res) <- dfg$facNames
     return(res)
 }

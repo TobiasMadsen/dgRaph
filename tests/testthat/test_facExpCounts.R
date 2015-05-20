@@ -28,6 +28,16 @@ test_that("Factor Marginals Interface 2",{
   expect_equal( expCounts[[2]], matrix(c(0.75, 0, 0.6875, 0.5625),2,2))
 })
 
+test_that("Factor Marginals Interface 3 Shared Potentials",{
+  # IID variables
+  source("cases/IIDVariables.R")
+  mydfg <- IIDVariables(10)
+  
+  # Pass a dataframe
+  expCounts <- facExpectations(data.frame(matrix(c(1,1,1,1,2,2,2,NA,1,1),1,10)), mydfg)
+  expect_equal( expCounts[[1]], matrix(c(6.7, 3.3), 1, 2))  
+})
+
 test_that("Factor Marginals C++ level 1",{
   source("cases/fourIndependentVariables.R")
   mydfg <- fourIndependentVariables()

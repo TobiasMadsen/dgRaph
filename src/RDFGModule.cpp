@@ -6,7 +6,7 @@ using namespace Rcpp ;
 RCPP_MODULE(phy) {
     class_<RDFG>("RDFG")
 
-      .constructor<IntegerVector, List, List>()
+      .constructor<IntegerVector, List, List, IntegerVector>()
 
       .method("makeImportanceSamples", &RDFG::makeImportanceSamples)
 
@@ -16,9 +16,9 @@ RCPP_MODULE(phy) {
 
       .method("facExpCounts", &RDFG::facExpCounts)
 
-      .method("resetFactorPotentials", &RDFG::resetFactorPotentials)
+      .method("resetPotentials", &RDFG::resetPotentials)
       
-      .method("getFactorPotentials", &RDFG::getFactorPotentials)
+      .method("getPotentials", &RDFG::getPotentials)
 
       .method("calcLikelihood", &RDFG::calcLikelihood);
     ;

@@ -10,7 +10,14 @@
 #' facPot <- list(matrix(c(1:6),2,3))
 #' facNbs <- list( c(0L,1L))
 #' my_pgm <- dfg(varDim, facPot, facNbs)
-dfg <- function(varDim, facPot, facNbs, varNames=seq_along(varDim), facNames=(length(varDim)+seq_along(facPot))){
+dfg <- function(varDim,
+                facPot,
+                facNbs,
+                potMap = 1:length(facPot),
+                varNames = seq_along(varDim),
+                facNames = (length(varDim)+seq_along(potMap)),
+                makeGraph = ifelse(length(varNames) > 50, FALSE, TRUE),
+                optim    = NULL){
   #Check varDim is a vector of integers
   stopifnot( is.vector(varDim, mode="numeric"), all(varDim %% 1 == 0))
   
@@ -21,12 +28,12 @@ dfg <- function(varDim, facPot, facNbs, varNames=seq_along(varDim), facNames=(le
   stopifnot( is.list(facNbs), sapply(facNbs, is.vector), all(sapply(facNbs, function(x) all(x %% 1 ==0))) )
   
   #Check that potential dimensions matches var dimensions
-  stopifnot( length(facNbs) == length(facPot) )
+  stopifnot( length(facNbs) == length(potMap) )
   stopifnot( all(sapply(seq_along(facNbs), function(i){
     if(length(facNbs[[i]]) == 1){
-      return( 1 == nrow(facPot[[i]]) & varDim[ facNbs[[i]][1] ] == ncol(facPot[[i]]))
+      return( 1 == nrow(facPot[[ potMap[i] ]]) & varDim[ facNbs[[i]][1] ] == ncol(facPot[[ potMap[i] ]]))
     } else if(length(facNbs[[i]]) == 2){
-      return(varDim[ facNbs[[i]][1] ] == nrow(facPot[[i]]) & varDim[ facNbs[[i]][2] ] == ncol(facPot[[i]]) )
+      return(varDim[ facNbs[[i]][1] ] == nrow(facPot[[ potMap[i] ]]) & varDim[ facNbs[[i]][2] ] == ncol(facPot[[ potMap[i] ]]) )
     } else{ #Too many neighbors
       return(FALSE)
     }
@@ -34,8 +41,7 @@ dfg <- function(varDim, facPot, facNbs, varNames=seq_along(varDim), facNames=(le
   
   graph <- NULL
   #Create graph
-  if(require(igraph)){
-    #graph <- graph.empty(directed=F) + vertices(length(varDim)+seq_along(facPot), color="red")
+  if(require(igraph) && makeGraph){
     graph <- graph.empty(directed=F) + vertices(facNames, color="red", shape="rectangle", size2=18, size=12*nchar(facNames))
     graph <- graph + vertices(varNames, color="blue", shape="crectangle", size2=18, size=12*nchar(varNames))
 
@@ -51,7 +57,8 @@ dfg <- function(varDim, facPot, facNbs, varNames=seq_along(varDim), facNames=(le
   structure(list(varDim=varDim,
                  facPot=facPot,
                  facNbs=facNbs,
-                 dfgmodule=new("RDFG", varDim, facPot, facNbs),
+                 potMap=potMap,
+                 dfgmodule=new("RDFG", varDim, facPot, facNbs, potMap-1),
                  varNames=varNames,
                  facNames=facNames,
                  graph=graph),

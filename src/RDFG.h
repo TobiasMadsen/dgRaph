@@ -13,7 +13,7 @@ phy::DFG rToDFG(IntegerVector varDimensions, List facPotentials, List facNeighbo
 class RDFG{
 public:
   //Constructors
-  RDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors);
+  RDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors, IntegerVector potentialMap);
 
   // Calculate likelihood of of data frame
   double calcLikelihood(IntegerVector observations, LogicalVector observed);
@@ -30,8 +30,8 @@ public:
   Rcpp::List facExpCounts(Rcpp::IntegerMatrix observations );
 
   // Accessors
-  List getFactorPotentials();
-  void resetFactorPotentials(List facPotentials);
+  List getPotentials();
+  void resetPotentials(List facPotentials);
   
 
 

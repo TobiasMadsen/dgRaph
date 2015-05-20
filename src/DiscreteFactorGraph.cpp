@@ -19,14 +19,14 @@ namespace phy {
   isFactor_(false), dimension(dimension) {}
 
 
-  DFGNode::DFGNode(matrix_t const & potential) : 
-    isFactor_(true), potential(potential)
-    {
-      if (potential.size1() == 1)
-	dimension = 1;
-      else
-	dimension = 2;
-    }
+  DFGNode::DFGNode(Potential * pot) :
+    isFactor_(true), potential(pot)
+  {
+    if (potential->potential.size1() == 1)
+      dimension = 1;
+    else
+      dimension = 2;
+  }
 
   bool DFGNode::isFactor() const{
     return isFactor_;
@@ -37,12 +37,17 @@ namespace phy {
   }
 
   matrix_t DFGNode::getPotential() const{
-    return potential;
+    if(isFactor_)
+      return potential->potential;
+    else
+      return potentialDummy;
   }
 
   void DFGNode::setPotential(matrix_t const & pot){
-    potential = pot;
+    potential->potential = pot;
   }
+
+  matrix_t DFGNode::potentialDummy(0,0);
 
   // The graph is defined in terms of the factor neighbors. We want
   // links to be represented both ways, i.e., also from var nodes to
@@ -65,103 +70,64 @@ namespace phy {
 	   vector<matrix_t> const & facPotentials, 
 	   vector<vector<unsigned> > const & facNeighbors)
   {
-    init(varDimensions, facPotentials, facNeighbors);
+    // Default potential map
+    vector<unsigned> potMap( facNeighbors.size() );
+    for(unsigned i = 0; i < facNeighbors.size(); ++i)
+      potMap.at(i) = i;
+
+    init(varDimensions, facPotentials, facNeighbors, potMap);
   }
 
-  void DFG::resetFactorPotential(matrix_t const & pot, unsigned facId)
-  {
-    DFGNode & nd = nodes[ convFacToNode(facId) ];
-    if( nd.getPotential().size1() != pot.size1() )
-      errorAbort("DFG::resetFactorPotential: nd.getPotential().size1()="+toString(nd.getPotential().size1())+" does not match pot.size1()="+toString(pot.size1()) );
-    if( nd.getPotential().size2() != pot.size2() )
-      errorAbort("DFG::resetFactorPotential: nd.getPotential().size2()="+toString(nd.getPotential().size2())+" does not match pot.size2()="+toString(pot.size2()) );
-    nd.setPotential(pot);
+  DFG::DFG(vector<unsigned> const & varDimensions,
+	   vector<matrix_t> const & facPotentials,
+	   vector<vector<unsigned> > const & facNeighbors,
+	   vector<unsigned> const & potMap){
+    init(varDimensions, facPotentials, facNeighbors, potMap);
   }
 
-
-  void DFG::resetFactorPotentials(vector<matrix_t> const & facPotVecSubSet, vector<unsigned> const & facMap)
-  {
-    assert(facPotVecSubSet.size() == facMap.size() );
-    for (unsigned i = 0; i < facMap.size(); i++)
-      resetFactorPotential( facPotVecSubSet[i], facMap[i] );
+  void DFG::resetPotentials(matrix_t const & pot, unsigned potIdx){
+    Potential & p = potentials.at(potIdx);
+    if( p.potential.size1() != pot.size1() )
+      errorAbort("DFG::resetFactorPotential: p.potential.size1()="+toString(p.potential.size1())+" does not match pot.size1()="+toString(pot.size1()) );
+    if( p.potential.size2() != pot.size2() )
+      errorAbort("DFG::resetFactorPotential: p->potential.size2()="+toString(p.potential.size2())+" does not match pot.size2()="+toString(pot.size2()) );
+    p.potential = pot;
   }
 
-
-  void DFG::resetFactorPotentials(vector<matrix_t> const & facPotVec)
-  {
-    assert(facPotVec.size() == factors.size() );
-    for (unsigned i = 0; i < facPotVec.size(); i++)
-      resetFactorPotential(facPotVec[i], i);
+  void DFG::resetPotentials(vector<matrix_t> const & potVec){
+    assert( potVec.size() == potentials.size() ) ;
+    for(int i = 0; i < potentials.size(); ++i)
+      resetPotentials( potVec[i], i );
   }
 
-  // Begining of  write dot
-
-  /** functor for use with write_graphviz. Writes out internal properties */
-  struct DFGNodeWriter 
-  {
-    DFGNodeWriter(DFG const & fg) : fg_ (fg) {};
-
-    // writing factor node in dot format
-    void mkDotFacNode(std::ostream& out, unsigned const & v)
-    {
-      out << " [label=\"f" << fg_.convNodeToFac(v) << "\\n" << v << "\", shape=box]" << endl;
+  void DFG::getPotentials(vector<matrix_t> & potVec){
+    potVec.clear();
+    potVec.reserve( potentials.size() );
+    for(unsigned i = 0; i < potentials.size(); ++i){
+      potVec.push_back( potentials.at(i).potential);
     }
+  }
 
-    // writing variable node in dot format
-    void mkDotVarNode(std::ostream& out, unsigned const & v)
-    {
-      out << " [label=\"v" << fg_.convNodeToVar(v) << "\\n" << v << "\"]" << endl;
+
+  void DFG::submitCounts(vector<matrix_t> const & countsVec){
+    if( countsVec.size() != potentialMap.size() )
+      errorAbort("DFG::submitCounts: countsVec.size() != potMap.size()");
+    for(unsigned i = 0; i < countsVec.size(); ++i)
+      potentials.at( potentialMap.at(i) ).submitCounts( countsVec.at(i) );
+  }
+
+  void DFG::clearCounts(){
+    for( unsigned i = 0; i < potentials.size(); ++i )
+      potentials.at(i).clearCounts();
+  }
+
+  void DFG::getCounts(vector<matrix_t> & counts){
+    counts.clear();
+    counts.reserve( potentials.size() );
+    for(unsigned i = 0; i < potentials.size(); ++i){
+      counts.push_back( potentials.at(i).expCounts);
     }
-    
-    template <class Vertex>
-    void operator()(ostream & out, Vertex const & v) 
-    {
-      if (fg_.nodes[v].isFactor()) 
-	mkDotFacNode(out, v);
-      else
-	mkDotVarNode(out, v);
-    }
-
- 
-    DFG const & fg_;
-  };
-
-
-  boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> DFG::mkBoostGraph()
-  {
-    set< pair<unsigned, unsigned> > seen;
-    boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> bfg( nodes.size() );
-    for (unsigned i = 0; i < neighbors.size(); i++)
-      for (unsigned j = 0; j < neighbors[i].size(); j++) {
-	unsigned from = i;
-	unsigned to = neighbors[i][j];
-	if(seen.insert(pair<unsigned, unsigned>(from, to) ).second and seen.insert(pair<unsigned, unsigned>(to, from) ).second ) // link not seen 
-	  add_edge(i, neighbors[i][j], bfg);
-      }
-    return bfg;
   }
-
-
-  string DFG::writeDot()
-  {
-    boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> bfg( mkBoostGraph() );
-    stringstream ss;
-    write_graphviz(ss, bfg, DFGNodeWriter(*this) );
-    return ss.str();
-  }
-
-
-  void DFG::writeDot(string const &fileName)
-  {
-    ofstream f(fileName.c_str(), ios::out);
-    if (!f)
-      errorAbort("Cannot open file: " + fileName + "\n");
-  
-    f << writeDot();
-    f.close();
-  }
-
-  // end of write dot
 
   void DFG::writeInfo(ostream & str, vector<string> const & varNames, vector<string> const & facNames)
   {
@@ -847,20 +813,15 @@ namespace phy {
     maxVariables.resize( variables.size() );
   }
 
-  vector<number_t> calcNormConsMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
-  {
-    vector<number_t> result( stateMask2DVec.size() );
-    calcNormConsMultObs(result, stateMask2DVec, dfg);
-    return result;
-  }
-
-  void DFG::init(vector<unsigned> const & varDimensions, vector<matrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors)
+  void DFG::init(vector<unsigned> const & varDimensions, vector<matrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors, vector<unsigned> const & potMap)
   {
     // reserve memory
     nodes.reserve( varDimensions.size() + facPotentials.size() ); 
     neighbors.reserve( varDimensions.size() + facPotentials.size() ); 
     variables.reserve( varDimensions.size() );
-    factors.reserve( facPotentials.size() );
+    factors.reserve( potMap.size() );
+    potentials.reserve( facPotentials.size() );
+    potentialMap = potMap;
 
     // define variable nodes
     unsigned idx = 0;
@@ -869,16 +830,18 @@ namespace phy {
       variables.push_back(idx);
       idx++;
     }
+
+    // define potentials
+    BOOST_FOREACH(matrix_t const & pot, facPotentials){
+      potentials.push_back( Potential( pot ) );
+    }
       
     // define factor nodes
-    BOOST_FOREACH(matrix_t const & pot, facPotentials) {
-      nodes.push_back( DFGNode( pot ) );
+    BOOST_FOREACH(unsigned potIdx, potMap) {
+      nodes.push_back( DFGNode( & potentials.at(potIdx) ) );
       factors.push_back(idx);
       idx++;
     }
-
-    // runSumProduct
-    
 
     neighbors.resize( variables.size() ); // placeholder for var neighbors
     neighbors.insert(neighbors.end(), facNeighbors.begin(), facNeighbors.end());  // all facNeighbors refer to variables, which have not changed indices
@@ -1088,149 +1051,6 @@ namespace phy {
 
     // Normalize 
     outMesLambda.first /= nc;
-  }
-
-  void calcNormConsMultObs(vector<number_t> & result, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
-  {
-    for (unsigned i = 0; i < stateMask2DVec.size(); i++)
-      result[i] = dfg.calcNormConst(stateMask2DVec[i]);
-  }
-
-
-  // Calculates the accumulated variable marginals over all observation vectors. 
-  vector<vector_t> calcVarAccMarMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
-  {
-    vector<vector_t> accVariableMarginals;
-    initAccVariableMarginals(accVariableMarginals, dfg);
-    calcVarAccMarMultObs(accVariableMarginals, stateMask2DVec, dfg);
-    return accVariableMarginals;
-  }
-
-
-  void calcVarAccMarMultObs(vector<vector_t> & result, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
-  {
-    unsigned varCount = dfg.variables.size();
-    assert(result.size() == varCount);
-
-    vector<vector_t> tmpVarMar;
-    dfg.initVariableMarginals(tmpVarMar);
-    for (unsigned i = 0; i < stateMask2DVec.size(); i++) {
-      dfg.runSumProduct(stateMask2DVec[i]);
-      dfg.calcVariableMarginals(tmpVarMar, stateMask2DVec[i]);
-      for (unsigned j = 0; j < varCount; j++)
-	result[j] += tmpVarMar[j]; 
-    }
-  }
-
-
-  // Calculates the accumulated factor marginals over all observation vectors. 
-  vector<matrix_t> calcFacAccMarMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
-  {
-    vector<matrix_t> accFactorMarginals;
-    initAccFactorMarginals(accFactorMarginals, dfg);
-    calcFacAccMarMultObs(accFactorMarginals, stateMask2DVec, dfg);
-    return accFactorMarginals;
-  }
-
-
-  void calcFacAccMarMultObs(vector<matrix_t> & result, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
-  {
-    unsigned facCount = dfg.factors.size();
-    assert(result.size() == facCount);
-
-    vector<matrix_t> tmpFacMar;
-    dfg.initFactorMarginals(tmpFacMar);
-    for (unsigned i = 0; i < stateMask2DVec.size(); i++) {
-      dfg.runSumProduct(stateMask2DVec[i]);
-      dfg.calcFactorMarginals(tmpFacMar);
-      for (unsigned j = 0; j < facCount; j++)
-	result[j] += tmpFacMar[j];
-    }
-  }
-
-
-  void calcVarAndFacAccMarMultObs(vector<vector_t> & varResult, vector<matrix_t> & facResult, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
-  {
-    unsigned varCount = dfg.variables.size();
-    assert(varResult.size() == varCount);
-
-    unsigned facCount = dfg.factors.size();
-    assert(facResult.size() == facCount);
-
-    vector<vector_t> tmpVarMar;
-    dfg.initVariableMarginals(tmpVarMar);
-    vector<matrix_t> tmpFacMar;
-    dfg.initFactorMarginals(tmpFacMar);
-    for (unsigned i = 0; i < stateMask2DVec.size(); i++) {
-      dfg.runSumProduct(stateMask2DVec[i]);
-      dfg.calcVariableMarginals(tmpVarMar, stateMask2DVec[i]);
-      for (unsigned j = 0; j < varCount; j++)
-	varResult[j] += tmpVarMar[j];
-      dfg.calcFactorMarginals(tmpFacMar);
-      for (unsigned j = 0; j < facCount; j++)
-	facResult[j] += tmpFacMar[j];
-    }
-  }
-
-
-  void calcMaxProbStatesMultObs(vector<number_t> & maxProbResult, vector<vector<unsigned> > & maxVarResult, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
-  {
-    unsigned long stateMaskVecCount = stateMask2DVec.size();
-    unsigned varCount = dfg.variables.size();
-
-    // adjust result references if necessary
-    if (maxProbResult.size() != stateMask2DVec.size() )
-      maxProbResult.resize(stateMaskVecCount);
-
-    if (maxVarResult.size() != stateMaskVecCount)
-      maxVarResult.resize(stateMaskVecCount);
-    assert(varCount > 0);
-    if (maxVarResult[0].size() != varCount)
-      for (unsigned i = 0; i < stateMaskVecCount; i++)
-	maxVarResult[i].resize(varCount);
-    
-    // calculations
-    for (unsigned i = 0; i < stateMaskVecCount; i++)
-      maxProbResult[i] = dfg.runMaxSum(stateMask2DVec[i], maxVarResult[i]);
-  }
-
-
-  pair<vector<number_t>, vector<vector<unsigned> > > calcMaxProbStatesMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
-  {
-    long stateMaskVecCount = stateMask2DVec.size();
-    unsigned varCount = dfg.variables.size();
-    vector<number_t> maxProbResult(stateMaskVecCount);
-    vector<vector<unsigned> > maxVarResult(stateMaskVecCount, vector<unsigned>(varCount) );
-
-    calcMaxProbStatesMultObs(maxProbResult, maxVarResult, stateMask2DVec, dfg);
-    return make_pair(maxProbResult, maxVarResult);
-  }
-
-  // tmpFacMar is used as workspace. accFacMar must be of correct size (use dfg.initFactorMarginals(tmpFacMar) )
-  void calcFacAccMarAndNormConst(vector<matrix_t> & accFacMar, vector<matrix_t> & tmpFacMar, number_t & normConst, stateMaskVec_t const & stateMaskVec, DFG & dfg)
-  {
-    dfg.runSumProduct(stateMaskVec);
-    dfg.calcFactorMarginals(tmpFacMar);
-    for (unsigned j = 0; j < dfg.factors.size(); j++)
-      accFacMar[j] += tmpFacMar[j];
-    normConst = dfg.calcNormConst(stateMaskVec);
-  }
-
-
-  void calcFacAccMarAndNormConstMultObs(vector<matrix_t> & accFacMar, vector_t & normConstVec, stateMask2DVec_t const & stateMask2DVec, DFG & dfg)
-  {
-    // check data structures
-    long unsigned stateMaskVecCount = stateMask2DVec.size();
-    assert( accFacMar.size() == dfg.factors.size() );
-    if( normConstVec.size() != stateMaskVecCount )
-      normConstVec.resize( stateMaskVecCount );
-
-    // calculations
-    vector<matrix_t> tmpFacMar;
-    dfg.initFactorMarginals(tmpFacMar);
-    for (unsigned i = 0; i < stateMaskVecCount; i++) {
-      calcFacAccMarAndNormConst(accFacMar, tmpFacMar, normConstVec[i], stateMask2DVec[i], dfg);
-    }
   }
 
   // helper functions

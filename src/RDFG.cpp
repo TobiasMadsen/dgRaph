@@ -7,10 +7,11 @@
 using namespace Rcpp;
 
 //Helper functions
-phy::DFG rToDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors){
+phy::DFG rToDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors, IntegerVector potentialMap){
     //Make conversions
   std::vector<unsigned> varDim(varDimensions.begin(), varDimensions.end() );
-
+  std::vector<unsigned> potMap(potentialMap.begin(), potentialMap.end() );
+  
   std::vector<phy::matrix_t> facPot;
   for(int k = 0; k < facPotentials.size(); ++k){
     facPot.push_back( rMatToMat( facPotentials[k] ));
@@ -18,12 +19,12 @@ phy::DFG rToDFG(IntegerVector varDimensions, List facPotentials, List facNeighbo
 
   std::vector< std::vector<unsigned> > facNbs = rNbsToNbs( facNeighbors);
 
-  return phy::DFG(varDim, facPot, facNbs);
+  return phy::DFG(varDim, facPot, facNbs, potMap);
 } 
 
 //Function definition
-RDFG::RDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors) 
-  : dfg(rToDFG(varDimensions, facPotentials, facNeighbors)) {}
+RDFG::RDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors, IntegerVector potentialMap) 
+  : dfg(rToDFG(varDimensions, facPotentials, facNeighbors, potentialMap)) {}
 
 double RDFG::calculateExpectedScoreIS(double alpha, List facPotentialsFg){
   //Make conversions
@@ -82,8 +83,8 @@ DataFrame RDFG::makeImportanceSamples(int N, double alpha, List facPotentialsFg)
   
   phy::DFG dfgFg = dfg;
   phy::DFG dfgIS = dfg;
-  dfgFg.resetFactorPotentials( facPotFg );
-  dfgIS.resetFactorPotentials( facPotIS );
+  dfgFg.resetPotentials( facPotFg );
+  dfgIS.resetPotentials( facPotIS );
 
   //Calculate normalizing constants for likelihood calculation
   phy::stateMaskVec_t stateMasks( dfg.variables.size() );
@@ -171,9 +172,7 @@ Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
   if(observations.ncol() != dfg.variables.size() )
     phy::errorAbort("ncol != variables.size");
 
-  //List with matrices to be returned
-  std::vector<phy::matrix_t> facExpCounts;
-  phy::initAccFactorMarginals(facExpCounts, dfg);
+  dfg.clearCounts();
 
   //Each row in the matrix is an observation
   for(int i = 0; i < observations.nrow(); ++i){
@@ -196,22 +195,22 @@ Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
     dfg.initFactorMarginals( tmpFacMar );
     dfg.runSumProduct( stateMasks );
     dfg.calcFactorMarginals( tmpFacMar );
-
-    for(int f = 0; f < dfg.factors.size(); ++f)
-      facExpCounts[f] += tmpFacMar[f];
-
+    dfg.submitCounts( tmpFacMar );
   }
 
   //Convert to list of matrices
-  Rcpp::List ret(dfg.factors.size());
-  for(int f = 0; f < dfg.factors.size(); ++f){
-    phy::matrix_t& facCounts = facExpCounts.at(f);
-    Rcpp::NumericMatrix rFacCounts(facCounts.size1(), facCounts.size2());
-    for(int i = 0; i < facCounts.size1(); ++i)
-      for(int j = 0; j < facCounts.size2(); ++j)
-	rFacCounts(i,j) = facCounts(i,j);
+  std::vector<phy::matrix_t> potCountsVec;
+  dfg.getCounts(potCountsVec);
+  Rcpp::List ret(potCountsVec.size());
 
-    ret[f] = rFacCounts;
+  for(int p = 0; p < potCountsVec.size(); ++p){
+    phy::matrix_t & potCounts = potCountsVec.at(p);
+    Rcpp::NumericMatrix rPotCounts(potCounts.size1(), potCounts.size2());
+    for(int i = 0; i < potCounts.size1(); ++i)
+      for(int j = 0; j < potCounts.size2(); ++j)
+	rPotCounts(i,j) = potCounts(i,j);
+
+    ret[p] = rPotCounts;
   }
 
 
@@ -219,7 +218,7 @@ Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
 }
 
 // Accessors
-void RDFG::resetFactorPotentials(List facPotentials){
+void RDFG::resetPotentials(List facPotentials){
   // Convert to matrix
   std::vector<phy::matrix_t> facPot;
   for(int k = 0; k < facPotentials.size(); ++k){
@@ -227,17 +226,13 @@ void RDFG::resetFactorPotentials(List facPotentials){
   }
 
   // Set factor potentials
-  dfg.resetFactorPotentials( facPot);
+  dfg.resetPotentials( facPot);
 }
 
-List RDFG::getFactorPotentials(){
+List RDFG::getPotentials(){
   // Loop over factor nodes
   std::vector<phy::matrix_t> ret;
-  ret.reserve( dfg.factors.size());
-  for(std::vector<unsigned>::iterator it = dfg.factors.begin(); it != dfg.factors.end(); ++it){
-    // Put potentials in list
-    ret.push_back( dfg.nodes.at(*it).getPotential());
-  }
+  dfg.getPotentials( ret);
   return facPotToRFacPot( ret);
 }
 
