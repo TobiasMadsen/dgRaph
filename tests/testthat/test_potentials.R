@@ -54,6 +54,6 @@ test_that("Set potentials",{
   
   facPot <- c(list(matrix(c(0.5,0.5),1,2)),
               list(matrix(c(0.4,0.6,0.7,0.3),2,2)))
-  mydfg$dfgmodule$resetFactorPotentials( facPot )
+  mydfg$dfgmodule$resetPotentials( facPot )
   expect_equal( facPot, potentials(mydfg))
 })

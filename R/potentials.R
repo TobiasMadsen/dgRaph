@@ -4,7 +4,7 @@
 potentials <- function(dfg){
     stopifnot(is.dfg(dfg))
 
-    dfg$dfgmodule$getFactorPotentials()
+    dfg$dfgmodule$getPotentials()
 }
 
 #' Normal Potential

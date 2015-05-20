@@ -81,7 +81,9 @@ using namespace std;
 	inMessages_ pointers are wiped out on copy. This means that
 	the states of the dynammic programming tables are not kept on
 	copy.*/
+    /*
     DFG(DFG const & rhs) : nodes(rhs.nodes), neighbors(rhs.neighbors), variables(rhs.variables), factors(rhs.factors), components(rhs.components), roots(rhs.roots), potentials(rhs.potentials) {}
+    */
 
     // public data
     vector<DFGNode> nodes;       // Contains and enumerates all the nodes of the graph.
@@ -95,11 +97,7 @@ using namespace std;
     const vector<matrix_t> & getFactorMarginals(){ return factorMarginals_;}
     const vector<vector_t> & getVariableMarginals(){ return variableMarginals_;}
 
-    /** Reset specific or all factor potentials. Useful with factor optimization, e.g., by EM. */
-    void resetFactorPotential(matrix_t const & facPotVec, unsigned facId);
-    void resetFactorPotentials(vector<matrix_t> const & facPotVecSubSet, vector<unsigned> const & facMap);  // facMap maps positions of facPotVecSubSet onto facPotVec
-    void resetFactorPotentials(vector<matrix_t> const & facPotVec);
-
+    /** Reset specific or all potentials. Useful with optimization, e.g., by EM. */
     void resetPotentials(matrix_t const & pot, unsigned potIdx);
     void resetPotentials(vector<matrix_t> const & potVec);
     void getPotentials(vector<matrix_t> & potVec);
@@ -151,9 +149,6 @@ using namespace std;
 
     /** No preconditions. Give the two kinds of potentials*/
     pair<number_t,number_t> calcExpect(vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks);
-
-    /** write factor graph in dot format (convert to ps using: cat out.dot | dot -Tps -o out.ps ) */
-    void writeDot(string const & fileName);
 
     // convenience functions
     DFGNode const & getFactor(unsigned facId) const {return nodes[ factors[ facId ] ];} 
@@ -233,12 +228,6 @@ using namespace std;
     void calcExpectMessage(unsigned current, unsigned sender, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
 
 
-    /** Convert to boost factor graph (only captures graph structure */ 
-    boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> mkBoostGraph();
-
-    /** write factor graph in dot format to string. */
-    string writeDot();
-
     // Initialize data structures, only need to run once
     void initMessages();
     void initMaxNeighbourStates();
@@ -269,45 +258,6 @@ using namespace std;
   };
 
   // free functions for dealing vith a vector of observation sets
-
-  /** Calculates the normalization constant for a vector of stateMasks
-      (observations). If the factors represent proper probability
-      distributions, the norm constant equal the likelihood of the
-      observations under the model */
-  vector<number_t> calcNormConsMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
-  void calcNormConsMultObs(vector<number_t> & result, stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
-
-  /** Calculates the accumulated variable marginals over all
-      stateMask vectors. Useful for EM based parameter estimation,
-      etc.. */
-  vector<vector_t> calcVarAccMarMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
-  /** Result is assumed of correct size (use dfg.initVariableMarginals above).  The accumulated counts will be added, therefore reset to zero as needed (use resetVarMarVec below).*/
-  void calcVarAccMarMultObs(vector<vector_t> & result, stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
-
-  /** Calculates the accumulated factor marginals over all
-      stateMask vectors. Useful for EM based parameter estimation,
-      etc.. */
-  vector<matrix_t> calcFacAccMarMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
-  /** Result is assumed of correct size (use dfg.initFactorMarginals above).  The accumulated counts will be added, therefore reset to zero as needed (use resetFacMarVec below).*/
-  void calcFacAccMarMultObs(vector<matrix_t> & result, stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
-
-  /** Calculates the accumulated variable and factor marginals over
-      all stateMask vectors. */
-  /** varResult and facResult are assumed of correct sizes (use dfg.init* member functions above).  The accumulated counts will be added, therefore reset to zero as needed (use reset*Vec below).*/
-  void calcVarAndFacAccMarMultObs(vector<matrix_t> & varResult, vector<matrix_t> & facResult, stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
-
-  /** Calculates the most probable combined state assignment to variables for multiple stateMask (observation) vectors. For ease of use, size of result references will be adjusted is of wrong size. */
-  void calcMaxProbStatesMultObs(vector<number_t> & maxProbResult, vector<vector<unsigned> > & maxVarResult, stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
-  pair<vector<number_t>, vector<vector<unsigned> > > calcMaxProbStatesMultObs(stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
-
-  /** Calculates the accumulated factor marginals as well as the
-      normalization constants (Z) for multiple (second version) or
-      single stateMask vectors. The accumulated counts will be added,
-      therefore reset to zero as needed (use reset*Vec below). Useful
-      for EM based parameter estimation. */
-  // tmpFacMar is used as workspace. accFacMar must be of correct size (use dfg.initFactorMarginals(tmpFacMar) )
-  void calcFacAccMarAndNormConst(vector<matrix_t> & accFacMar, vector<matrix_t> & tmpFacMar, number_t & normConst, stateMaskVec_t const & stateMaskVec, DFG & dfg);
-  void calcFacAccMarAndNormConstMultObs(vector<matrix_t> & accFacMar, vector_t & normConstVec, stateMask2DVec_t const & stateMask2DVec, DFG & dfg);
 
   /* Initiate data structure for accumulated marginals */
   void initAccVariableMarginals(vector<vector_t> & variableMarginals, DFG const & dfg);

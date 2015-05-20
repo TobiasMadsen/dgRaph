@@ -83,8 +83,8 @@ DataFrame RDFG::makeImportanceSamples(int N, double alpha, List facPotentialsFg)
   
   phy::DFG dfgFg = dfg;
   phy::DFG dfgIS = dfg;
-  dfgFg.resetFactorPotentials( facPotFg );
-  dfgIS.resetFactorPotentials( facPotIS );
+  dfgFg.resetPotentials( facPotFg );
+  dfgIS.resetPotentials( facPotIS );
 
   //Calculate normalizing constants for likelihood calculation
   phy::stateMaskVec_t stateMasks( dfg.variables.size() );
@@ -218,7 +218,7 @@ Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
 }
 
 // Accessors
-void RDFG::resetFactorPotentials(List facPotentials){
+void RDFG::resetPotentials(List facPotentials){
   // Convert to matrix
   std::vector<phy::matrix_t> facPot;
   for(int k = 0; k < facPotentials.size(); ++k){
@@ -229,7 +229,7 @@ void RDFG::resetFactorPotentials(List facPotentials){
   dfg.resetPotentials( facPot);
 }
 
-List RDFG::getFactorPotentials(){
+List RDFG::getPotentials(){
   // Loop over factor nodes
   std::vector<phy::matrix_t> ret;
   dfg.getPotentials( ret);

@@ -30,8 +30,8 @@ public:
   Rcpp::List facExpCounts(Rcpp::IntegerMatrix observations );
 
   // Accessors
-  List getFactorPotentials();
-  void resetFactorPotentials(List facPotentials);
+  List getPotentials();
+  void resetPotentials(List facPotentials);
   
 
 
