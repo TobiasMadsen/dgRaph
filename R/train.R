@@ -6,11 +6,11 @@
 #'                  "row" optimizing a multinomial conditional distribution 
 #'                  "norm" optimizing a discretized normal conditional distribution
 #'                  "linreg" optizing a normal linear regression of x2 on x1
-#' @param optimList A named list with additional optimization functions. 
+#' @param optimFun A named list with additional optimization functions. 
 #'                  Refer to the optimization function by entry name in "optim".
 #' @return A dataframe with a column for each variable and the most probable state for each observation
 #' @export
-train <- function(data, dfg, optim = NULL, optimList = NULL, threshold = 1e-9, iter.max = 200){
+train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, iter.max = 200){
   # Output
   sprintf("Training...\n")
     
@@ -43,12 +43,17 @@ train <- function(data, dfg, optim = NULL, optimList = NULL, threshold = 1e-9, i
 
       # Update potentials
       newPotentials <- lapply( seq_along(expCounts), FUN=function(i){
-        if(is.null(optim) || optim[i] == 'row')
+        if(is.null(optim) || optim[i] == 'row') # Default optimization
           return( .rowOptimize(expCounts[[i]]) )
         if(optim[i] == 'norm')
           return( .normOptimize(expCounts[[i]]))
         if(optim[i] == 'beta')
           return( .betaOptimize(expCounts[[i]]))
+        if(!is.null(optimFun) && optim[i] %in% names(optimFun)){
+          if(!is.function(optimFun[[optim[i]]]))
+            stop("optimFun should contain functions that take expectation counts and return potentials")
+          return( optimFun[[optim[i]]](expCounts[[i]]) )
+        }
         stop(paste0("No matching optimization function found for: ", optim[i]))
       })
 

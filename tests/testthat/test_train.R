@@ -1,6 +1,27 @@
 library(dgRaph)
 context("Training")
 
+test_that("Custom Optimization", {
+  varDim <- c(4)
+  facPot <- list(matrix(c(0.2,0.2,0.3,0.3), 1, 4))
+  facNbs <- list(1)
+  mydfg  <- dfg(varDim, facPot, facNbs)
+  
+  # Custom training function
+  optimList <- list("uniform" = function(expCounts){return(matrix(0.25,1,4))})
+  df <- data.frame(O1 = c(1,2,3))
+  
+  tryCatch({
+    sink("/dev/null")
+    train(df, mydfg, optim = 'uniform', optimFun = optimList)
+  },
+  finally = {sink()})
+  
+  # Test
+  expect_equal( potentials(mydfg)[[1]], matrix(0.25,1,4))
+  
+})
+
 test_that("Beta Distribution", {
   varDim <- c(100)
   set.seed(1)
