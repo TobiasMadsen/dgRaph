@@ -3,6 +3,7 @@
 #' @param dfg       discrete factor graph object
 #' @param log       calculate loglikelihood
 #' @return A vector of likelihoods for each observation
+#' @export
 likelihood <- function(data, dfg, log = FALSE){
   # Correct number of columns
   stopifnot(ncol(data) == length(dfg$varNames))

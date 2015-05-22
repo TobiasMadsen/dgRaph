@@ -86,6 +86,9 @@ namespace phy {
   }
 
   void DFG::resetPotentials(matrix_t const & pot, unsigned potIdx){
+    // A 0x0 matrix can be provided if no optimization should be performed
+    if(pot.size1() == 0 && pot.size2() == 0)
+      return;
     Potential & p = potentials.at(potIdx);
     if( p.potential.size1() != pot.size1() )
       errorAbort("DFG::resetFactorPotential: p.potential.size1()="+toString(p.potential.size1())+" does not match pot.size1()="+toString(pot.size1()) );

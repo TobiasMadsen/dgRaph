@@ -52,8 +52,20 @@ test_that("Set potentials",{
   source("cases/twoDepedentVariables.R")
   mydfg <- twoDependentVariables()
   
-  facPot <- c(list(matrix(c(0.5,0.5),1,2)),
+  newFacPot <- c(list(matrix(c(0.5,0.5),1,2)),
               list(matrix(c(0.4,0.6,0.7,0.3),2,2)))
-  mydfg$dfgmodule$resetPotentials( facPot )
-  expect_equal( facPot, potentials(mydfg))
+  mydfg$dfgmodule$resetPotentials( newFacPot )
+  expect_equal( newFacPot, potentials(mydfg))
+})
+
+test_that("Set potentials no update",{
+  source("cases/twoDepedentVariables.R")
+  mydfg <- twoDependentVariables()
+  pot2 <- potentials(mydfg)[[2]]
+  
+  newFacPot <- c(list(matrix(c(0.5,0.5),1,2)),
+                 list(matrix(0,0,0)))
+  mydfg$dfgmodule$resetPotentials( newFacPot )
+  expect_equal( newFacPot[[1]], potentials(mydfg)[[1]])
+  expect_equal( pot2, potentials(mydfg)[[2]] )
 })

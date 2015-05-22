@@ -28,9 +28,10 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
   # Iterate till convergence
   curLik <- -Inf
   iter <- 0
+  cat("Iterations:")
   while( TRUE && iter < iter.max){
       iter <- iter + 1
-      cat(sprintf("EM algorithm iteration %i current likelihood: %f\n", iter, curLik))
+      cat(".")
       
       # Calculate likelihood of data
       oldLik <- curLik
@@ -45,6 +46,8 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
       newPotentials <- lapply( seq_along(expCounts), FUN=function(i){
         if(is.null(optim) || optim[i] == 'row') # Default optimization
           return( .rowOptimize(expCounts[[i]]) )
+        if(optim[i] == 'noopt')
+          return( matrix(0,0,0) )
         if(optim[i] == 'norm')
           return( .normOptimize(expCounts[[i]]))
         if(optim[i] == 'beta')
@@ -59,36 +62,8 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
 
       dfg$dfgmodule$resetPotentials( newPotentials);
   }
+  cat("\n")
   
-}
-
-#################################################
-# Built-in optimization functions
-# Take expectation counts and return a potential
-#################################################
-
-.rowOptimize <- function(expCounts){
-  sweep( expCounts, 1, STATS = rowSums(expCounts), FUN = '/')
-}
-
-.normOptimize <- function(expCounts){
-  t(apply(expCounts, 1, FUN=function(x){
-    xs <- sum(x*seq_along(x) )
-    xm <- xs/sum(x)+1/2
-    xv <- (sum(x*seq_along(x)**2)-xs**2/sum(x))/sum(x)
-    diff(pnorm( c(-Inf, 2:length(x), Inf), xm, sqrt(xv)))
-  }))
-}
-
-.betaOptimize <- function(expCounts){
-  # Method of moments
-  t(apply(expCounts, 1, FUN=function(x){
-    val <- (seq_along(x)-0.5)/length(x)
-    xs  <- sum(x*val )
-    xm  <- xs/sum(x)
-    xv  <- (sum(x*val**2)-xs**2/sum(x) )/sum(x)
-    a   <- xm*(xm*(1-xm)/xv-1)
-    b   <- a*(1/xm-1)
-    diff(pbeta( 0:length(x)/length(x), a, b))
-  }))
+  # TODO summarize
+  
 }

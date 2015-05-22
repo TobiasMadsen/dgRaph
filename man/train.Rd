@@ -4,7 +4,7 @@
 \alias{train}
 \title{EM training}
 \usage{
-train(data, dfg, optim = NULL, optimList = NULL, threshold = 1e-09,
+train(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-09,
   iter.max = 200)
 }
 \arguments{
@@ -18,7 +18,7 @@ NA will be interpreted as a missing variable}
 "norm" optimizing a discretized normal conditional distribution
 "linreg" optizing a normal linear regression of x2 on x1}
 
-\item{optimList}{A named list with additional optimization functions.
+\item{optimFun}{A named list with additional optimization functions.
 Refer to the optimization function by entry name in "optim".}
 }
 \value{

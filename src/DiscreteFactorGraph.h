@@ -17,7 +17,6 @@
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/variate_generator.hpp>
-#include <boost/graph/graphviz.hpp>
 #include <boost/foreach.hpp>
 #include <vector>
 #include <utility>

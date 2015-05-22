@@ -5,10 +5,12 @@
 \title{Beta Potential
 Initialize a beta distributed potential with random starting point}
 \usage{
-betaPotential(dim = c(1, 100))
+betaPotential(dim = c(1, 100), range = c(0, 1))
 }
 \arguments{
 \item{dim}{A vector with dimensions of potential}
+
+\item{range}{The limits of the binning scheme.}
 }
 \description{
 Beta Potential
