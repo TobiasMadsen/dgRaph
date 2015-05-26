@@ -2,34 +2,40 @@
 #' Construct a probalistic graphical model
 #' 
 #' @param  varDim  Vector of integers containing variable dimensions
-#' @param  facPot  List of matrices containing factor potentials for null model
-#' @param  facNbs  List of vector containing describing neighbouring variables for each factor 
+#' @param  facPot  List of matrices containing potentials
+#' @param  facNbs  List of vector containing describing neighbouring variables for each factor
+#' @param  potMap  A vector of integers mapping with corresponding potential for each factor
 #' 
 #' @examples
 #' varDim <- c(2L,3L)
 #' facPot <- list(matrix(c(1:6),2,3))
 #' facNbs <- list( c(0L,1L))
-#' my_pgm <- dfg(varDim, facPot, facNbs)
+#' mydfg <- dfg(varDim, facPot, facNbs)
 dfg <- function(varDim,
                 facPot,
                 facNbs,
                 potMap = 1:length(facPot),
                 varNames = seq_along(varDim),
                 facNames = (length(varDim)+seq_along(potMap)),
-                makeGraph = ifelse(length(varNames) > 50, FALSE, TRUE),
                 optim    = NULL){
   #Check varDim is a vector of integers
-  stopifnot( is.vector(varDim, mode="numeric"), all(varDim %% 1 == 0))
+  if( ! is.vector(varDim, mode="numeric") |  ! all(varDim %% 1 == 0) )
+    stop("varDim must be a vector of integers")
   
   #Check facPot is a list of matrices
-  stopifnot( is.list(facPot), sapply(facPot, is.matrix))
-  
+  if( ! is.list(facPot) | ! all(sapply(facPot, is.matrix)))
+    stop("facPot must be a list of matrices")
+    
   #Check facNbs is a list of integer vectors
-  stopifnot( is.list(facNbs), sapply(facNbs, is.vector), all(sapply(facNbs, function(x) all(x %% 1 ==0))) )
+  if( ! is.list(facNbs) | ! all(sapply(facNbs, is.vector)) )
+    stop("facNbs must be a list of vectors")
+  if( ! all(sapply(facNbs, function(x) all(x %% 1 ==0))) )
+    stop("facNbs must be a list of integer vectors")
   
   #Check that potential dimensions matches var dimensions
-  stopifnot( length(facNbs) == length(potMap) )
-  stopifnot( all(sapply(seq_along(facNbs), function(i){
+  if( ! length(facNbs) == length(potMap) )
+    stop("facNbs must have same length as potMap")
+  facNbsCheck <- sapply(seq_along(facNbs), function(i){
     if(length(facNbs[[i]]) == 1){
       return( 1 == nrow(facPot[[ potMap[i] ]]) & varDim[ facNbs[[i]][1] ] == ncol(facPot[[ potMap[i] ]]))
     } else if(length(facNbs[[i]]) == 2){
@@ -37,31 +43,32 @@ dfg <- function(varDim,
     } else{ #Too many neighbors
       return(FALSE)
     }
-  } )) )
-  
-  graph <- NULL
-  #Create graph
-  if(require(igraph) && makeGraph){
-    graph <- graph.empty(directed=F) + vertices(facNames, color="red", shape="rectangle", size2=18, size=12*nchar(facNames))
-    graph <- graph + vertices(varNames, color="blue", shape="crectangle", size2=18, size=12*nchar(varNames))
-
-    lapply(seq_along(facNbs),FUN=function(i){
-      graph <<- graph + edges( c(i, length(facNbs)+facNbs[[i]][1]), mode="mutual")
-      if(length(facNbs[[i]]) == 2)
-        graph <<- graph + edges( c(i, length(facNbs)+facNbs[[i]][2]) )
-    })
-  } else{
-    warning("igraph not installed: Check manually that your graph is acyclic")
+  })
+  if(! all(facNbsCheck)){
+    fac <- which.min(facNbsCheck)
+    if(length(facNbs[[fac]]) == 1)
+      stop("Potential ", fac, " has wrong dimensions.\n",
+           "Neighboring variable has dimensions: 1 ",varDim[ facNbs[[fac]][1] ], '\n',
+           "Potential has dimensions: ", nrow(facPot[[ potMap[fac] ]]), " ", ncol(facPot[[ potMap[fac] ]]), '\n')
+    if(length(facNbs[[fac]]) == 2)
+      stop("Potential ", fac, " has wrong dimensions.\n",
+           "Neighboring variables has dimensions: ", varDim[ facNbs[[fac]][1]], " ", varDim[ facNbs[[fac]][2] ], '\n',
+           "Potential has dimensions: ", nrow(facPot[[ potMap[fac] ]]), " ", ncol(facPot[[ potMap[fac] ]]), '\n')
+    
+    stop("Too many or too few neighbors at factor ", fac, ". Factors should have 1 or 2 neighbors\n")
   }
   
+  # Check acyclic
+  if(! checkAcyclic(facNbs))
+    stop("Graph contains a cycle")
+
   structure(list(varDim=varDim,
                  facPot=facPot,
                  facNbs=facNbs,
                  potMap=potMap,
                  dfgmodule=new("RDFG", varDim, facPot, facNbs, potMap-1),
                  varNames=varNames,
-                 facNames=facNames,
-                 graph=graph),
+                 facNames=facNames),
             class = "dfg")
 }
 
@@ -73,14 +80,24 @@ dfg <- function(varDim,
 is.dfg <- function(x) inherits(x, "dfg")
 
 plot.dfg <- function(x){
-  require(igraph)
-  if(!is.null(x$graph)){
-    plot(x$graph, layout = layout.reingold.tilford,
+  if(require(igraph)){
+    graph <- graph.empty(directed=F) + vertices(x$facNames, color="red", shape="rectangle", size2=18, size=12*nchar(x$facNames))
+    graph <- graph + vertices(x$varNames, color="blue", shape="crectangle", size2=18, size=12*nchar(x$varNames))
+    
+    lapply(seq_along(facNbs),FUN=function(i){
+      graph <<- graph + edges( c(i, length(x$facNbs)+x$facNbs[[i]][1]), mode="mutual")
+      if(length(x$facNbs[[i]]) == 2)
+        graph <<- graph + edges( c(i, length(x$facNbs)+x$facNbs[[i]][2]) )
+    })
+    
+    plot(graph, layout = layout.reingold.tilford,
          main = "DFG",
          vertex.frame.color = "white",
          vertex.label.color = "white",
          vertex.label.family = "sans",
          edge.width = 3,
          edge.color = "black")
+  } else{
+    warning("igraph not installed: Check manually that your graph is acyclic")
   }
 }

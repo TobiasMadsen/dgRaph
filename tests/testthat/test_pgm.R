@@ -37,7 +37,7 @@ test_that("Wrong potential dimensions",{
               list(c(1L,3L)),
               list(c(3L,4L)))
   
-  expect_error({mydfg <- dfg(varDim, facPot, facNbs)}) #If first commmand fails second command won't be evaluated 
+  expect_error({mydfg <- dfg(varDim, facPot, facNbs)})
 })
 
 test_that("Wrong potential dimensions",{
@@ -47,7 +47,7 @@ test_that("Wrong potential dimensions",{
   facNbs <- c(list(1),
               list(c(1,2)))
   
-  expect_error({mydfg <- dfg(varDim, facPot, facNbs)}) #If first commmand fails second command won't be evaluated 
+  expect_error({mydfg <- dfg(varDim, facPot, facNbs)}) 
 })
 
 test_that("Too many neighbors",{
@@ -61,7 +61,7 @@ test_that("Too many neighbors",{
               list(c(1L,3L)),
               list(c(3L,4L,5L)))
   
-  expect_error({mydfg <- dfg(varDim, facPot, facNbs)}) #If first commmand fails second command won't be evaluated
+  expect_error({mydfg <- dfg(varDim, facPot, facNbs)}) 
 })
 
 test_that("Check acyclic",{
@@ -69,6 +69,18 @@ test_that("Check acyclic",{
   facPot <- c(list(matrix(1,2,2)),
               list(matrix(1,2,2)))
   facNbs <- c(list(c(1,2)),
+              list(c(2,1)))
+  
+  expect_error({mydfg <- dfg(varDim, facPot, facNbs)})
+})
+
+test_that("Check acyclic two components", {
+  varDim <- c(2,2,2)
+  facPot <- c(list(matrix(1,1,2)),
+              list(matrix(1,2,2)),
+              list(matrix(1,2,2)))
+  facNbs <- c(list(c(1)),
+              list(c(1,2)),
               list(c(2,1)))
   
   expect_error({mydfg <- dfg(varDim, facPot, facNbs)})

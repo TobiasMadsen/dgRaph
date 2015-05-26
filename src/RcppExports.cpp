@@ -5,6 +5,21 @@
 
 using namespace Rcpp;
 
+// checkAcyclic
+bool checkAcyclic(List rFacNbs);
+RcppExport SEXP dgRaph_checkAcyclic(SEXP rFacNbsSEXP) {
+BEGIN_RCPP
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< List >::type rFacNbs(rFacNbsSEXP );
+        bool __result = checkAcyclic(rFacNbs);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
+END_RCPP
+}
 // evalDFG
 double evalDFG(NumericVector x);
 RcppExport SEXP dgRaph_evalDFG(SEXP xSEXP) {
