@@ -39,33 +39,54 @@ linregOptimize <- function(range1 = 1:100, range2 = 1:100){
   if(var  <= 0)
     stop("Variance 0 or less")
   
-  t(sapply(1:nrow(expCounts), FUN=function(x){
+  pot <- t(sapply(1:nrow(expCounts), FUN=function(x){
     diff( pnorm(c(-Inf, 2:ncol(expCounts), Inf) ,x*alpha+beta+0.5, sqrt(var)) )
   }))
+  
+  str <- "Linear Regression Potential\n"
+  str <- paste0(str, "alpha:\t", signif(alpha, 5), "\nbeta:\t", signif(beta, 5), '\nvar:\t', signif(var, 5), '\n')
+  return(list(pot = pot, str = str))    
 }
 
 .rowOptimize <- function(expCounts){
-  sweep( expCounts, 1, STATS = rowSums(expCounts), FUN = '/')
+  pot <- sweep( expCounts, 1, STATS = rowSums(expCounts), FUN = '/')
+  str <- "Row normalized multinomial potential\n"
+  str <- paste0(str, '\t', paste(1:ncol(pot), collapse = '\t'), '\n')
+  for(i in 1:nrow(pot))
+    str <- paste0(str, i, '\t', paste(signif(pot[i,],5), collapse = '\t'), '\n')
+  
+  return(list(pot = pot, str = str))
 }
 
 .normOptimize <- function(expCounts){
-  t(apply(expCounts, 1, FUN=function(x){
+  str <- "norm-potential update\n"
+  i <- 0
+  pot <- t(apply(expCounts, 1, FUN=function(x){
     xs <- sum(x*seq_along(x) )
     xm <- xs/sum(x)+1/2
     xv <- (sum(x*seq_along(x)**2)-xs**2/sum(x))/sum(x)
+    i <<- i + 1
+    str <<- paste0(str, i, "\tmean:\t", signif(xm, 5), "\tvar:\t", signif(xv, 5), '\n')
     diff(pnorm( c(-Inf, 2:length(x), Inf), xm, sqrt(xv)))
   }))
+  return(list(pot = pot, str = str))
 }
 
 .betaOptimize <- function(expCounts, range = c(0,1)){
   # Method of moments
-  t(apply(expCounts, 1, FUN=function(x){
+  str <- "beta-potential update\n"
+  i <- 0
+  pot <- t(apply(expCounts, 1, FUN=function(x){
     val <- (seq_along(x)-0.5)/length(x)
     xs  <- sum(x*val )
     xm  <- xs/sum(x)
     xv  <- (sum(x*val**2)-xs**2/sum(x) )/sum(x)
     a   <- xm*(xm*(1-xm)/xv-1)
     b   <- a*(1/xm-1)
+    
+    i <<- i + 1
+    str <<- paste0(str, i, "\talpha:\t", signif(a, 5), "\tbeta:\t", signif(b, 5), '\n')
     diff(pbeta( 0:length(x)/length(x), a, b))
   }))
+  return(list(pot = pot, str = str))
 }

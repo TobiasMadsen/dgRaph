@@ -9,7 +9,7 @@ test_that("Beta optimizer",{
   expCounts <- matrix(table(c(discrete_dat, 1:100))-1, 1, 100)
   
   # Optimize
-  pot <- betaOptimize(range = c(0,0.1))(expCounts)
+  pot <- betaOptimize(range = c(0,0.1))(expCounts)$pot
   
   expect_less_than(
     max(abs(pbeta(1:100/1000, 4, 140) - cumsum(pot[1,]))),

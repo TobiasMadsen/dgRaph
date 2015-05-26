@@ -8,7 +8,7 @@ test_that("Custom Optimization", {
   mydfg  <- dfg(varDim, facPot, facNbs)
   
   # Custom training function
-  optimList <- list("uniform" = function(expCounts){return(matrix(0.25,1,4))})
+  optimList <- list("uniform" = function(expCounts){return(list(pot = matrix(0.25,1,4), str = "Uniform\n"))})
   df <- data.frame(O1 = c(1,2,3))
   
   tryCatch({
@@ -19,7 +19,6 @@ test_that("Custom Optimization", {
   
   # Test
   expect_equal( potentials(mydfg)[[1]], matrix(0.25,1,4))
-  
 })
 
 test_that("Beta Distribution", {
