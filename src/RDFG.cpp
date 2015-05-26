@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <cmath>
 #include "RDFG.h"
 #include "rToCpp.h"
 #include "PhyDef.h"
@@ -241,6 +242,10 @@ List RDFG::getPotentials(){
 // observations either empty or length==variables.size()
 // observed either empty or length==variables.size()
 double RDFG::calcLikelihood(Rcpp::IntegerVector observations, Rcpp::LogicalVector observed){
+  return std::exp( calcLogLikelihood(observations, observed));
+}
+
+double RDFG::calcLogLikelihood(Rcpp::IntegerVector observations, Rcpp::LogicalVector observed){
   // Create empty statemasks
   phy::stateMaskVec_t stateMasks( dfg.variables.size() );
   std::vector<phy::stateMask_t> stateMasksObj;
@@ -258,5 +263,5 @@ double RDFG::calcLikelihood(Rcpp::IntegerVector observations, Rcpp::LogicalVecto
     }
   }
 
-  return dfg.calcNormConst(stateMasks);
+  return dfg.calcLogNormConst(stateMasks);
 }

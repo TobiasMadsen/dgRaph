@@ -39,7 +39,7 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
       
       # Calculate likelihood of data
       oldLik <- curLik
-      curLik <- sum(log(likelihood(data, dfg)))
+      curLik <- sum(likelihood(data, dfg, log = T))
       likVec[iter] <- curLik
       lastIteration <- !(curLik-oldLik > threshold)
       

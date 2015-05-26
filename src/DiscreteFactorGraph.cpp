@@ -453,6 +453,39 @@ namespace phy {
     return ublas::sum(v.first)*std::exp(v.second);
   }
 
+  number_t DFG::calcLogNormConst(stateMaskVec_t const & stateMasks)
+  {
+    if (inMessages_.size() == 0)
+      initMessages();
+
+    return calcLogNormConst(stateMasks, inMessages_, outMessages_);
+  }
+
+  number_t DFG::calcLogNormConst(stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMessages, vector<vector<message_t> > & outMessages) const
+  {
+    number_t res = 0;
+    if(roots.size() == 0)
+      errorAbort("DiscreFactorGraph.cpp::calcNormConst: No root nodes");
+
+    for(int i = 0; i < roots.size(); ++i){
+      unsigned const root = roots.at(i);
+      runSumProductInwardsRec(root, root, stateMasks, inMessages, outMessages);
+      res += calcLogNormConstComponent(root, stateMasks[root], inMessages[root]);
+    }
+    return res;
+  }
+
+  number_t DFG::calcLogNormConstComponent(unsigned varId, stateMask_t const * stateMask, vector<message_t const *> const & inMes) const
+  {
+    // Calculates Normalizing Constant for the component that contains varId
+    assert( varId < variables.size() );
+    unsigned dim = nodes[ variables[varId] ].getDimension();
+    message_t v(vector_t(dim), 0);
+    calcSumProductMessageVariable(varId, varId, stateMask, inMes, v);
+    return std::log( ublas::sum(v.first)) + v.second;
+  }
+
+
   void DFG::calcVariableMarginals(stateMaskVec_t const & stateMasks){
     calcVariableMarginals( variableMarginals_, stateMasks);
   }

@@ -114,6 +114,8 @@ using namespace std;
 	variable marginals are also needed.  */
     number_t calcNormConst(stateMaskVec_t const & stateMasks);
     number_t calcNormConst(stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMessages, vector<vector<message_t> > & outMessages) const;
+    number_t calcLogNormConst(stateMaskVec_t const & stateMasks);
+    number_t calcLogNormConst(stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMessages, vector<vector<message_t> > & outMessages) const;
  
     /** Run the sum product algorithm. Postcondition: all inMessages
 	and outMessages are computed. The stateMask: Observed data is
@@ -207,6 +209,7 @@ using namespace std;
     void calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<message_t const *> const & inMes, message_t & outMes) const;
     void calcSumProductMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMessages, vector<vector<message_t> > & outMessages) const;
     number_t calcNormConstComponent(unsigned varId, stateMask_t const * stateMask, vector<message_t const *> const & inMes) const;
+    number_t calcLogNormConstComponent(unsigned varId, stateMask_t const * stateMask, vector<message_t const *> const & inMes) const;
 
     // helper functions for maxSum();
     unsigned maxNeighborDimension(vector<unsigned> const & nbs) const;

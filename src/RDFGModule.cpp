@@ -20,6 +20,8 @@ RCPP_MODULE(phy) {
       
       .method("getPotentials", &RDFG::getPotentials)
 
-      .method("calcLikelihood", &RDFG::calcLikelihood);
-    ;
+      .method("calcLikelihood", &RDFG::calcLikelihood)
+
+      .method("calcLogLikelihood", &RDFG::calcLogLikelihood);
+
 }

@@ -17,6 +17,7 @@ public:
 
   // Calculate likelihood of of data frame
   double calcLikelihood(IntegerVector observations, LogicalVector observed);
+  double calcLogLikelihood(IntegerVector observations, LogicalVector observed);
 
   //Importance sampling
   DataFrame makeImportanceSamples(int N, double alpha, List facPotentialsFg);

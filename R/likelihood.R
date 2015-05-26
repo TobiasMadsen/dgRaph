@@ -19,6 +19,10 @@ likelihood <- function(data, dfg, log = FALSE){
   apply(data, 1, FUN=function(x){
     obs <- x
     obs[is.na(obs)] <- 1
-    dfg$dfgmodule$calcLikelihood(obs ,!is.na(x))
+    if( log ){
+      dfg$dfgmodule$calcLogLikelihood(obs ,!is.na(x))
+    } else{
+      dfg$dfgmodule$calcLikelihood(obs, !is.na(x))
+    }
   })
 }
