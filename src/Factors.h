@@ -9,7 +9,6 @@
 #include "PhyDef.h"
 #include "utils.h"
 #include "utilsLinAlg.h"
-#include "Mixtures.h"
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
@@ -79,25 +78,6 @@ namespace phy {
     /** serialization method */
     virtual void serialize(ostream& os) const = 0;
 
-    /** generic update method to change parameters at each observation. The factor maintains it self an update type that specifies how to parse the input and update parameters */
-    virtual void update(vector<symbol_t>& var){
-      errorAbort("AbstractBaseFactor::update: Warning: update has not been implemented for your factor");
-    }
-    
-    /** get vector of variables names that the factor subscribes to */
-    virtual vector<string> getSubscriptions() const{
-      return subscriptions;
-    }
-
-    /** add a variable name that the factor subscribes to */
-    void addSubscription(string & s){
-      subscriptions.push_back(s);
-    }
-
-    void setUpdateType(int t){
-      updateType_ = t;
-    }
-
   protected:
 
     /** Optimize parameters implementation. Called by optimizeParameters and must be implemented by derived classes. */
@@ -121,12 +101,6 @@ namespace phy {
 
     /** Name string */
     string const name_;
-
-    /** Variables that the factor use to update parameters at each observation */
-    vector<string> subscriptions;
-
-    /** Identify which update should be performed when subscribing to variables */
-    int updateType_;
   };
 
 
@@ -206,125 +180,6 @@ namespace phy {
 
   protected:
     virtual int optimizeParametersImpl();  
-  };
-
-  /** @brief Discrete and Continuous variable factor. Mixture of normals */
-  class DiscContFactor : public AbstractBaseFactor {
-  public:
-    /** Constructor with parameters*/
-  DiscContFactor(string const & name, vector_t const & means, vector_t const & vars, number_t const & minv, number_t const & maxv, unsigned states, unsigned bins ) : AbstractBaseFactor("discCont", name, states, bins), minv_(minv), maxv_(maxv), bins_(bins),states_(states), mixDist_(new NormalMixture(means, vars, minv, maxv, bins)) { }
-
-    /** Constructor using "default" parameters */
-    DiscContFactor(string const & name, number_t const & minv, number_t const & maxv, unsigned states, unsigned bins );
-
-    /** Constructor taking Mixture object */
-    DiscContFactor(string const & name, number_t const & minv, number_t const & maxv, unsigned states, unsigned bins, MixPtr_t mixDist );
-
-    /** Destructor */
-    virtual ~DiscContFactor() {} ;
-
-    /** Serialize object(write means and variance to stream) */
-    virtual void serialize(ostream & os) const;
-
-    /** AbstractFullyParameterizedFactor just overwrite m_. Sets matrix ideally only where there are observations*/
-    virtual void mkFactor(matrix_t &m) const;
-
-    /** Pass update to Mixture */
-    virtual void update( vector<symbol_t>& var){
-      mixDist_->update( var);
-    }
-
-    /** Get subscriptions from Mixture */
-    virtual vector<string> getSubscriptions() const;
-
-  protected:
-    virtual int optimizeParametersImpl();
-
-  private:
-    number_t minv_; ///< Endpoint of range of observations
-    number_t maxv_; ///< Endpoint of range of observations
-    unsigned bins_; ///< Number of bins(binning of continuous variable)
-    unsigned states_; ///< Number of states
-    MixPtr_t mixDist_; 
-  };
-
-  class NormalMeanPostFactor : public AbstractBaseFactor {
-  public:
-    NormalMeanPostFactor(string const & name, number_t const & var, number_t const & minv, number_t const & maxv_, unsigned bins, vector<string> subscriptions);
-
-    virtual ~NormalMeanPostFactor() {} ;
-
-    virtual void serialize(ostream & os) const;
-
-    virtual void mkFactor(matrix_t &m) const;
-
-    virtual void update( vector<symbol_t> & var);
-
-  protected:
-    virtual int optimizeParametersImpl();
-
-  private:
-    number_t var_;
-    number_t minv_, maxv_;
-    unsigned bins_;
-
-    number_t postvar_;//Posterior variance
-    number_t postmean_;//Posterior mean
-  };
-
-  /** @brief Continuous-Continuous factor linear regression of second variable in first variable
-      Notice that if first variable has a normal prior, then this is effectively a 2D normal distribution */
-  class ContContFactor : public AbstractBaseFactor {
-  public:
-    /** Constructor with parameters */
-  ContContFactor(string const & name, number_t const & alpha, number_t const & beta, number_t const & var, unsigned const & bins1, unsigned const & bins2, number_t const & minv1, number_t const & maxv1, number_t const & minv2, number_t const & maxv2 ) : AbstractBaseFactor("contCont", name, bins1, bins2), alpha_(alpha), beta_(beta), var_(var), bins1_(bins1), bins2_(bins2), minv1_(minv1), maxv1_(maxv1), minv2_(minv2), maxv2_(maxv2) {}
-
-    /** Constructor without parameters(reasonable defaults are used */
-  ContContFactor(string const & name, unsigned const & bins1, unsigned const & bins2, number_t const & minv1, number_t const & maxv1, number_t const & minv2, number_t const & maxv2 ) : AbstractBaseFactor("contCont", name, bins1, bins2), alpha_(0), beta_(bins2/2), var_(bins2*bins2/1.96/1.96), bins1_(bins1), bins2_(bins2), minv1_(minv1), maxv1_(maxv1), minv2_(minv2), maxv2_(maxv2) {}
-
-    /** Destructor */
-    virtual ~ContContFactor() {} ;
-
-    /** Serialize object(write coefficients and variance to stream) */
-    virtual void serialize(ostream & os) const;
-
-    /** Overwrite m_. Ideally set matrix only where there are observations */
-    virtual void mkFactor(matrix_t &m) const;
-
-  protected:
-    virtual int optimizeParametersImpl();
-
-  private:
-    number_t alpha_, beta_, var_; ///< Regression coeffecients and variance
-    unsigned bins1_, bins2_;  ///< Number of bins in each variable
-    number_t minv1_,maxv1_, minv2_,maxv2_; ///< Range of observations
-  };
-
-  class BinomialFactor : public AbstractBaseFactor {
-  public:
-    /** Constructor minv and maxv are the ranges of the corresponding countbased statemap */
-    BinomialFactor(string const & name, number_t const & prob, unsigned const & N, unsigned const & minv, unsigned const & maxv) : AbstractBaseFactor("binomial",name, 1, maxv-minv+1), N_(N), prob_(prob), minv_(minv), maxv_(maxv) { }
-    
-    /** Destructor */
-    virtual ~BinomialFactor() {} ;
-    
-    /** Serialize object(write coefficients and variance to stream) */
-    virtual void serialize(ostream & os) const;
-
-    /** Overwrite m_ */
-    virtual void mkFactor(matrix_t &m) const;
-
-    /** Update parameters with new values. Useful if parameter is directly observed but is sample specific*/
-    virtual void update( vector<symbol_t>& var);
-
-  protected:
-    virtual int optimizeParametersImpl();
-    
-  private:
-    unsigned N_;
-    number_t prob_; //To used for single p mode
-    unsigned minv_; //min for count statemap on x
-    unsigned maxv_; //max for count statemap on x
   };
 
   class AbstractBaseFactorSet {
