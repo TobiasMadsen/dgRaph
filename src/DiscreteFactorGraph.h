@@ -8,6 +8,7 @@
 
 #include "PhyDef.h"
 #include "Potential.h"
+#include "DFGNode.h"
 #include "utils.h"
 #include "utilsLinAlg.h"
 
@@ -26,29 +27,6 @@
 namespace phy {
 
 using namespace std;
-
-  class DFGNode
-  {
-  public:
-    /**Variable node constructor*/
-    DFGNode(unsigned dimension);
-    
-    /**Factor node constructor*/
-    DFGNode(Potential * pot);
-
-    bool isFactor() const;
-
-    unsigned getDimension() const;
-
-    matrix_t getPotential() const;
-
-    void setPotential(matrix_t const & pot);
-  private:
-    static matrix_t potentialDummy;
-    bool isFactor_;      // true if factor node, false if variable node
-    unsigned dimension; // dimension of variable or dimension of potential
-    Potential * potential;
-  };
 
   class DFG 
   {
@@ -85,7 +63,7 @@ using namespace std;
     */
 
     // public data
-    vector<DFGNode> nodes;       // Contains and enumerates all the nodes of the graph.
+    DFGNodeSet nodes;       // Contains and enumerates all the nodes of the graph.
     vector< vector< unsigned > > neighbors; // Defines graph structure in terms of neighboring nodes 
     vector<unsigned> variables;  // enumerates variable nodes
     vector<unsigned> factors;    // enumerates factor nodes
@@ -234,10 +212,6 @@ using namespace std;
     void initMessages();
     void initMaxNeighbourStates();
     void initComponents();
-
-    // Potentials
-    vector<Potential> potentials;
-    vector<unsigned> potentialMap;
 
     // private data
     // convenience data structures -- perhaps make public

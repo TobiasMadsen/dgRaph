@@ -15,40 +15,6 @@
 
 namespace phy {
 
-  DFGNode::DFGNode(unsigned dimension) : 
-  isFactor_(false), dimension(dimension) {}
-
-
-  DFGNode::DFGNode(Potential * pot) :
-    isFactor_(true), potential(pot)
-  {
-    if (potential->potential.size1() == 1)
-      dimension = 1;
-    else
-      dimension = 2;
-  }
-
-  bool DFGNode::isFactor() const{
-    return isFactor_;
-  }
-
-  unsigned DFGNode::getDimension() const{
-    return dimension;
-  }
-
-  matrix_t DFGNode::getPotential() const{
-    if(isFactor_)
-      return potential->potential;
-    else
-      return potentialDummy;
-  }
-
-  void DFGNode::setPotential(matrix_t const & pot){
-    potential->potential = pot;
-  }
-
-  matrix_t DFGNode::potentialDummy(0,0);
-
   // The graph is defined in terms of the factor neighbors. We want
   // links to be represented both ways, i.e., also from var nodes to
   // fac nodes. This function returns the neighbors from the var point
@@ -852,29 +818,21 @@ namespace phy {
   void DFG::init(vector<unsigned> const & varDimensions, vector<matrix_t> const & facPotentials, vector<vector<unsigned> > const & facNeighbors, vector<unsigned> const & potMap)
   {
     // reserve memory
-    nodes.reserve( varDimensions.size() + facPotentials.size() ); 
     neighbors.reserve( varDimensions.size() + facPotentials.size() ); 
     variables.reserve( varDimensions.size() );
     factors.reserve( potMap.size() );
-    potentials.reserve( facPotentials.size() );
-    potentialMap = potMap;
 
     // define variable nodes
     unsigned idx = 0;
     BOOST_FOREACH(unsigned dim, varDimensions) {
-      nodes.push_back( DFGNode(dim) );
+      nodes.addVariable( dim );
       variables.push_back(idx);
       idx++;
     }
 
-    // define potentials
-    BOOST_FOREACH(matrix_t const & pot, facPotentials){
-      potentials.push_back( Potential( pot ) );
-    }
-      
     // define factor nodes
-    BOOST_FOREACH(unsigned potIdx, potMap) {
-      nodes.push_back( DFGNode( & potentials.at(potIdx) ) );
+    nodes.addFactors(facPotentials, potMap);
+    for(int i = 0; i < potMap.size(); ++i){
       factors.push_back(idx);
       idx++;
     }
