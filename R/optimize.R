@@ -58,7 +58,7 @@ linregOptimize <- function(range1 = 1:100, range2 = 1:100){
   return(list(pot = pot, str = str))
 }
 
-.normOptimize <- function(expCounts){
+.normOptimize <- function(expCounts, range = 1:ncol(expCounts)){
   str <- "norm-potential update\n"
   i <- 0
   pot <- t(apply(expCounts, 1, FUN=function(x){

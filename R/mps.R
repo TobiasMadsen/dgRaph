@@ -7,11 +7,16 @@ mps <- function(data, dfg){
   stopifnot(ncol(data) == length(dfg$varNames))
   
   # Correct data type
-  if(is.matrix(data))
+  if(is.matrix(data)){
       stopifnot(is.numeric(data))
-  # TODO NA's has type logical
-  #if(is.data.frame(data))
-  #    stopifnot(all(lapply(data, is.numeric)))
+  } else if(is.data.frame(data)){
+      # TODO NA's has type logical
+  } else {
+      stop("data must be either a data.frame or a matrix")
+  }
+
+  # Check range of variables
+
   
   # Calculate mps
   res <- apply(data, 1, FUN=function(x){

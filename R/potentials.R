@@ -1,10 +1,22 @@
 #' Potentials
 #' @param dfg     discrete factor graph object
 #' @return A list of current factors
+#' @export
 potentials <- function(dfg){
     stopifnot(is.dfg(dfg))
 
     dfg$dfgmodule$getPotentials()
+}
+
+#' Potentials <- 
+#' @param dfg     discrete factor graph object
+#' @export
+"potentials<-" <- function(dfg, value){
+  # Perform input check
+  
+  # Set potentials
+  dfg$dfgmodule$resetPotentials( value)
+  dfg
 }
 
 #' Linear Regression Potential
