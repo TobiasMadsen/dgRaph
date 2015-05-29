@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <ctime>
 #include "rToCpp.h"
 #include "PhyDef.h"
 #include "DiscreteFactorGraph.h"

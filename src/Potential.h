@@ -1,12 +1,12 @@
 #include "PhyDef.h"
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 namespace phy {
   // Forward declaration
   class Potential;
 
   // Typedef to pointer
-  typedef std::shared_ptr<Potential> PotentialPtr_t;
+  typedef boost::shared_ptr<Potential> PotentialPtr_t;
 
   /** Keep a potential. A potential can be shared between many factors */
   class Potential{

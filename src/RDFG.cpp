@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include <cmath>
+#include <ctime>
 #include "RDFG.h"
 #include "rToCpp.h"
 #include "PhyDef.h"
