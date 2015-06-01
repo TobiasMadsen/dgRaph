@@ -8,6 +8,8 @@ RCPP_MODULE(phy) {
 
       .constructor<IntegerVector, List, List, IntegerVector>()
 
+      .method("simulate", &RDFG::simulate)
+
       .method("makeImportanceSamples", &RDFG::makeImportanceSamples)
 
       .method("calculateExpectedScoreIS", &RDFG::calculateExpectedScoreIS)

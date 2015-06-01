@@ -61,6 +61,32 @@ double RDFG::calculateExpectedScoreIS(double alpha, List facPotentialsFg){
   return (res.second / res.first);
 }
 
+IntegerMatrix RDFG::simulate(int N){
+  // Setup
+  boost::mt19937 gen(std::time(0));
+
+  // Calculate marginals
+  phy::stateMaskVec_t stateMasks( dfg.variables.size() );
+  dfg.runSumProduct(stateMasks);
+  dfg.calcVariableMarginals(stateMasks);
+  dfg.calcFactorMarginals();
+  const std::vector<phy::vector_t> & varMarginals = dfg.getVariableMarginals();
+  const std::vector<phy::matrix_t> & facMarginals = dfg.getFactorMarginals();
+
+  // Sample
+  IntegerMatrix samples( N, dfg.variables.size() );
+  for(int i = 0; i < N; ++i){
+    std::vector<unsigned> sample(dfg.variables.size());
+    dfg.sample(gen, varMarginals, facMarginals, sample);
+    
+    // Process
+    for(int j = 0; j < sample.size(); ++j)
+      samples(i,j) = sample[j] + 1; // C++ to R conversion
+  }
+
+  return samples;
+}
+
 DataFrame RDFG::makeImportanceSamples(int N, double alpha, List facPotentialsFg){
   //Make conversions
   std::vector<phy::matrix_t> facPotFg;

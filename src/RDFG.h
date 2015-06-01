@@ -19,6 +19,9 @@ public:
   double calcLikelihood(IntegerVector observations, LogicalVector observed);
   double calcLogLikelihood(IntegerVector observations, LogicalVector observed);
 
+  // Sampling
+  IntegerMatrix simulate(int N);
+
   //Importance sampling
   DataFrame makeImportanceSamples(int N, double alpha, List facPotentialsFg);
   double calculateExpectedScoreIS(double alpha, List facPotentialsFg);
