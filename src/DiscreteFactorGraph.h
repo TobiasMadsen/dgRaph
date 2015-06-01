@@ -43,6 +43,10 @@ using namespace std;
     matrix_t getPotential() const;
 
     void setPotential(matrix_t const & pot);
+
+    matrix_t getScore() const;
+
+    void setScore(matrix_t const & sc);
   private:
     static matrix_t potentialDummy;
     bool isFactor_;      // true if factor node, false if variable node
@@ -100,6 +104,8 @@ using namespace std;
     void resetPotentials(matrix_t const & pot, unsigned potIdx);
     void resetPotentials(vector<matrix_t> const & potVec);
     void getPotentials(vector<matrix_t> & potVec);
+    void resetScores(matrix_t const & sc, unsigned potIdx);
+    void resetScores(vector<matrix_t> const & scVec);
 
     /** Sum up expectation counts for each potential. Counts is a vector with same length as number of factors
      */
@@ -149,7 +155,7 @@ using namespace std;
     number_t calcFullLikelihood( vector<unsigned> const & sample);
 
     /** No preconditions. Give the two kinds of potentials*/
-    pair<number_t,number_t> calcExpect(vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks);
+    pair<number_t,number_t> calcExpect(stateMaskVec_t const & stateMasks);
 
     // convenience functions
     DFGNode const & getFactor(unsigned facId) const {return nodes[ factors[ facId ] ];} 
@@ -221,13 +227,13 @@ using namespace std;
 
     //Functions for calculating expectancies
     //See note: sumProduct.pdf
-    void runExpectInwardsRec(unsigned current, unsigned sender, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
+    void runExpectInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
 //void runExpectOutwardsRec(unsigned current, unsigned sender, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMu, vector<vector<vector_t> > & outMu, vector<vector<vector_t const *> > & inLambda, vector<vector<vector_t> > & outLambda) const;
-    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
-    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const;
+    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
+    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const;
     void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
     void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const;
-    void calcExpectMessage(unsigned current, unsigned sender, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
+    void calcExpectMessage(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
 
 
     // Initialize data structures, only need to run once

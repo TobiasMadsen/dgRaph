@@ -21,6 +21,7 @@ namespace phy {
     
     // Data members
     matrix_t potential;
+    matrix_t score;
     matrix_t expCounts;
   };
 

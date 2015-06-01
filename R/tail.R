@@ -1,78 +1,76 @@
 #' ImportanceSampling for tail estimation
 #' @param x         points to evaluate tail probabilities in
 #' @param n         number of samples
-#' @param q         find quantiles instead of probabilities see details
 #' @param alpha     Tuning parameter, alpha=0 is naive sampling the higher alpha the more extreme observations
 #' @param dfg       Probabilistic graphical model specifying null model
 #' @param facPotFg  Foreground model
 #' @return A dataframe with columns, x, tail estimate and confidence intervals
 tailIS <- function(x=NULL, n, q=NULL, alpha=0.5, dfg, facPotFg){
-  stopifnot( (!is.null(x)) | (!is.null(q)) )
-  if( !is.null(x) )
-    stopifnot(is.numeric(x))
-  if( !is.null(q) )
-    stopifnot(is.numeric(q))
-  stopifnot(is.numeric(n))
-  stopifnot(is.numeric(alpha))
-  stopifnot(is.dfg(dfg))
+  if( is.null(x))
+    stop("Specify scores x ")
+  if( !is.numeric(x) )
+    stop("x must be a numeric vector")
+  if( !is.numeric(n) | length(n) != 1) 
+    stop("n must be a single integer")
+  if( !is.numeric(alpha))
+    stop("alpha must be a numeric vector")
+  if( !is.dfg(dfg))
+    stop("dfg must be a dfg object")
   
   #Check if compatible dimensions
   stopifnot( is.list(facPotFg), all(sapply(facPotFg, is.matrix)))
   stopifnot( length(facPotFg) == length(dfg$facPot))
-  stopifnot( all(sapply(seq_along(dfg$facPot), FUN=function(i){all(dim(dfg$facPot[[i]])==dim(facPotFg[[i]]))})) )
+  facPotBg <- potentials(dfg)
+  stopifnot( all(sapply(seq_along(facPotBg), FUN=function(i){all(dim(facPotBg[[i]])==dim(facPotFg[[i]]))})) )
   
+  # Data frame to return
+  ret <- data.frame(x = numeric(0), p = numeric(0), low = numeric(0), high = numeric(0), p_lower = numeric(0), alpha = numeric(0))
   
-  if(!is.null(x)){
-    #Find expected score for each alpha and find nearest mean
-    expScore <- sapply( alpha, FUN=function(a){ dfg$dfgmodule$calculateExpectedScoreIS(a, facPotFg)})
-    x_sample_assign <- sapply( x, FUN=function(x){ which.min(abs(x-expScore)) })#the estimate at each x will be calculated from 
+  for(i in seq_along(alpha)){
+    if( length(x) == 0) #check if any samples are assigned
+      next
+    a <- alpha[i]
     
-    ret <- data.frame(x = numeric(0), p = numeric(0), low = numeric(0), high = numeric(0), p_lower = numeric(0), alpha = numeric(0))
-    
-    for(i in seq_along(alpha)){
-      x_alpha <- x[ which(x_sample_assign == i) ]
-      if( length(x_alpha) == 0) #check if any samples are assigned
-        next
-      a <- alpha[i]
-      
-      #Make samples
-      samples <- dfg$dfgmodule$makeImportanceSamples(n, a, facPotFg)
-      
-      #Tail probabilities P(S > x)
-      cdf_upper_tail <- sapply(x_alpha, function(s){
-        if(a < 0){ #estimate lower tail
-          obs <- samples$weights*(samples$scores < s)
-          error <- qnorm(0.975)*sd(obs)/sqrt(n)
-          meanobs <- mean(obs)
-          c( 1-(meanobs+error), 1-meanobs, 1-(meanobs-error), meanobs )
-        } else{ #estimate upper tail
-          obs <- samples$weights*(samples$scores > s)
-          error <- qnorm(0.975)*sd(obs)/sqrt(n)
-          meanobs <- mean(obs)
-          return(c(meanobs-error, meanobs, meanobs+error, 1-meanobs))
-        }
-      })
-      
-      ret <- rbind( ret, 
-                    data.frame(x=x_alpha, p=cdf_upper_tail[2,], low=cdf_upper_tail[1,], high=cdf_upper_tail[3,], 
-                               p_lower=cdf_upper_tail[4,], alpha=a) )
-    }
-   return(ret) 
-  } else if(!is.null(q)){ #Find quantiles
     #Make samples
-    samples <- dfg$dfgmodule$makeImportanceSamples(n, alpha, facPotFg)
+    dfgIS <- .copy(dfg)
+    facPotIS <- lapply(seq_along(facPotBg), FUN=function(i){
+      m <- facPotBg[[i]]**(1-a)*facPotFg[[i]]**a
+      
+      # Score Matrix
+      m[facPotBg[[i]] == 0 | facPotFg[[i]] == 0] <- 0
+      m
+      })
+    potentials(dfgIS) <- facPotIS
+    samples <- simulate(dfgIS, n)
     
-    #Compute quantiles
-    samples <- samples[with(samples, order(-scores)), ]
-    cs_weights <- cumsum(samples$weights)
-    quant <- sapply(q, function(q){
-      if(tail(cs_weights,n=1) < q*n)
-        return(NA)
-      samples$scores[ which.max(cs_weights>=q*n) ]
+    # Calculate weights and scores
+    dfgFg <- .copy(dfg)
+    potentials(dfgFg) <- facPotFg
+    ncIS <- likelihood(matrix(NA, 1, length(dfg$varDim)), dfgIS, log = T) # dfgIS is not normalized
+    weights <- exp(likelihood(samples, dfg, log = T) - likelihood(samples, dfgIS, log = T) + ncIS)
+    scores <- likelihood(samples, dfgFg, log = T) - likelihood(samples, dfg, log = T)
+    
+    #Tail probabilities P(S > x)
+    cdf_upper_tail <- sapply(x, function(s){
+      if(a < 0){ #estimate lower tail
+        obs <- weights*(scores < s)
+        error <- qnorm(0.975)*sd(obs)/sqrt(n)
+        meanobs <- mean(obs)
+        c( max(0,1-(meanobs+error)), 1-meanobs, min(1,1-(meanobs-error)), meanobs )
+      } else{ #estimate upper tail
+        obs <- weights*(scores > s)
+        error <- qnorm(0.975)*sd(obs)/sqrt(n)
+        meanobs <- mean(obs)
+        return(c(max(0,meanobs-error), meanobs, min(1,meanobs+error), 1-meanobs))
+      }
     })
-    return( data.frame(x=quant, p=q))
+    
+    ret <- rbind( ret, 
+                  data.frame(x=x, p=cdf_upper_tail[2,], low=cdf_upper_tail[1,], high=cdf_upper_tail[3,], 
+                             p_lower=cdf_upper_tail[4,], alpha=a) )
   }
   
+  ret
 }
 
 #####################################################################
@@ -108,6 +106,7 @@ tailSaddle <- function(x, dfg, facPotFg){
   stopifnot( is.list(facPotFg), all(sapply(facPotFg, is.matrix)))
   stopifnot( length(facPotFg) == length(dfg$facPot))
   stopifnot( all(sapply(seq_along(dfg$facPot), FUN=function(i){all(dim(dfg$facPot[[i]])==dim(facPotFg[[i]]))})) )
+  facPotBg <- potentials(dfg)
   
   #For numerical derivative
   require(numDeriv, quietly = TRUE)
@@ -118,16 +117,17 @@ tailSaddle <- function(x, dfg, facPotFg){
   for(i in seq_along(x)){
     t <- x[i]
     
+    dfgSaddle <- .copy(dfg)
+    
     #Solve d/dt k(theta) = t
     #where k(theta) is the cumulant transform
     theta <- tryCatch(
     {
       uniroot(function(z)
       {
-        res <- PGMExpectCpp(dfg$varDim, 
-                            .facPotToFunA(dfg$facPot, facPotFg, z),
-                            .facPotToFunB(dfg$facPot, facPotFg),
-                            dfg$facNbs)
+        potentials(dfgSaddle) <- .facPotToFunA(facPotBg, facPotFg, z)
+        facScore <- .facPotToFunB(facPotBg, facPotFg)
+        res <- expect(dfgSaddle, facScore)
         return(res[2]/res[1]-t)
       }, c(-5,5))$root
     },
@@ -142,13 +142,16 @@ tailSaddle <- function(x, dfg, facPotFg){
     
     #Numerically find d/dt^2 k(t)
     kud2 <- grad(function(x){
-      res <- PGMExpectCpp(dfg$varDim, .facPotToFunA(dfg$facPot, facPotFg, x), .facPotToFunB(dfg$facPot, facPotFg),dfg$facNbs)
+      potentials(dfgSaddle) <- .facPotToFunA(facPotBg, facPotFg, x)
+      facScore <- .facPotToFunB(facPotBg, facPotFg)
+      res <- expect(dfgSaddle, facScore)
       return(res[2]/res[1])
     }, theta)
     
     
     #Find MGF in theta
-    phi <- PGMExpectCpp(dfg$varDim, .facPotToFunA(dfg$facPot, facPotFg, theta), .facPotToFunB(dfg$facPot, facPotFg), dfg$facNbs)[1]
+    potentials(dfgSaddle) <- .facPotToFunA(facPotBg, facPotFg, theta)
+    phi <- expect(dfgSaddle, .facPotToFunB(facPotBg, facPotFg))[1]
     
     #Calculate 
     la <- theta*sqrt(kud2)

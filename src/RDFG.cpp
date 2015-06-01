@@ -24,41 +24,28 @@ phy::DFG rToDFG(IntegerVector varDimensions, List facPotentials, List facNeighbo
   return phy::DFG(varDim, facPot, facNbs, potMap);
 } 
 
-//Function definition
+//Function definitions
 RDFG::RDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors, IntegerVector potentialMap) 
   : dfg(rToDFG(varDimensions, facPotentials, facNeighbors, potentialMap)) {}
 
-double RDFG::calculateExpectedScoreIS(double alpha, List facPotentialsFg){
-  //Make conversions
-  std::vector<phy::matrix_t> facPotFg;
-  for(int k = 0; k < facPotentialsFg.size(); ++k){
-    facPotFg.push_back( rMatToMat( facPotentialsFg[k] ));
+NumericVector RDFG::expect(List facScores){
+  // Convert to matrix
+  std::vector<phy::matrix_t> facScoresVec;
+  for(int k = 0; k < facScores.size(); ++k){
+    facScoresVec.push_back( rMatToMat( facScores[k] ));
   }
 
-  //Calculate IS distribution and score contributions
-  std::vector<phy::matrix_t> facPotIS( dfg.factors.size() );
-  std::vector<phy::matrix_t> score( dfg.factors.size() );
-
-  for(int f = 0; f < dfg.factors.size(); ++f){
-    phy::matrix_t const & potNull = dfg.getFactor(f).getPotential();
-    phy::matrix_t const & potFg   = facPotFg.at(f);
-
-    phy::matrix_t potIS(potNull.size1(), potNull.size2());
-    phy::matrix_t matScore( potNull.size1(), potNull.size2() );
-
-    for(int i = 0; i < potIS.size1(); ++i){
-      for(int j = 0; j < potIS.size2(); ++j){
-	potIS(i,j) = phy::power(potNull(i,j), 1-alpha)*phy::power(potFg(i,j), alpha);
-	matScore(i,j) = log( potFg(i,j) / potNull(i,j) );
-      }
-    }
-    facPotIS.at(f) = potIS;
-    score.at(f) = matScore;
-  }
-
+  // Generate statemasks
   phy::stateMaskVec_t stateMasks( dfg.variables.size() );
-  std::pair<phy::number_t, phy::number_t> res = dfg.calcExpect(facPotIS, score, stateMasks);
-  return (res.second / res.first);
+
+  // Set factor scores
+  dfg.resetScores( facScoresVec);
+  std::pair<phy::number_t, phy::number_t> res = dfg.calcExpect(stateMasks);
+
+  NumericVector ret(2);
+  ret(0) = res.first;
+  ret(1) = res.second;
+  return ret;
 }
 
 IntegerMatrix RDFG::simulate(int N){
@@ -255,6 +242,17 @@ void RDFG::resetPotentials(List facPotentials){
 
   // Set factor potentials
   dfg.resetPotentials( facPot);
+}
+
+void RDFG::resetScores(List facScores){
+  // Convert to matrix
+  std::vector<phy::matrix_t> facScoresVec;
+  for(int k = 0; k < facScores.size(); ++k){
+    facScoresVec.push_back( rMatToMat( facScores[k] ));
+  }
+
+  // Set factor potentials
+  dfg.resetPotentials( facScoresVec);
 }
 
 List RDFG::getPotentials(){

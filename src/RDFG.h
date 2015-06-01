@@ -19,6 +19,9 @@ public:
   double calcLikelihood(IntegerVector observations, LogicalVector observed);
   double calcLogLikelihood(IntegerVector observations, LogicalVector observed);
 
+  // Calculate Expecations
+  NumericVector expect(List facScores);
+
   // Sampling
   IntegerMatrix simulate(int N);
 
@@ -36,6 +39,7 @@ public:
   // Accessors
   List getPotentials();
   void resetPotentials(List facPotentials);
+  void resetScores(List facScores);
   
 
 

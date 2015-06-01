@@ -11,8 +11,6 @@ tailIS(x = NULL, n, q = NULL, alpha = 0.5, dfg, facPotFg)
 
 \item{n}{number of samples}
 
-\item{q}{find quantiles instead of probabilities see details}
-
 \item{alpha}{Tuning parameter, alpha=0 is naive sampling the higher alpha the more extreme observations}
 
 \item{dfg}{Probabilistic graphical model specifying null model}

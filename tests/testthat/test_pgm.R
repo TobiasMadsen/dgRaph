@@ -1,6 +1,25 @@
 library(dgRaph)
 context("PGM class")
 
+test_that("Variable and factor names",{
+  varDim <- rep(4,6)
+  facPot <- list(matrix(0.25,1,4),
+                 matrix(0.25,4,4),
+                 matrix(0.25,4,4),
+                 matrix(0.25,4,4),
+                 matrix(0.25,4,4),
+                 matrix(0.25,4,4))
+  facNbs <- c(list(c(1L)),
+              list(c(1L,2L)),
+              list(c(1L,3L)),
+              list(c(3L,4L)),
+              list(c(3L,5L)),
+              list(c(5L,6L)) )
+  facNames = c("Prior",rep("Int",5))
+  varNames = c("Foo","Bar","Baz","Do","Re","Mi")
+  expect_true({mydfg <- dfg(varDim, facPot, facNbs, varNames = varNames, facNames = facNames); TRUE})
+})
+
 test_that("Shared potentials",{
   # Markov chain
   N <- 1000

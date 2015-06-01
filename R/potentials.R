@@ -13,8 +13,14 @@ potentials <- function(dfg){
 #' @export
 "potentials<-" <- function(dfg, value){
   # Perform input check
+  if( ! is.list(facPot) | ! all(sapply(facPot, is.matrix)))
+    stop("Potentials must be a list of matrices")
+  if(length(value) != length(dfg$facPot))
+    stop("Potentials did not have correct length")
+  stopifnot( all(sapply(seq_along(dfg$facPot), FUN=function(i){all(dim(dfg$facPot[[i]])==dim(value[[i]]))})) )
   
   # Set potentials
+  dfg$facPot <- value
   dfg$dfgmodule$resetPotentials( value)
   dfg
 }

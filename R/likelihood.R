@@ -9,8 +9,8 @@ likelihood <- function(data, dfg, log = FALSE){
   stopifnot(ncol(data) == length(dfg$varNames))
   
   # Correct data type
-  if(is.matrix(data))
-      stopifnot(is.numeric(data))
+  #if(is.matrix(data))
+  #    stopifnot(is.numeric(data))
   # TODO NA's has type logical
   #if(is.data.frame(data))
   #    stopifnot(all(lapply(data, is.numeric)))

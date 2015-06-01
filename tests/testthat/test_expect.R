@@ -1,5 +1,21 @@
 library(dgRaph)
-context("Expect algorithm")
+context("Expect")
+
+test_that("Components", {
+  varDim <- rep(1L,2)
+  facPot <- c(list(matrix(3,1,1)),
+              list(matrix(2,1,1)))
+  facExp <- c(list(matrix(1,1,1)),
+              list(matrix(2,1,1)))
+  facNbs <- c(list(c(1L)),
+              list(c(2L)))
+  
+  mydfg <- dfg(varDim, facPot, facNbs)
+  
+  res <- expect(mydfg, facExp)
+  expect_equal(res[1],6)
+  expect_equal(res[2],18)
+})
 
 test_that("Simple phylogenetic model",{
   varDim <- rep(2L,4)
@@ -11,23 +27,12 @@ test_that("Simple phylogenetic model",{
               list(c(1L,2L)),
               list(c(1L,3L)),
               list(c(3L,4L)))
-  res <- PGMExpectCpp(varDim,facPot, facExp, facNbs)
+  mydfg <- dfg(varDim, facPot, facNbs)
+  
+  res <- expect(mydfg, facExp)
   expect_equal(length(res),2)
   expect_equal(res[1],1)
   expect_equal(res[2],0.6)
-})
-
-test_that("Components",{
-  varDim <- rep(1L,2)
-  facPot <- c(list(matrix(3,1,1)),
-              list(matrix(2,1,1)))
-  facExp <- c(list(matrix(1,1,1)),
-              list(matrix(2,1,1)))
-  facNbs <- c(list(c(1L)),
-              list(c(2L)))
-  res <- PGMExpectCpp(varDim,facPot, facExp, facNbs)
-  expect_equal(res[1],6)
-  expect_equal(res[2],18)
 })
 
 test_that("Bernoulli connected to ancestor",{
@@ -37,7 +42,13 @@ test_that("Bernoulli connected to ancestor",{
   facPot1 <- c( list(matrix(c(0.5,0.5),1,2)), rep(list(matrix(c(0.50,0.50,0.50,0.50),2,2)),N) )
   facPot2 <- c( list(matrix(c(0.5,0.5),1,2)), rep(list(matrix(c(0.75,0.25,0.25,0.75),2,2)),N) )
   facNbs <- c(list(c(1L)), lapply(1:N, function(x){c(1,x+1)}))
-  res <- PGMExpectCpp(varDim, .facPotToFunA(facPot1,facPot2,t), .facPotToFunB(facPot1,facPot2), facNbs)
+  
+  facPot <- .facPotToFunA(facPot1,facPot2,t)
+  facExp <- .facPotToFunB(facPot1,facPot2)
+  
+  mydfg <- dfg(varDim, facPot, facNbs)
+  res <- expect(mydfg, facExp)
+  
   mgf <- function(t){(((1/2)**t+(3/2)**t)/2)**N}
   dtlogmgf <- function(t){N/((1/2)**t+(3/2)**t)*(log(1/2)*(1/2)**t+log(3/2)*(3/2)**t )}
   
@@ -52,59 +63,15 @@ test_that("Bernoulli disconnected",{
   facPot2 <- rep(list(matrix(c(0.75,0.25),1,2)),N)
   facNbs <- lapply(1:N,function(i){c(i)})
   t <- 0.25
-  res <- PGMExpectCpp(varDim, .facPotToFunA(facPot1, facPot2,t), .facPotToFunB(facPot1, facPot2), facNbs)
+  
+  facPot <- .facPotToFunA(facPot1,facPot2,t)
+  facExp <- .facPotToFunB(facPot1,facPot2)
+  
+  mydfg <- dfg(varDim, facPot, facNbs)
+  res <- expect(mydfg, facExp)
+  
   mgf <- function(t){(((1/2)**t+(3/2)**t)/2)**N}
   dtlogmgf <- function(t){N/((1/2)**t+(3/2)**t)*(log(1/2)*(1/2)**t+log(3/2)*(3/2)**t )}
   expect_equal(mgf(t),res[1])
   expect_equal(dtlogmgf(t), res[2]/res[1])
-})
-
-test_that("Expected score IS disconnected",{
-  N <- 4
-  varDim <- rep(2L,N)
-  facPot <- rep(list(matrix(c(0.5,0.5),1,2)),N)
-  facPotFg <- rep(list(matrix(c(0.75,0.25),1,2)),N)
-  facNbs <- lapply(1:N,function(i){c(i)})
-  
-  dfg <- dfg(varDim, facPot, facNbs)
-  
-  score <- log(c(0.75,0.25)/c(0.5,0.5))
-  
-  prob <- c(0.5,0.5)
-  expect_equal(dfg$dfgmodule$calculateExpectedScoreIS(0, facPotFg),
-               sum(prob*score)*N)
-  
-  prob <- c(0.75,0.25)
-  expect_equal(dfg$dfgmodule$calculateExpectedScoreIS(1, facPotFg),
-               sum(prob*score)*N)
-  
-  prob <- c(0.75,0.25)**0.5*c(0.5,0.5)**0.5; prob <- prob/sum(prob)
-  expect_equal(dfg$dfgmodule$calculateExpectedScoreIS(0.5, facPotFg),
-               sum(prob*score)*N)
-})
-
-test_that("Expect score IS connected",{
-  varDim <- rep(2L, 2)
-  facPot <- c(list(matrix(c(0.5,0.5),1,2)),
-              list(matrix(c(0.5,0.5,0.5,0.5),2,2)))
-  facPotFg <- c(list(matrix(c(0.5,0.5),1,2)),
-              list(matrix(c(0.75,0.25,0.25,0.75),2,2)))
-  facNbs <- c(list(c(1)),
-              list(c(1,2)))
-  
-  dfg <- dfg(varDim, facPot, facNbs)
-  
-  score <- log(c(0.75,0.25)/c(0.5,0.5))
-  
-  prob <- c(0.5, 0.5)
-  expect_equal(dfg$dfgmodule$calculateExpectedScoreIS(0, facPotFg),
-               sum(prob*score))
-  
-  prob <- c(0.75, 0.25)
-  expect_equal(dfg$dfgmodule$calculateExpectedScoreIS(1, facPotFg),
-               sum(prob*score))
-  
-  prob <- c(0.75,0.25)**1.5*c(0.5,0.5)**(-.5); prob <- prob/sum(prob)
-  expect_equal(dfg$dfgmodule$calculateExpectedScoreIS(1.5, facPotFg),
-               sum(prob*score))
 })
