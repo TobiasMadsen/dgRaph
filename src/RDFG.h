@@ -25,10 +25,6 @@ public:
   // Sampling
   IntegerMatrix simulate(int N);
 
-  //Importance sampling
-  DataFrame makeImportanceSamples(int N, double alpha, List facPotentialsFg);
-  double calculateExpectedScoreIS(double alpha, List facPotentialsFg);
-
   //Calculate most probable state given partially observed data
   Rcpp::IntegerVector maxProbState(Rcpp::IntegerVector observations, Rcpp::LogicalVector observed);
 

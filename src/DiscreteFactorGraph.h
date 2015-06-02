@@ -79,15 +79,6 @@ using namespace std;
 	vector<vector<unsigned> > const & facNeighbors,
 	vector<unsigned> const & potMap);
 
-
-    /** The copy constructor is defined explicitly to ensure the
-	inMessages_ pointers are wiped out on copy. This means that
-	the states of the dynammic programming tables are not kept on
-	copy.*/
-    /*
-    DFG(DFG const & rhs) : nodes(rhs.nodes), neighbors(rhs.neighbors), variables(rhs.variables), factors(rhs.factors), components(rhs.components), roots(rhs.roots), potentials(rhs.potentials) {}
-    */
-
     // public data
     vector<DFGNode> nodes;       // Contains and enumerates all the nodes of the graph.
     vector< vector< unsigned > > neighbors; // Defines graph structure in terms of neighboring nodes 

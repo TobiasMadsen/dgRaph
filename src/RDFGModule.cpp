@@ -10,8 +10,6 @@ RCPP_MODULE(phy) {
 
       .method("simulate", &RDFG::simulate)
 
-      .method("makeImportanceSamples", &RDFG::makeImportanceSamples)
-
       .method("maxProbState", &RDFG::maxProbState)
 
       .method("expect", &RDFG::expect)

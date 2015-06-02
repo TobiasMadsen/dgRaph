@@ -20,23 +20,3 @@ BEGIN_RCPP
     return __sexp_result;
 END_RCPP
 }
-// sampleISCpp
-DataFrame sampleISCpp(int N, double alpha, IntegerVector varDimensions, List facPotentialsNull, List facNeighbors, List facPotentialsFg);
-RcppExport SEXP dgRaph_sampleISCpp(SEXP NSEXP, SEXP alphaSEXP, SEXP varDimensionsSEXP, SEXP facPotentialsNullSEXP, SEXP facNeighborsSEXP, SEXP facPotentialsFgSEXP) {
-BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< int >::type N(NSEXP );
-        Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP );
-        Rcpp::traits::input_parameter< IntegerVector >::type varDimensions(varDimensionsSEXP );
-        Rcpp::traits::input_parameter< List >::type facPotentialsNull(facPotentialsNullSEXP );
-        Rcpp::traits::input_parameter< List >::type facNeighbors(facNeighborsSEXP );
-        Rcpp::traits::input_parameter< List >::type facPotentialsFg(facPotentialsFgSEXP );
-        DataFrame __result = sampleISCpp(N, alpha, varDimensions, facPotentialsNull, facNeighbors, facPotentialsFg);
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
-END_RCPP
-}

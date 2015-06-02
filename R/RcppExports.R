@@ -5,7 +5,3 @@ checkAcyclic <- function(rFacNbs) {
     .Call('dgRaph_checkAcyclic', PACKAGE = 'dgRaph', rFacNbs)
 }
 
-sampleISCpp <- function(N, alpha, varDimensions, facPotentialsNull, facNeighbors, facPotentialsFg) {
-    .Call('dgRaph_sampleISCpp', PACKAGE = 'dgRaph', N, alpha, varDimensions, facPotentialsNull, facNeighbors, facPotentialsFg)
-}
-
