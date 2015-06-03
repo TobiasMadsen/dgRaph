@@ -8,6 +8,7 @@
 
 #include "PhyDef.h"
 #include "Potential.h"
+#include "StateMask.h"
 #include "utils.h"
 #include "utilsLinAlg.h"
 
@@ -176,14 +177,10 @@ using namespace std;
     /** Make a sample from conditional distribution induced by factorgraph, precondition sumProduct has been run */
     void sample(boost::mt19937 & gen, vector<vector_t> const & varMarginals, vector<matrix_t> const & facMarginals, vector<unsigned> & sample);
     vector<unsigned> sample(boost::mt19937 & gen, vector<vector_t> const & varMarginals, vector<matrix_t> const & facMarginals);
-    void sampleIS(boost::mt19937 & gen, vector<vector_t> const & varMarginals, vector<matrix_t> const & facMarginals, vector<vector_t> const & ISVarMarginals, vector<matrix_t> const & ISFacMarginals, vector<unsigned> & sim, number_t & weight);
-
 
     /** Precondition: calcFactorMarginals and calcVariableMarginals has been called on members factorMarginals and variableMarginals */
     void simulateVariable(boost::mt19937 & gen, unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<unsigned> & sim);
     void simulateFactor(boost::mt19937 & gen, unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<unsigned> & sim);
-    void simulateVariableIS(boost::mt19937 & gen, unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<matrix_t> const & ISFacMarginals, vector<unsigned> & sim, number_t & weight);
-    void simulateFactorIS(boost::mt19937 & gen, unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<matrix_t> const & ISFacMarginals,  vector<unsigned> & sim, number_t & weight);
     
     /** write factor info to str */
     void writeInfo( ostream & str, vector<string> const & varNames = vector<string>(), vector<string> const & facNames = vector<string>() );
@@ -203,10 +200,10 @@ using namespace std;
     void calcSumProductMessageFactor(unsigned current, unsigned receiver, vector<vector<message_t const *> > & inMessages, vector<vector<message_t> > & outMessages) const;
     void calcSumProductMessageFactor(unsigned current, unsigned receiver, vector<message_t const *> const & inMes, message_t & outMes) const;
     void calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMessages, vector<vector<message_t> > & outMessages) const;
-    void calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<message_t const *> const & inMes, message_t & outMes) const;
+    void calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMaskPtr_t stateMask, vector<message_t const *> const & inMes, message_t & outMes) const;
     void calcSumProductMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMessages, vector<vector<message_t> > & outMessages) const;
-    number_t calcNormConstComponent(unsigned varId, stateMask_t const * stateMask, vector<message_t const *> const & inMes) const;
-    number_t calcLogNormConstComponent(unsigned varId, stateMask_t const * stateMask, vector<message_t const *> const & inMes) const;
+    number_t calcNormConstComponent(unsigned varId, stateMaskPtr_t stateMask, vector<message_t const *> const & inMes) const;
+    number_t calcLogNormConstComponent(unsigned varId, stateMaskPtr_t stateMask, vector<message_t const *> const & inMes) const;
 
     // helper functions for maxSum();
     unsigned maxNeighborDimension(vector<unsigned> const & nbs) const;
@@ -223,7 +220,7 @@ using namespace std;
     void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
     void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const;
     void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
-    void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const;
+    void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskPtr_t stateMask, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const;
     void calcExpectMessage(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
 
 
@@ -299,13 +296,13 @@ using namespace std;
     vector<unsigned> const & nbs = neighbors[current];
     message_t & outMes = outMessages[current][ getIndex( nbs, receiver) ];  // identify message
     vector< message_t const *> const & inMes( inMessages[current] );
-    stateMask_t const * stateMask = stateMasks[ convNodeToVar(current) ]; 
+    stateMaskPtr_t stateMask = stateMasks[ convNodeToVar(current) ]; 
 
     calcSumProductMessageVariable(current, receiver, stateMask, inMes, outMes);
   }
 
 
-  inline void DFG::calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<message_t const *> const & inMes, message_t & outMes) const
+  inline void DFG::calcSumProductMessageVariable(unsigned current, unsigned receiver, stateMaskPtr_t stateMask, vector<message_t const *> const & inMes, message_t & outMes) const
   {
     vector<unsigned> const & nbs = neighbors[current];
 

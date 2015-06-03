@@ -5,6 +5,7 @@
 #include "rToCpp.h"
 #include "PhyDef.h"
 #include "DiscreteFactorGraph.h"
+#include "StateMask.h"
 
 using namespace Rcpp;
 
@@ -81,17 +82,12 @@ IntegerMatrix RDFG::simulate(int N){
 Rcpp::IntegerVector RDFG::maxProbState(Rcpp::IntegerVector observations, Rcpp::LogicalVector observed){
   //Create empty statemasks
   phy::stateMaskVec_t stateMasks( dfg.variables.size() );
-  std::vector<phy::stateMask_t> stateMasksObj;
-  stateMasksObj.reserve( dfg.variables.size() );
 
   //Observed variables
   if(observed.size() == dfg.variables.size()){
     for(int i = 0; i < dfg.variables.size(); ++i){
       if(observed[i]){
-	stateMasksObj.push_back( phy::stateMask_t( dfg.getVariable(i).getDimension(), 0 ) );
-	// 1-0 R-C++ index conversion
-	stateMasksObj.back()( observations[i] - 1 ) = 1;
-	stateMasks.at(i) = & stateMasksObj.back();
+	stateMasks.at(i) = phy::stateMaskPtr_t( new phy::StateMaskObserved(observations[i] -1) );
       }
     }
   }
@@ -118,16 +114,11 @@ Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
   //Each row in the matrix is an observation
   for(int i = 0; i < observations.nrow(); ++i){
     //Create statemasks
-    phy::stateMaskVec_t stateMasks( dfg.variables.size(), NULL );
-    std::vector<phy::stateMask_t> stateMasksObj;
-    stateMasksObj.reserve( dfg.variables.size() );
+    phy::stateMaskVec_t stateMasks( dfg.variables.size());
 
     for(int j = 0; j < observations.ncol(); ++j){
       if( ! IntegerMatrix::is_na(observations(i, j))){
-	stateMasksObj.push_back(  phy::stateMask_t( dfg.getVariable(j).getDimension(), 0 ) );
-	// 1-0 R-C++ index conversion
-	stateMasksObj.back()( observations(i, j) - 1) = 1;
-	stateMasks.at(j) = & stateMasksObj.back();
+	stateMasks.at(j) = phy::stateMaskPtr_t( new phy::StateMaskObserved(observations(i, j) -1) );
       }
     }
 
@@ -199,17 +190,12 @@ double RDFG::calcLikelihood(Rcpp::IntegerVector observations, Rcpp::LogicalVecto
 double RDFG::calcLogLikelihood(Rcpp::IntegerVector observations, Rcpp::LogicalVector observed){
   // Create empty statemasks
   phy::stateMaskVec_t stateMasks( dfg.variables.size() );
-  std::vector<phy::stateMask_t> stateMasksObj;
-  stateMasksObj.reserve( dfg.variables.size() );
 
   // Observed variables
   if(observed.size() == dfg.variables.size()){
     for(int i = 0; i < dfg.variables.size(); ++i){
       if(observed[i]){
-	stateMasksObj.push_back( phy::stateMask_t( dfg.getVariable(i).getDimension(), 0 ) );
-	// Remember: Take care of 1-0 index-conversion on C++ side
-	stateMasksObj.back()( observations[i] - 1) = 1;
-	stateMasks.at(i) = & stateMasksObj.back();
+	stateMasks.at(i) = phy::stateMaskPtr_t( new phy::StateMaskObserved(observations[i] -1) );
       }
     }
   }

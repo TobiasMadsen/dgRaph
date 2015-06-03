@@ -468,7 +468,7 @@ namespace phy {
   }
 
 
-  number_t DFG::calcNormConstComponent(unsigned varId, stateMask_t const * stateMask, vector<message_t const *> const & inMes) const
+  number_t DFG::calcNormConstComponent(unsigned varId, stateMaskPtr_t stateMask, vector<message_t const *> const & inMes) const
   {
     // Calculates Normalizing Constant for the component that contains varId
     assert( varId < variables.size() );
@@ -500,7 +500,7 @@ namespace phy {
     return res;
   }
 
-  number_t DFG::calcLogNormConstComponent(unsigned varId, stateMask_t const * stateMask, vector<message_t const *> const & inMes) const
+  number_t DFG::calcLogNormConstComponent(unsigned varId, stateMaskPtr_t stateMask, vector<message_t const *> const & inMes) const
   {
     // Calculates Normalizing Constant for the component that contains varId
     assert( varId < variables.size() );
@@ -656,100 +656,7 @@ namespace phy {
 	    toVisit.push( neighbors.at(visit).at(j) );
 	}
       }
-      
-
     }
-  }
-
-  // IS sample from factor graph
-  void DFG::sampleIS(boost::mt19937 & gen, vector<vector_t> const & varMarginals, vector<matrix_t> const & facMarginals, vector<vector_t> const & ISVarMarginals, vector<matrix_t> const & ISFacMarginals, vector<unsigned> & sim, number_t & weight){
-    //Make assertions
-    if( varMarginals.size() != variables.size() )
-      errorAbort("DFG::sampleIS: varMarginals.size() != variables.size()");
-    if( facMarginals.size() != factors.size() )
-      errorAbort("DFG::sampleIS: facMarginals.size() != factors.size()");
-    if( ISVarMarginals.size() != variables.size() )
-      errorAbort("DFG::sampleIS: ISVarMarginals.size() != variables.size()");
-    if( ISFacMarginals.size() != factors.size() )
-      errorAbort("DFG::sampleIS: ISFacMarginals.size() != factors.size()");
-    
-    //return vector
-    sim.resize(variables.size());
-    weight = 1;
-
-    for(int r = 0; r < roots.size(); ++r){
-      unsigned root = roots.at(r);
-      
-      if(nodes.at(root).isFactor())
-	errorAbort("DiscreFactorGraph.cpp::DFG::sampleIS: Root nodes currently have to be variables");
-
-      unsigned varId = convNodeToVar(root);
-      boost::random::discrete_distribution<int, number_t> dist( ISVarMarginals.at(varId).begin(), ISVarMarginals.at(varId).end());
-      boost::variate_generator<boost::mt19937 &, boost::random::discrete_distribution< int, number_t> > distGen( gen, dist);
-      
-      unsigned state = distGen();
-      sim.at(varId) = state;
-      weight *= varMarginals.at(varId)(state)/ISVarMarginals.at(varId)(state)/sum(varMarginals.at(varId))*sum(ISVarMarginals.at(varId));
-
-      simulateVariableIS(gen, root, root, state, facMarginals, ISFacMarginals, sim, weight);
-    }
-  }
-
-    void DFG::simulateVariableIS(boost::mt19937 & gen, unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<matrix_t> const & ISFacMarginals, vector<unsigned> & sim, number_t & weight){
-      //Loop over neighbors except sender ( notice if current==sender, this is the root node)
-      vector<unsigned> const & nbs = neighbors.at(current);
-      for(int i = 0; i < nbs.size(); ++i){
-	unsigned nb = nbs.at(i);
-	if(nb != sender)
-	  simulateFactorIS(gen, nb, current, state, facMarginals, ISFacMarginals, sim, weight);
-      }
-    }
-
-  void DFG::simulateFactorIS(boost::mt19937 & gen, unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<matrix_t> const & ISFacMarginals,  vector<unsigned> & sim, number_t & weight){
-    //At most a single nb except root
-    vector<unsigned> const & nbs = neighbors.at(current);
-
-    if( nbs.size() == 1)
-      return; //Prior for some variable that has already been set
-    else if( nbs.size() == 2){
-      unsigned facId = convNodeToFac(current);
-
-      if(nbs[0] == sender){
-	const boost::numeric::ublas::matrix_row<const matrix_t> prob( facMarginals.at(facId), state);
-	const boost::numeric::ublas::matrix_row<const matrix_t> ISprob( ISFacMarginals.at(facId), state);
-	boost::random::discrete_distribution<int, number_t> dist( ISprob.begin(), ISprob.end() );
-	boost::variate_generator<boost::mt19937 &, boost::random::discrete_distribution<int, number_t> > distGen( gen, dist);
-	unsigned receiver_state = distGen();
-	
-	//set state
-	sim.at( convNodeToVar(nbs[1])) = receiver_state;
-	
-	//set weight
-	weight *= prob(receiver_state)/ISprob(receiver_state)/sum(prob)*sum(ISprob);
-
-	//call neighbour
-	simulateVariableIS(gen, nbs[1], current, receiver_state, facMarginals, ISFacMarginals, sim, weight);
-      }
-      else if( nbs[1] == sender){
-	const boost::numeric::ublas::matrix_column<const matrix_t> prob( facMarginals.at(facId), state);
-	const boost::numeric::ublas::matrix_column<const matrix_t> ISprob( ISFacMarginals.at(facId), state);
-	boost::random::discrete_distribution<int, number_t> dist( ISprob.begin(), ISprob.end() );
-	boost::variate_generator<boost::mt19937 &, boost::random::discrete_distribution<int, number_t> > distGen( gen, dist);
-	unsigned receiver_state = distGen();
-	
-	//set state
-	sim.at( convNodeToVar(nbs[0])) = receiver_state;
-
-	//set weight
-	weight *= prob(receiver_state)/ISprob(receiver_state)/sum(prob)*sum(ISprob);
-	
-	//call neighbour
-	simulateVariableIS(gen, nbs[0], current, receiver_state, facMarginals, ISFacMarginals, sim, weight);
-      }
-    }
-    else{
-      errorAbort("DiscreFactorGraph.cpp::DFG::simulateFactor: Reached factor with " + toString(nbs.size()) + " neighbors, only 1 or 2 allowed");
-    }    
   }
 
   vector<unsigned> DFG::sample(boost::mt19937 & gen, vector<vector_t> const & varMarginals, vector<matrix_t> const & facMarginals){
@@ -950,7 +857,7 @@ namespace phy {
       runExpectInwardsRec(root, root, stateMasks, inMu_, outMu_, inLambda_, outLambda_);
 
       //use incoming messages to root to calculate expectancy
-      stateMask_t const * stateMask = stateMasks[ convNodeToVar(root) ];
+      stateMaskPtr_t stateMask = stateMasks[ convNodeToVar(root) ];
       
       // calculate the likelihood of current component
       number_t lik_com = calcNormConstComponent(root, stateMask, inMu_[root]);
@@ -1058,12 +965,12 @@ namespace phy {
     vector< message_t const *> const & inMesLambda( inLambda[current]);
     message_t & outMesLambda = outLambda[current][ getIndex( nbs, receiver) ];
 
-    stateMask_t const * stateMask = stateMasks[ convNodeToVar(current) ];
+    stateMaskPtr_t stateMask = stateMasks[ convNodeToVar(current) ];
 
     calcExpectMessageVariable(current, receiver, stateMask, inMesMu, outMesMu, inMesLambda, outMesLambda);
   }
 
-  void DFG::calcExpectMessageVariable(unsigned current, unsigned receiver, stateMask_t const * stateMask, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const
+  void DFG::calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskPtr_t stateMask, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const
   {
     vector<unsigned> const & nbs = neighbors[current];
 

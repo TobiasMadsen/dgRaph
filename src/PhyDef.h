@@ -35,15 +35,6 @@ namespace phy {
   /** Type used to represent states of random variables */
   typedef unsigned state_t;
 
-  /** Type used for observed random variables */
-  typedef ublas::vector<bool> stateMask_t;
-
-  /** Type used for an enumerated set of stateMasks (e.g., input to factor graph) */
-  typedef std::vector<stateMask_t const *> stateMaskVec_t;
-
-  /** Type used for sequential data sets translated to stateMasks */
-  typedef std::vector<stateMaskVec_t> stateMask2DVec_t;
-
   /** Convert between boost::numeric::ublas::vector and std::vector */
   template<class T>
   std::vector<T> toStdVector(ublas::vector<T> v) {std::vector<T> u(v.size()); for (unsigned i = 0; i < v.size(); i++) u[i] = v[i]; return u;}

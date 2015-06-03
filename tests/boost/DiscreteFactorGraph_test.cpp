@@ -9,6 +9,7 @@
 #include "../../src/DiscreteFactorGraph.h"
 #undef private
 #undef protected
+#include "../../src/StateMask.h"
 
 // bost test
 #include <boost/test/unit_test.hpp>
@@ -79,11 +80,6 @@ DFG mkSimpleFactorGraph()
 /**************************************************
  Tests
  **************************************************/
-
-BOOST_AUTO_TEST_CASE(Test_1) 
-{
-  BOOST_CHECK( true );
-}
 
 BOOST_AUTO_TEST_CASE(DFGNode_1) 
 {
@@ -195,9 +191,7 @@ BOOST_AUTO_TEST_CASE(sumProduct_1)
   BOOST_CHECK_CLOSE(p, 1.0, EPS);
 
   // Test 2
-  stateMask_t v0 = stateMask_t(4, 0);
-  v0(0) = 1;
-  stateMasks.at(0) = &v0;
+  stateMasks.at(0) = phy::stateMaskPtr_t( new StateMaskObserved(1) );
   p = fg.calcNormConst(stateMasks);
   BOOST_CHECK_CLOSE( p, 0.25, EPS);
 }
@@ -207,9 +201,7 @@ BOOST_AUTO_TEST_CASE(calcVariableMarginals_1)
   // setup
   DFG fg = mkSimpleFactorGraph(); // fg defined a two leaf phylo tree (see function definition)
   stateMaskVec_t stateMasks(3);
-  stateMask_t v2 = stateMask_t(4, 0);
-  v2(0) = 1;
-  stateMasks.at(2) = &v2;
+  stateMasks.at(2) = phy::stateMaskPtr_t(new StateMaskObserved(0));
   fg.runSumProduct(stateMasks);
 
   // calcVariableMarginals
@@ -230,14 +222,10 @@ BOOST_AUTO_TEST_CASE(maxSum_1)
   DFG fg = mkSimpleFactorGraph(); // fg defined a two leaf phylo tree (see function definition)
   
   stateMaskVec_t stateMasks(3);
-  stateMask_t v0 = stateMask_t(4, 0), v1 = stateMask_t(4,0), v2 = stateMask_t(4,0);
-  v0(0) = 1;
-  v1(0) = 1;
-  v2(1) = 1;
-  stateMasks.at(0) = &v0;
-  stateMasks.at(1) = &v1;
-  stateMasks.at(2) = &v2;
-
+  stateMasks.at(0) = phy::stateMaskPtr_t( new StateMaskObserved(0) );
+  stateMasks.at(1) = phy::stateMaskPtr_t( new StateMaskObserved(0) );
+  stateMasks.at(2) = phy::stateMaskPtr_t( new StateMaskObserved(0) );
+  
   // run max sum
   vector<unsigned> maxVar;
   fg.initMaxVariables(maxVar);
@@ -251,9 +239,7 @@ BOOST_AUTO_TEST_CASE(calcFactorMarginals_1)
   // setup
   DFG fg = mkSimpleFactorGraph(); // fg defined a two leaf phylo tree (see function definition)
   stateMaskVec_t stateMasks(3);
-  stateMask_t v2 = stateMask_t(4, 0);
-  v2(0) = 1;
-  stateMasks.at(2) = &v2;
+  stateMasks.at(2) = phy::stateMaskPtr_t( new StateMaskObserved(0) );
 
   fg.runSumProduct(stateMasks);
 

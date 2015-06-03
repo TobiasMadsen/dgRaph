@@ -12,7 +12,7 @@ phy::DFG rToDFG(IntegerVector varDimensions, List facPotentials, List facNeighbo
 
 class RDFG{
 public:
-  //Constructors
+  // Constructors
   RDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors, IntegerVector potentialMap);
 
   // Calculate likelihood of of data frame
@@ -25,20 +25,17 @@ public:
   // Sampling
   IntegerMatrix simulate(int N);
 
-  //Calculate most probable state given partially observed data
-  Rcpp::IntegerVector maxProbState(Rcpp::IntegerVector observations, Rcpp::LogicalVector observed);
+  // Calculate most probable state given partially observed data
+  IntegerVector maxProbState(IntegerVector observations, LogicalVector observed);
 
-  //Calculate expectation counts
-  //TODO: Potentially cater for variables that are always unobserved
-  Rcpp::List facExpCounts(Rcpp::IntegerMatrix observations );
+  // Calculate factor expectation counts
+  List facExpCounts(IntegerMatrix observations );
 
-  // Accessors
+  // Potentials and scores
   List getPotentials();
   void resetPotentials(List facPotentials);
   void resetScores(List facScores);
   
-
-
 private:
   phy::DFG dfg;
 
