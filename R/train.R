@@ -82,7 +82,7 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
         stop(paste0("No matching optimization function found for: ", optim[i]))
       })
 
-      dfg$dfgmodule$resetPotentials( newPotentials);
+      potentials(dfg) <- newPotentials
       
       if(lastIteration)
         break;

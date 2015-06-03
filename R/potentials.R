@@ -13,7 +13,7 @@ potentials <- function(dfg){
 #' @export
 "potentials<-" <- function(dfg, value){
   # Perform input check
-  if( ! is.list(facPot) | ! all(sapply(facPot, is.matrix)))
+  if( ! is.list(value) | ! all(sapply(value, is.matrix)))
     stop("Potentials must be a list of matrices")
   if(length(value) != length(dfg$facPot))
     stop("Potentials did not have correct length")
