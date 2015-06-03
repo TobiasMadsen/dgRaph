@@ -4,7 +4,7 @@
 \alias{tailIS}
 \title{ImportanceSampling for tail estimation}
 \usage{
-tailIS(x = NULL, n, q = NULL, alpha = 0.5, dfg, facPotFg)
+tailIS(x = NULL, n = 1000, alpha = 0.5, dfg, facPotFg, observed = NULL)
 }
 \arguments{
 \item{x}{points to evaluate tail probabilities in}
@@ -16,6 +16,8 @@ tailIS(x = NULL, n, q = NULL, alpha = 0.5, dfg, facPotFg)
 \item{dfg}{Probabilistic graphical model specifying null model}
 
 \item{facPotFg}{Foreground model}
+
+\item{observed}{A boolean vector indicating which variables are observed}
 }
 \value{
 A dataframe with columns, x, tail estimate and confidence intervals

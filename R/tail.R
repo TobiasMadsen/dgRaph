@@ -4,8 +4,9 @@
 #' @param alpha     Tuning parameter, alpha=0 is naive sampling the higher alpha the more extreme observations
 #' @param dfg       Probabilistic graphical model specifying null model
 #' @param facPotFg  Foreground model
+#' @param observed  A boolean vector indicating which variables are observed
 #' @return A dataframe with columns, x, tail estimate and confidence intervals
-tailIS <- function(x=NULL, n, q=NULL, alpha=0.5, dfg, facPotFg){
+tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg, facPotFg, observed = NULL){
   if( is.null(x))
     stop("Specify scores x ")
   if( !is.numeric(x) )
@@ -16,6 +17,12 @@ tailIS <- function(x=NULL, n, q=NULL, alpha=0.5, dfg, facPotFg){
     stop("alpha must be a numeric vector")
   if( !is.dfg(dfg))
     stop("dfg must be a dfg object")
+  if( !is.null(observed)){
+    if( !is.logical(observed) | !is.vector(observed))
+      stop("observed must be a logical vector")
+    if( length(observed) != length(dfg$varDim))
+      stop("observed must have same length equal to number of variables")
+  }
   
   #Check if compatible dimensions
   stopifnot( is.list(facPotFg), all(sapply(facPotFg, is.matrix)))
@@ -42,6 +49,10 @@ tailIS <- function(x=NULL, n, q=NULL, alpha=0.5, dfg, facPotFg){
       })
     potentials(dfgIS) <- facPotIS
     samples <- simulate(dfgIS, n)
+    if(!is.null(observed)){
+      # Change unobserved columns to NA
+      samples[,which(observed)] <- NA
+    }
     
     # Calculate weights and scores
     dfgFg <- .copy(dfg)
