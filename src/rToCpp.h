@@ -3,8 +3,11 @@
 
 #include <Rcpp.h>
 #include "PhyDef.h"
+#include "StateMask.h"
 
 using namespace Rcpp;
+
+void dataToStateMasks(IntegerMatrix const & data, unsigned row, phy::stateMaskVec_t & stateMasks);
 
 void rMatToMat(NumericMatrix const & rmat, phy::matrix_t & mat);
 

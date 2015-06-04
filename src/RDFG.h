@@ -8,33 +8,33 @@
 
 using namespace Rcpp;
 
-phy::DFG rToDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors);
+phy::DFG rToDFG(IntegerVector const & varDimensions, List const & facPotentials, List const & facNeighbors);
 
 class RDFG{
 public:
   // Constructors
-  RDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors, IntegerVector potentialMap);
+  RDFG(IntegerVector const & varDimensions, List const & facPotentials, List const & facNeighbors, IntegerVector const & potentialMap);
 
   // Calculate likelihood of of data frame
-  double calcLikelihood(IntegerVector observations, LogicalVector observed);
-  double calcLogLikelihood(IntegerVector observations, LogicalVector observed);
+  NumericVector calcLikelihood(IntegerMatrix const & observations);
+  NumericVector calcLogLikelihood(IntegerMatrix const & observations);
 
   // Calculate Expecations
-  NumericVector expect(List facScores);
+  NumericVector expect(List const & facScores);
 
   // Sampling
   IntegerMatrix simulate(int N);
 
   // Calculate most probable state given partially observed data
-  IntegerVector maxProbState(IntegerVector observations, LogicalVector observed);
+  IntegerMatrix mps(IntegerMatrix const & observations);
 
   // Calculate factor expectation counts
-  List facExpCounts(IntegerMatrix observations );
+  List facExpCounts(IntegerMatrix const & observations );
 
   // Potentials and scores
   List getPotentials();
-  void resetPotentials(List facPotentials);
-  void resetScores(List facScores);
+  void resetPotentials(List const & facPotentials);
+  void resetScores(List const & facScores);
   
 private:
   phy::DFG dfg;

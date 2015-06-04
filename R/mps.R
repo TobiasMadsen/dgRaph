@@ -15,17 +15,8 @@ mps <- function(data, dfg){
       stop("data must be either a data.frame or a matrix")
   }
 
-  # Check range of variables
-
-  
   # Calculate mps
-  res <- apply(data, 1, FUN=function(x){
-    obs <- x
-    obs[is.na(obs)] <- 1
-    dfg$dfgmodule$maxProbState(obs ,!is.na(x))
-  })
-  
-  res <- as.data.frame(t(res))
-  names(res) <- dfg$varNames
-  return(res)
+  ret <- data.frame(dfg$dfgmodule$mps(as.matrix(data)))
+  colnames(ret) <- dfg$varNames
+  return(ret)
 }

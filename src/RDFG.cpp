@@ -10,7 +10,7 @@
 using namespace Rcpp;
 
 //Helper functions
-phy::DFG rToDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors, IntegerVector potentialMap){
+phy::DFG rToDFG(IntegerVector const & varDimensions, List const & facPotentials, List const & facNeighbors, IntegerVector const & potentialMap){
     //Make conversions
   std::vector<unsigned> varDim(varDimensions.begin(), varDimensions.end() );
   std::vector<unsigned> potMap(potentialMap.begin(), potentialMap.end() );
@@ -26,10 +26,10 @@ phy::DFG rToDFG(IntegerVector varDimensions, List facPotentials, List facNeighbo
 } 
 
 //Function definitions
-RDFG::RDFG(IntegerVector varDimensions, List facPotentials, List facNeighbors, IntegerVector potentialMap) 
+RDFG::RDFG(IntegerVector const & varDimensions, List const & facPotentials, List const & facNeighbors, IntegerVector const & potentialMap) 
   : dfg(rToDFG(varDimensions, facPotentials, facNeighbors, potentialMap)) {}
 
-NumericVector RDFG::expect(List facScores){
+NumericVector RDFG::expect(List const & facScores){
   // Convert to matrix
   std::vector<phy::matrix_t> facScoresVec;
   for(int k = 0; k < facScores.size(); ++k){
@@ -79,48 +79,43 @@ IntegerMatrix RDFG::simulate(int N){
 // Preconditions
 // observations either empty or length==variables.size()
 // observed either empty or length==variables.size()
-Rcpp::IntegerVector RDFG::maxProbState(Rcpp::IntegerVector observations, Rcpp::LogicalVector observed){
-  //Create empty statemasks
-  phy::stateMaskVec_t stateMasks( dfg.variables.size() );
+IntegerMatrix RDFG::mps(IntegerMatrix const & observations){
+  // Matrix to be returned
+  IntegerMatrix ret(observations.nrow(), observations.ncol());
 
-  //Observed variables
-  if(observed.size() == dfg.variables.size()){
-    for(int i = 0; i < dfg.variables.size(); ++i){
-      if(observed[i]){
-	stateMasks.at(i) = phy::stateMaskPtr_t( new phy::StateMaskObserved(observations[i] -1) );
-      }
-    }
+  // Create empty statemasks
+  phy::stateMaskVec_t stateMasks( dfg.variables.size() );
+  
+  for(int i = 0; i < observations.nrow(); ++i){
+    // Vector with mps
+    std::vector<unsigned> maxVarStates( dfg.variables.size() );
+
+    // Set statemasks
+    dataToStateMasks(observations, i, stateMasks);
+
+    //Calculate most probable state
+    dfg.runMaxSum(stateMasks, maxVarStates);
+
+    for(int j = 0; j < observations.ncol(); ++j)
+      ret(i, j) = maxVarStates.at(j) + 1;
   }
 
-  //Create return vector
-  std::vector<unsigned> maxVarStates( dfg.variables.size() );
-
-  //Calculate most probable state
-  dfg.runMaxSum(stateMasks, maxVarStates);
-  
-  // 0-1 C++-R index conversion
-  for(std::vector<unsigned>::iterator it = maxVarStates.begin(); it != maxVarStates.end(); ++it )
-    (*it)++;
-
-  return Rcpp::wrap(maxVarStates);
+  return ret;
 }
 
-Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
+List RDFG::facExpCounts(IntegerMatrix const & observations ){
   if(observations.ncol() != dfg.variables.size() )
     phy::errorAbort("ncol != variables.size");
 
   dfg.clearCounts();
 
+  //Create statemasks
+  phy::stateMaskVec_t stateMasks( dfg.variables.size());
+
   //Each row in the matrix is an observation
   for(int i = 0; i < observations.nrow(); ++i){
-    //Create statemasks
-    phy::stateMaskVec_t stateMasks( dfg.variables.size());
 
-    for(int j = 0; j < observations.ncol(); ++j){
-      if( ! IntegerMatrix::is_na(observations(i, j))){
-	stateMasks.at(j) = phy::stateMaskPtr_t( new phy::StateMaskObserved(observations(i, j) -1) );
-      }
-    }
+    dataToStateMasks(observations, i, stateMasks);
 
     //calculation
     std::vector<phy::matrix_t> tmpFacMar;
@@ -133,11 +128,11 @@ Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
   //Convert to list of matrices
   std::vector<phy::matrix_t> potCountsVec;
   dfg.getCounts(potCountsVec);
-  Rcpp::List ret(potCountsVec.size());
+  List ret(potCountsVec.size());
 
   for(int p = 0; p < potCountsVec.size(); ++p){
     phy::matrix_t & potCounts = potCountsVec.at(p);
-    Rcpp::NumericMatrix rPotCounts(potCounts.size1(), potCounts.size2());
+    NumericMatrix rPotCounts(potCounts.size1(), potCounts.size2());
     for(int i = 0; i < potCounts.size1(); ++i)
       for(int j = 0; j < potCounts.size2(); ++j)
 	rPotCounts(i,j) = potCounts(i,j);
@@ -150,7 +145,7 @@ Rcpp::List RDFG::facExpCounts(Rcpp::IntegerMatrix observations ){
 }
 
 // Accessors
-void RDFG::resetPotentials(List facPotentials){
+void RDFG::resetPotentials(List const & facPotentials){
   // Convert to matrix
   std::vector<phy::matrix_t> facPot;
   for(int k = 0; k < facPotentials.size(); ++k){
@@ -161,7 +156,7 @@ void RDFG::resetPotentials(List facPotentials){
   dfg.resetPotentials( facPot);
 }
 
-void RDFG::resetScores(List facScores){
+void RDFG::resetScores(List const & facScores){
   // Convert to matrix
   std::vector<phy::matrix_t> facScoresVec;
   for(int k = 0; k < facScores.size(); ++k){
@@ -179,26 +174,22 @@ List RDFG::getPotentials(){
   return facPotToRFacPot( ret);
 }
 
-
-// Preconditions
-// observations either empty or length==variables.size()
-// observed either empty or length==variables.size()
-double RDFG::calcLikelihood(Rcpp::IntegerVector observations, Rcpp::LogicalVector observed){
-  return std::exp( calcLogLikelihood(observations, observed));
+NumericVector RDFG::calcLikelihood(IntegerMatrix const & observations){
+  return exp( calcLogLikelihood(observations));
 }
 
-double RDFG::calcLogLikelihood(Rcpp::IntegerVector observations, Rcpp::LogicalVector observed){
+NumericVector RDFG::calcLogLikelihood(IntegerMatrix const & observations){
+  // Vector to be returned
+  NumericVector ret( observations.nrow() );
+  
   // Create empty statemasks
-  phy::stateMaskVec_t stateMasks( dfg.variables.size() );
+  phy::stateMaskVec_t stateMasks;
 
   // Observed variables
-  if(observed.size() == dfg.variables.size()){
-    for(int i = 0; i < dfg.variables.size(); ++i){
-      if(observed[i]){
-	stateMasks.at(i) = phy::stateMaskPtr_t( new phy::StateMaskObserved(observations[i] -1) );
-      }
-    }
+  for(int i = 0; i < observations.nrow(); ++i){
+    dataToStateMasks(observations, i, stateMasks);
+    ret(i) = dfg.calcLogNormConst(stateMasks);
   }
 
-  return dfg.calcLogNormConst(stateMasks);
+  return ret;
 }

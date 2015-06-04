@@ -10,7 +10,7 @@ RCPP_MODULE(phy) {
 
       .method("simulate", &RDFG::simulate)
 
-      .method("maxProbState", &RDFG::maxProbState)
+      .method("mps", &RDFG::mps)
 
       .method("expect", &RDFG::expect)
 
