@@ -16,8 +16,8 @@ public:
   RDFG(IntegerVector const & varDimensions, List const & facPotentials, List const & facNeighbors, IntegerVector const & potentialMap);
 
   // Calculate likelihood of of data frame
-  NumericVector calcLikelihood(IntegerMatrix const & observations);
-  NumericVector calcLogLikelihood(IntegerMatrix const & observations);
+  NumericVector calcLikelihood(IntegerMatrix const & observations, List const & obsList);
+  NumericVector calcLogLikelihood(IntegerMatrix const & observations, List const & obsList);
 
   // Calculate Expecations
   NumericVector expect(List const & facScores);
@@ -26,10 +26,10 @@ public:
   IntegerMatrix simulate(int N);
 
   // Calculate most probable state given partially observed data
-  IntegerMatrix mps(IntegerMatrix const & observations);
+  IntegerMatrix mps(IntegerMatrix const & observations, List const & obsList);
 
   // Calculate factor expectation counts
-  List facExpCounts(IntegerMatrix const & observations );
+  List facExpCounts(IntegerMatrix const & observations, List const & obsList);
 
   // Potentials and scores
   List getPotentials();

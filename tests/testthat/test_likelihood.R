@@ -1,6 +1,18 @@
 library(dgRaph)
 context("Likelihood Calculation")
 
+test_that("Likelihood Partial Observation", {
+  source("cases/twoDepedentVariables.R")
+  mydfg <- twoDependentVariables()
+  
+  data <- matrix(c(NA, 1), 1, 2)
+  dataList <- list()
+  dataList[[1]] <- list(c(0.8,0.2))
+  
+  expect_equal( likelihood(data = data, dfg = mydfg, dataList = dataList),
+                0.7*0.8*0.75+0.3*0.2*0.25)
+})
+
 test_that("Likelihood Calculation 1",{
   source("cases/twoDepedentVariables.R")
   mydfg <- twoDependentVariables()

@@ -9,6 +9,8 @@ using namespace Rcpp;
 
 void dataToStateMasks(IntegerMatrix const & data, unsigned row, phy::stateMaskVec_t & stateMasks);
 
+void dataToStateMasks(IntegerMatrix const & data, List const & dataList, unsigned row, phy::stateMaskVec_t & stateMasks);
+
 void rMatToMat(NumericMatrix const & rmat, phy::matrix_t & mat);
 
 phy::matrix_t rMatToMat(NumericMatrix const & rmat);

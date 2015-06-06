@@ -4,7 +4,7 @@
 #' @param log       calculate loglikelihood
 #' @return A vector of likelihoods for each observation
 #' @export
-likelihood <- function(data, dfg, log = FALSE){
+likelihood <- function(data, dfg, log = FALSE, dataList = list()){
   # Correct number of columns
   stopifnot(ncol(data) == length(dfg$varNames))
   
@@ -17,8 +17,8 @@ likelihood <- function(data, dfg, log = FALSE){
   
   # Calculate likelihood
   if( log ){
-    dfg$dfgmodule$calcLogLikelihood(as.matrix(data))
+    dfg$dfgmodule$calcLogLikelihood(as.matrix(data), dataList)
   } else{
-    dfg$dfgmodule$calcLikelihood(as.matrix(data))
+    dfg$dfgmodule$calcLikelihood(as.matrix(data), dataList)
   }
 }

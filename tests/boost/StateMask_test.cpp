@@ -26,6 +26,16 @@ BOOST_AUTO_TEST_CASE(StateMaskObserved_1){
   BOOST_CHECK_EQUAL( sm[1], 0);
 }
 
+BOOST_AUTO_TEST_CASE(StateMaskPosterior_1){
+  vector_t post(2);
+  post(0) = 0.8;
+  post(1) = 0.2;
+
+  StateMaskPosterior sm(post);
+  BOOST_CHECK_EQUAL( sm[0], 0.8);
+  BOOST_CHECK_EQUAL( sm[1], 0.2);
+}
+
 BOOST_AUTO_TEST_CASE(StateMaskVec_1){
   stateMaskVec_t smv(2, stateMaskPtr_t( new StateMask()) );
   smv.push_back( stateMaskPtr_t(new StateMaskObserved(2) ));

@@ -3,12 +3,12 @@
 #' @param dfg       discrete factor graph object
 #' @return A list of matrices containing the expectation counts for each factor
 
-facExpectations <- function(data, dfg){
+facExpectations <- function(data, dfg, dataList = list()){
     # Check input
     stopifnot(ncol(data) == length(dfg$varNames))
 
     # Calculate expectation counts
-    res <- dfg$dfgmodule$facExpCounts(as.matrix(data))
+    res <- dfg$dfgmodule$facExpCounts(as.matrix(data), dataList)
     #names(res) <- dfg$facNames
     return(res)
 }

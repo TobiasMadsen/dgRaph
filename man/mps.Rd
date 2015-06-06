@@ -4,7 +4,7 @@
 \alias{mps}
 \title{Most Probable State}
 \usage{
-mps(data, dfg)
+mps(data, dfg, dataList = list())
 }
 \arguments{
 \item{data}{dataframe or matrix with observed data. The mapping between columns and rows will be performed automatically. NA will be interpreted as a missing variable}

@@ -13,6 +13,29 @@ void dataToStateMasks(IntegerMatrix const & data, unsigned row, phy::stateMaskVe
   }
 }
 
+void dataToStateMasks(IntegerMatrix const & data, List const & dataList, unsigned row, phy::stateMaskVec_t & stateMasks){
+  stateMasks.resize( data.ncol() );
+  for(int col = 0; col < data.ncol(); ++col){
+    stateMasks.at(col).reset();
+
+    if( col < dataList.size() && ! Rf_isNull( dataList[col]) ){
+      // Use dataList if possible
+      NumericVector x = ((List) dataList[col])[row];
+      phy::vector_t posterior(x.size());
+      for(int i = 0; i < x.size(); ++i)
+	posterior(i) = x(i);
+      stateMasks.at(col) = phy::stateMaskPtr_t( new phy::StateMaskPosterior( posterior) );
+      continue;
+    }
+
+    if( ! IntegerMatrix::is_na( data(row, col)) ){
+      // Use observed variable
+      stateMasks.at(col) = phy::stateMaskPtr_t( new phy::StateMaskObserved( data(row, col) - 1));
+    }
+
+  }
+}
+
 void rMatToMat(NumericMatrix const & rmat, phy::matrix_t & mat){
   mat.resize( rmat.nrow(), rmat.ncol());
   for(int i = 0; i < rmat.nrow(); ++i)

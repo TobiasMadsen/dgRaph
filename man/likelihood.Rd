@@ -4,7 +4,7 @@
 \alias{likelihood}
 \title{Calculate likelihood of observation}
 \usage{
-likelihood(data, dfg, log = FALSE)
+likelihood(data, dfg, log = FALSE, dataList = list())
 }
 \arguments{
 \item{data}{dataframe or matrix with observed data. The mapping between columns and rows will be performed automatically. NA will be interpreted as a missing variable}

@@ -8,7 +8,7 @@
 namespace phy {
   class StateMask {
   public:
-    virtual const unsigned operator[](unsigned n) const{
+    virtual const double operator[](unsigned n) const{
       return 1;
     }
   };
@@ -17,7 +17,7 @@ namespace phy {
   public:
     StateMaskObserved(unsigned obs) : obs_(obs) {}
 
-    virtual const unsigned operator[](unsigned n) const{
+    virtual const double operator[](unsigned n) const{
       if(n == obs_)
 	return 1;
       return 0;
@@ -31,7 +31,7 @@ namespace phy {
   public:
     StateMaskPosterior(vector_t const & posterior) : posterior_(posterior) {}
 
-    virtual const unsigned operator[](unsigned n) const{
+    virtual const double operator[](unsigned n) const{
       return posterior_(n);
     }
 

@@ -79,7 +79,7 @@ IntegerMatrix RDFG::simulate(int N){
 // Preconditions
 // observations either empty or length==variables.size()
 // observed either empty or length==variables.size()
-IntegerMatrix RDFG::mps(IntegerMatrix const & observations){
+IntegerMatrix RDFG::mps(IntegerMatrix const & observations, List const & obsList){
   // Matrix to be returned
   IntegerMatrix ret(observations.nrow(), observations.ncol());
 
@@ -91,7 +91,7 @@ IntegerMatrix RDFG::mps(IntegerMatrix const & observations){
     std::vector<unsigned> maxVarStates( dfg.variables.size() );
 
     // Set statemasks
-    dataToStateMasks(observations, i, stateMasks);
+    dataToStateMasks(observations, obsList, i, stateMasks);
 
     //Calculate most probable state
     dfg.runMaxSum(stateMasks, maxVarStates);
@@ -103,7 +103,7 @@ IntegerMatrix RDFG::mps(IntegerMatrix const & observations){
   return ret;
 }
 
-List RDFG::facExpCounts(IntegerMatrix const & observations ){
+List RDFG::facExpCounts(IntegerMatrix const & observations, List const & obsList ){
   if(observations.ncol() != dfg.variables.size() )
     phy::errorAbort("ncol != variables.size");
 
@@ -115,7 +115,7 @@ List RDFG::facExpCounts(IntegerMatrix const & observations ){
   //Each row in the matrix is an observation
   for(int i = 0; i < observations.nrow(); ++i){
 
-    dataToStateMasks(observations, i, stateMasks);
+    dataToStateMasks(observations, obsList, i, stateMasks);
 
     //calculation
     std::vector<phy::matrix_t> tmpFacMar;
@@ -174,11 +174,11 @@ List RDFG::getPotentials(){
   return facPotToRFacPot( ret);
 }
 
-NumericVector RDFG::calcLikelihood(IntegerMatrix const & observations){
-  return exp( calcLogLikelihood(observations));
+NumericVector RDFG::calcLikelihood(IntegerMatrix const & observations, List const & obsList){
+  return exp( calcLogLikelihood(observations, obsList));
 }
 
-NumericVector RDFG::calcLogLikelihood(IntegerMatrix const & observations){
+NumericVector RDFG::calcLogLikelihood(IntegerMatrix const & observations, List const & obsList){
   // Vector to be returned
   NumericVector ret( observations.nrow() );
   
@@ -187,7 +187,7 @@ NumericVector RDFG::calcLogLikelihood(IntegerMatrix const & observations){
 
   // Observed variables
   for(int i = 0; i < observations.nrow(); ++i){
-    dataToStateMasks(observations, i, stateMasks);
+    dataToStateMasks(observations, obsList, i, stateMasks);
     ret(i) = dfg.calcLogNormConst(stateMasks);
   }
 
