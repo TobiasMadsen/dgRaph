@@ -5,7 +5,7 @@
 \title{EM training}
 \usage{
 train(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-09,
-  iter.max = 200)
+  iter.max = 200, dataList = list())
 }
 \arguments{
 \item{data}{dataframe or matrix with observed data. The mapping between columns and rows will be performed automatically.

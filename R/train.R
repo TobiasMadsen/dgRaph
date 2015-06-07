@@ -10,20 +10,11 @@
 #'                  Refer to the optimization function by entry name in "optim".
 #' @return A dataframe with a column for each variable and the most probable state for each observation
 #' @export
-train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, iter.max = 200){
+train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, iter.max = 200, dataList = list()){
+  .checkInputData(dfg, data, dataList)
+  
   # Output
   sprintf("Training...\n")
-    
-  # Correct number of columns
-  stopifnot(ncol(data) == length(dfg$varNames))
-  
-  # Correct data type
-  if(is.matrix(data))
-      stopifnot(is.numeric(data))
-  if(is.data.frame(data)){
-      # TODO: All NA column has type logical 
-      #stopifnot(all(lapply(data, is.numeric)))
-  }
   
   # Info from potential updates
   strPotential <- list()

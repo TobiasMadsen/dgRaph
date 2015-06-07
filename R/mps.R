@@ -3,17 +3,7 @@
 #' @param dfg       discrete factor graph object
 #' @return A dataframe with a column for each variable and the most probable state for each observation
 mps <- function(data, dfg, dataList = list()){
-  # Correct number of columns
-  stopifnot(ncol(data) == length(dfg$varNames))
-  
-  # Correct data type
-  if(is.matrix(data)){
-      stopifnot(is.numeric(data))
-  } else if(is.data.frame(data)){
-      # TODO NA's has type logical
-  } else {
-      stop("data must be either a data.frame or a matrix")
-  }
+  .checkInputData(dfg, data, dataList)
 
   # Calculate mps
   ret <- data.frame(dfg$dfgmodule$mps(as.matrix(data), dataList))

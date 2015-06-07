@@ -5,15 +5,7 @@
 #' @return A vector of likelihoods for each observation
 #' @export
 likelihood <- function(data, dfg, log = FALSE, dataList = list()){
-  # Correct number of columns
-  stopifnot(ncol(data) == length(dfg$varNames))
-  
-  # Correct data type
-  #if(is.matrix(data))
-  #    stopifnot(is.numeric(data))
-  # TODO NA's has type logical
-  #if(is.data.frame(data))
-  #    stopifnot(all(lapply(data, is.numeric)))
+  .checkInputData(dfg, data, dataList)
   
   # Calculate likelihood
   if( log ){

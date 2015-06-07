@@ -2,6 +2,7 @@
 #define __StateMask_h
 
 #include "PhyDef.h"
+#include "utils.h"
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
@@ -32,6 +33,8 @@ namespace phy {
     StateMaskPosterior(vector_t const & posterior) : posterior_(posterior) {}
 
     virtual const double operator[](unsigned n) const{
+      if(n >= posterior_.size())
+	errorAbort("Wrong variable sizes. Probably specified in dataList");
       return posterior_(n);
     }
 

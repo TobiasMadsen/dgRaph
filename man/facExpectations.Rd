@@ -4,7 +4,7 @@
 \alias{facExpectations}
 \title{Calculate expection counts}
 \usage{
-facExpectations(data, dfg)
+facExpectations(data, dfg, dataList = list())
 }
 \arguments{
 \item{data}{dataframe or matrix with observed data. The mapping between columns and rows will be performed automatically. NA will be interpreted as a missing variable}
