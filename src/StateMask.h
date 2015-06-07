@@ -9,6 +9,8 @@
 namespace phy {
   class StateMask {
   public:
+    virtual ~StateMask() = default;
+
     virtual const double operator[](unsigned n) const{
       return 1;
     }
