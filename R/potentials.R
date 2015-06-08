@@ -17,7 +17,14 @@ potentials <- function(dfg){
     stop("Potentials must be a list of matrices")
   if(length(value) != length(dfg$facPot))
     stop("Potentials did not have correct length")
-  stopifnot( all(sapply(seq_along(dfg$facPot), FUN=function(i){all(dim(dfg$facPot[[i]])==dim(value[[i]]))})) )
+  
+  sapply(seq_along(dfg$facPot), FUN=function(i){
+      if( !all( dim(dfg$facPot[[i]]) == dim(value[[i]]) )){
+        if( !all( dim(value[[i]]) == c(0,0) )){
+          stop(i,"th potential doesn't match")
+        }
+      }
+    })
   
   # Set potentials
   dfg$facPot <- value

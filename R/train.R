@@ -14,7 +14,7 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
   .checkInputData(dfg, data, dataList)
   
   # Output
-  sprintf("Training...\n")
+  cat("Training...\n")
   
   # Info from potential updates
   strPotential <- list()
@@ -24,18 +24,18 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
   curLik <- -Inf
   iter <- 0
   cat("Iterations:")
-  while( TRUE && iter < iter.max){
+  while( iter < iter.max){
       iter <- iter + 1
       cat(".")
       
       # Calculate likelihood of data
       oldLik <- curLik
-      curLik <- sum(likelihood(data, dfg, log = T))
+      curLik <- sum(likelihood(data, dfg, log = T, dataList = dataList))
       likVec[iter] <- curLik
       lastIteration <- !(curLik-oldLik > threshold)
       
       # Obtain expectation counts
-      expCounts <- facExpectations(data, dfg)
+      expCounts <- facExpectations(data, dfg, dataList = dataList)
       
       # Update potentials
       newPotentials <- lapply( seq_along(expCounts), FUN=function(i){

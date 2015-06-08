@@ -33,11 +33,11 @@ normOptimize <- function(range = c(0,100)){
 
 .linregOptimize <- function(expCounts, range1 = c(1,nrow(expCounts)), range2 = c(1,ncol(expCounts))){
   # Ranges are only used for output
-  SP_xy <- sum(1:nrow(expCounts) %*% t(1:ncol(expCounts)) * expCounts)
-  S_x   <- sum(1:nrow(expCounts) %*% t(rep(1,ncol(expCounts))) * expCounts) # x runs along rows
-  S_y   <- sum(rep(1,nrow(expCounts)) %*% t(1:ncol(expCounts)) * expCounts) # y runs along columns
-  USS_x <- sum( (1:nrow(expCounts))**2 %*% t(rep(1,ncol(expCounts))) * expCounts)
-  USS_y <- sum(rep(1,nrow(expCounts)) %*% t((1:ncol(expCounts))**2) * expCounts)
+  SP_xy <- sum(row(expCounts) * col(expCounts) * expCounts)
+  S_x   <- sum(row(expCounts) * expCounts) # x runs along rows
+  S_y   <- sum(col(expCounts)* expCounts) # y runs along columns
+  USS_x <- sum(row(expCounts)**2 * expCounts)
+  USS_y <- sum(col(expCounts)**2 * expCounts)
   N <- sum(expCounts)
   
   SSD_x  <- USS_x-S_x**2/N
