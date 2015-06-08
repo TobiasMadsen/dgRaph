@@ -2,11 +2,18 @@
 % Please edit documentation in R/optimize.R
 \name{linregOptimize}
 \alias{linregOptimize}
-\title{Linear Regression optimization}
+\title{Linear Regression optimization
+Optimize a normal linear regression}
 \usage{
-linregOptimize(range1 = 1:100, range2 = 1:100)
+linregOptimize(range1 = c(0, 100), range2 = c(0, 100))
+}
+\arguments{
+\item{range1}{range of independent variable}
+
+\item{range2}{range of dependent variable}
 }
 \description{
 Linear Regression optimization
+Optimize a normal linear regression
 }
 
