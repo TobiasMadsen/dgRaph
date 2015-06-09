@@ -13,7 +13,7 @@
 #include <boost/random/discrete_distribution.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 
-namespace phy {
+namespace dgRaph {
 
   DFGNode::DFGNode(unsigned dimension) : 
   isFactor_(false), dimension(dimension) {}
@@ -1033,4 +1033,4 @@ namespace phy {
   }
 
 
-} // namespace phy
+} // namespace dgRaph

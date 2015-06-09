@@ -3,8 +3,8 @@
  *
  * See README_license.txt for license agreement.
  *******************************************************************/
-#ifndef __phyDef_h
-#define __phyDef_h
+#ifndef __Definitions_h
+#define __Definitions_h
 
 #include <string>
 #include <boost/numeric/ublas/matrix.hpp>
@@ -12,7 +12,7 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <utility>
 
-namespace phy {
+namespace dgRaph {
 
   namespace ublas = boost::numeric::ublas;
   using namespace std;
@@ -41,7 +41,7 @@ namespace phy {
 
   template<class T>
   ublas::vector<T> toNumVector(std::vector<T> v) {ublas::vector<T> u(v.size()); for (unsigned i = 0; i < v.size(); i++) u[i] = v[i]; return u;}
-} // end namespace phy
+} // end namespace dgRaph
 
 
-#endif  //__phyDef_h
+#endif  //__Definitions_h

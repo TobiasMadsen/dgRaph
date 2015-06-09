@@ -7,7 +7,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 
 using boost::unit_test::test_suite;
-using namespace phy;
+using namespace dgRaph;
 
 /**************************************************
  Tests

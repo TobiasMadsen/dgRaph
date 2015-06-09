@@ -5,7 +5,7 @@
  *******************************************************************/
 #include "utils.h"
 
-namespace phy {
+namespace dgRaph {
 
   string strip(string const & s, string const & sep)
   {
@@ -115,4 +115,4 @@ namespace phy {
     }
   }
 
-} // end namespace phy
+} // end namespace dgRaph

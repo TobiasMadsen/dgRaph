@@ -20,13 +20,13 @@
 #include <fstream>
 #include <utility>
 #include <algorithm>
-#include "PhyDef.h"
+#include "Definitions.h"
 
 #ifndef BOOST_TEST
 #include <Rcpp.h>
 #endif
 
-namespace phy {
+namespace dgRaph {
 
   // ERROR CALLS
 
@@ -421,6 +421,6 @@ namespace phy {
 
 
 
-} // end namespace phy
+} // end namespace dgRaph
 
 #endif  //__utils_h

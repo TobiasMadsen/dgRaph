@@ -4,12 +4,12 @@
 \alias{simulate.dfg}
 \title{Simulate from DFG}
 \usage{
-\method{simulate}{dfg}(x, n)
+\method{simulate}{dfg}(dfg, n)
 }
 \arguments{
-\item{n}{Number of samples}
-
 \item{dfg}{Discrete factor graph object}
+
+\item{n}{Number of samples}
 }
 \description{
 Simulate from DFG

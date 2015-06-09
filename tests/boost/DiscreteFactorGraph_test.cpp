@@ -16,7 +16,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 
 using boost::unit_test::test_suite;
-using namespace phy;
+using namespace dgRaph;
 
 // Constants
 #define EPS 1e-10
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(sumProduct_1)
   BOOST_CHECK_CLOSE(p, 1.0, EPS);
 
   // Test 2
-  stateMasks.at(0) = phy::stateMaskPtr_t( new StateMaskObserved(1) );
+  stateMasks.at(0) = dgRaph::stateMaskPtr_t( new StateMaskObserved(1) );
   p = fg.calcNormConst(stateMasks);
   BOOST_CHECK_CLOSE( p, 0.25, EPS);
 }
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(calcVariableMarginals_1)
   // setup
   DFG fg = mkSimpleFactorGraph(); // fg defined a two leaf phylo tree (see function definition)
   stateMaskVec_t stateMasks(3);
-  stateMasks.at(2) = phy::stateMaskPtr_t(new StateMaskObserved(0));
+  stateMasks.at(2) = dgRaph::stateMaskPtr_t(new StateMaskObserved(0));
   fg.runSumProduct(stateMasks);
 
   // calcVariableMarginals
@@ -222,9 +222,9 @@ BOOST_AUTO_TEST_CASE(maxSum_1)
   DFG fg = mkSimpleFactorGraph(); // fg defined a two leaf phylo tree (see function definition)
   
   stateMaskVec_t stateMasks(3);
-  stateMasks.at(0) = phy::stateMaskPtr_t( new StateMaskObserved(0) );
-  stateMasks.at(1) = phy::stateMaskPtr_t( new StateMaskObserved(0) );
-  stateMasks.at(2) = phy::stateMaskPtr_t( new StateMaskObserved(0) );
+  stateMasks.at(0) = dgRaph::stateMaskPtr_t( new StateMaskObserved(0) );
+  stateMasks.at(1) = dgRaph::stateMaskPtr_t( new StateMaskObserved(0) );
+  stateMasks.at(2) = dgRaph::stateMaskPtr_t( new StateMaskObserved(1) );
   
   // run max sum
   vector<unsigned> maxVar;
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(calcFactorMarginals_1)
   // setup
   DFG fg = mkSimpleFactorGraph(); // fg defined a two leaf phylo tree (see function definition)
   stateMaskVec_t stateMasks(3);
-  stateMasks.at(2) = phy::stateMaskPtr_t( new StateMaskObserved(0) );
+  stateMasks.at(2) = dgRaph::stateMaskPtr_t( new StateMaskObserved(0) );
 
   fg.runSumProduct(stateMasks);
 

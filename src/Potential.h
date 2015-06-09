@@ -1,7 +1,7 @@
-#include "PhyDef.h"
+#include "Definitions.h"
 #include <boost/shared_ptr.hpp>
 
-namespace phy {
+namespace dgRaph {
   // Forward declaration
   class Potential;
 

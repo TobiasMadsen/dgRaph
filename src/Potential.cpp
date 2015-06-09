@@ -1,6 +1,6 @@
 #include "Potential.h"
 
-namespace phy {
+namespace dgRaph {
   void Potential::clearCounts(){
     for(int i = 0; i < expCounts.size1(); ++i)
       for(int j = 0; j < expCounts.size2(); ++j)

@@ -10,7 +10,7 @@ simulate.default <- function(x, ...){
 #' @param dfg     Discrete factor graph object
 #' @param n       Number of samples
 #' @export
-simulate.dfg <- function(x, n){
+simulate.dfg <- function(dfg, n){
   # Input check
   if(!is.numeric(n))
     stop("n should be numeric")
@@ -18,7 +18,7 @@ simulate.dfg <- function(x, n){
     stop("n < 0")
   
   # Sample
-  ret <- data.frame(x$dfgmodule$simulate(n))
-  colnames(ret) <- x$varNames
+  ret <- data.frame(dfg$dfgmodule$simulate(n))
+  colnames(ret) <- dfg$varNames
   return(ret)
 }

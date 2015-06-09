@@ -3,12 +3,12 @@
 
 #include <Rcpp.h>
 #include "rToCpp.h"
-#include "PhyDef.h"
+#include "Definitions.h"
 #include "DiscreteFactorGraph.h"
 
 using namespace Rcpp;
 
-phy::DFG rToDFG(IntegerVector const & varDimensions, List const & facPotentials, List const & facNeighbors);
+dgRaph::DFG rToDFG(IntegerVector const & varDimensions, List const & facPotentials, List const & facNeighbors);
 
 class RDFG{
 public:
@@ -37,7 +37,7 @@ public:
   void resetScores(List const & facScores);
   
 private:
-  phy::DFG dfg;
+  dgRaph::DFG dfg;
 
 };
 

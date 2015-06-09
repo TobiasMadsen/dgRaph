@@ -3,26 +3,26 @@
 #include <ctime>
 #include "RDFG.h"
 #include "rToCpp.h"
-#include "PhyDef.h"
+#include "Definitions.h"
 #include "DiscreteFactorGraph.h"
 #include "StateMask.h"
 
 using namespace Rcpp;
 
 //Helper functions
-phy::DFG rToDFG(IntegerVector const & varDimensions, List const & facPotentials, List const & facNeighbors, IntegerVector const & potentialMap){
+dgRaph::DFG rToDFG(IntegerVector const & varDimensions, List const & facPotentials, List const & facNeighbors, IntegerVector const & potentialMap){
     //Make conversions
   std::vector<unsigned> varDim(varDimensions.begin(), varDimensions.end() );
   std::vector<unsigned> potMap(potentialMap.begin(), potentialMap.end() );
   
-  std::vector<phy::matrix_t> facPot;
+  std::vector<dgRaph::matrix_t> facPot;
   for(int k = 0; k < facPotentials.size(); ++k){
     facPot.push_back( rMatToMat( facPotentials[k] ));
   }
 
   std::vector< std::vector<unsigned> > facNbs = rNbsToNbs( facNeighbors);
 
-  return phy::DFG(varDim, facPot, facNbs, potMap);
+  return dgRaph::DFG(varDim, facPot, facNbs, potMap);
 } 
 
 //Function definitions
@@ -31,17 +31,17 @@ RDFG::RDFG(IntegerVector const & varDimensions, List const & facPotentials, List
 
 NumericVector RDFG::expect(List const & facScores){
   // Convert to matrix
-  std::vector<phy::matrix_t> facScoresVec;
+  std::vector<dgRaph::matrix_t> facScoresVec;
   for(int k = 0; k < facScores.size(); ++k){
     facScoresVec.push_back( rMatToMat( facScores[k] ));
   }
 
   // Generate statemasks
-  phy::stateMaskVec_t stateMasks( dfg.variables.size() );
+  dgRaph::stateMaskVec_t stateMasks( dfg.variables.size() );
 
   // Set factor scores
   dfg.resetScores( facScoresVec);
-  std::pair<phy::number_t, phy::number_t> res = dfg.calcExpect(stateMasks);
+  std::pair<dgRaph::number_t, dgRaph::number_t> res = dfg.calcExpect(stateMasks);
 
   NumericVector ret(2);
   ret(0) = res.first;
@@ -54,12 +54,12 @@ IntegerMatrix RDFG::simulate(int N){
   boost::mt19937 gen(std::time(0));
 
   // Calculate marginals
-  phy::stateMaskVec_t stateMasks( dfg.variables.size() );
+  dgRaph::stateMaskVec_t stateMasks( dfg.variables.size() );
   dfg.runSumProduct(stateMasks);
   dfg.calcVariableMarginals(stateMasks);
   dfg.calcFactorMarginals();
-  const std::vector<phy::vector_t> & varMarginals = dfg.getVariableMarginals();
-  const std::vector<phy::matrix_t> & facMarginals = dfg.getFactorMarginals();
+  const std::vector<dgRaph::vector_t> & varMarginals = dfg.getVariableMarginals();
+  const std::vector<dgRaph::matrix_t> & facMarginals = dfg.getFactorMarginals();
 
   // Sample
   IntegerMatrix samples( N, dfg.variables.size() );
@@ -84,7 +84,7 @@ IntegerMatrix RDFG::mps(IntegerMatrix const & observations, List const & obsList
   IntegerMatrix ret(observations.nrow(), observations.ncol());
 
   // Create empty statemasks
-  phy::stateMaskVec_t stateMasks( dfg.variables.size() );
+  dgRaph::stateMaskVec_t stateMasks( dfg.variables.size() );
   
   for(int i = 0; i < observations.nrow(); ++i){
     // Vector with mps
@@ -105,12 +105,12 @@ IntegerMatrix RDFG::mps(IntegerMatrix const & observations, List const & obsList
 
 List RDFG::facExpCounts(IntegerMatrix const & observations, List const & obsList ){
   if(observations.ncol() != dfg.variables.size() )
-    phy::errorAbort("ncol != variables.size");
+    dgRaph::errorAbort("ncol != variables.size");
 
   dfg.clearCounts();
 
   //Create statemasks
-  phy::stateMaskVec_t stateMasks( dfg.variables.size());
+  dgRaph::stateMaskVec_t stateMasks( dfg.variables.size());
 
   //Each row in the matrix is an observation
   for(int i = 0; i < observations.nrow(); ++i){
@@ -118,7 +118,7 @@ List RDFG::facExpCounts(IntegerMatrix const & observations, List const & obsList
     dataToStateMasks(observations, obsList, i, stateMasks);
 
     //calculation
-    std::vector<phy::matrix_t> tmpFacMar;
+    std::vector<dgRaph::matrix_t> tmpFacMar;
     dfg.initFactorMarginals( tmpFacMar );
     dfg.runSumProduct( stateMasks );
     dfg.calcFactorMarginals( tmpFacMar );
@@ -126,12 +126,12 @@ List RDFG::facExpCounts(IntegerMatrix const & observations, List const & obsList
   }
 
   //Convert to list of matrices
-  std::vector<phy::matrix_t> potCountsVec;
+  std::vector<dgRaph::matrix_t> potCountsVec;
   dfg.getCounts(potCountsVec);
   List ret(potCountsVec.size());
 
   for(int p = 0; p < potCountsVec.size(); ++p){
-    phy::matrix_t & potCounts = potCountsVec.at(p);
+    dgRaph::matrix_t & potCounts = potCountsVec.at(p);
     NumericMatrix rPotCounts(potCounts.size1(), potCounts.size2());
     for(int i = 0; i < potCounts.size1(); ++i)
       for(int j = 0; j < potCounts.size2(); ++j)
@@ -147,7 +147,7 @@ List RDFG::facExpCounts(IntegerMatrix const & observations, List const & obsList
 // Accessors
 void RDFG::resetPotentials(List const & facPotentials){
   // Convert to matrix
-  std::vector<phy::matrix_t> facPot;
+  std::vector<dgRaph::matrix_t> facPot;
   for(int k = 0; k < facPotentials.size(); ++k){
     facPot.push_back( rMatToMat( facPotentials[k] ));
   }
@@ -158,7 +158,7 @@ void RDFG::resetPotentials(List const & facPotentials){
 
 void RDFG::resetScores(List const & facScores){
   // Convert to matrix
-  std::vector<phy::matrix_t> facScoresVec;
+  std::vector<dgRaph::matrix_t> facScoresVec;
   for(int k = 0; k < facScores.size(); ++k){
     facScoresVec.push_back( rMatToMat( facScores[k] ));
   }
@@ -169,7 +169,7 @@ void RDFG::resetScores(List const & facScores){
 
 List RDFG::getPotentials(){
   // Loop over factor nodes
-  std::vector<phy::matrix_t> ret;
+  std::vector<dgRaph::matrix_t> ret;
   dfg.getPotentials( ret);
   return facPotToRFacPot( ret);
 }
@@ -183,7 +183,7 @@ NumericVector RDFG::calcLogLikelihood(IntegerMatrix const & observations, List c
   NumericVector ret( observations.nrow() );
   
   // Create empty statemasks
-  phy::stateMaskVec_t stateMasks;
+  dgRaph::stateMaskVec_t stateMasks;
 
   // Observed variables
   for(int i = 0; i < observations.nrow(); ++i){

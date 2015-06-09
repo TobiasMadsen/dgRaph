@@ -11,11 +11,11 @@
 // manipulations.
 ////////////////////////////////////////////////////////////////
 
-#include "PhyDef.h"
+#include "Definitions.h"
 #include "utils.h"
 #include <algorithm>
 
-namespace phy {
+namespace dgRaph {
 
 
   /** Reset all matrix entries to x (default is 0).*/
@@ -211,6 +211,6 @@ namespace phy {
 
 
 
-} // end namespace phy
+} // end namespace dgRaph
 
 #endif  //__utilsLinAlg_h

@@ -1,15 +1,15 @@
 #ifndef __StateMask_h
 #define __StateMask_h
 
-#include "PhyDef.h"
+#include "Definitions.h"
 #include "utils.h"
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
-namespace phy {
+namespace dgRaph {
   class StateMask {
   public:
-    virtual ~StateMask() = default;
+    virtual ~StateMask() {};
 
     virtual const double operator[](unsigned n) const{
       return 1;

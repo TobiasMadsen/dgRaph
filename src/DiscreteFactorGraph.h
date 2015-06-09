@@ -6,7 +6,7 @@
 #ifndef __DiscreteFactorGraph_h
 #define __DiscreteFactorGraph_h
 
-#include "PhyDef.h"
+#include "Definitions.h"
 #include "Potential.h"
 #include "StateMask.h"
 #include "utils.h"
@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace phy {
+namespace dgRaph {
 
 using namespace std;
 
@@ -374,6 +374,6 @@ using namespace std;
 
 
 
-} // end namespace phy
+} // end namespace dgRaph
 
 #endif  //__DiscreteFactorGraph_h
