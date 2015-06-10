@@ -11,7 +11,7 @@ title:            dgRaph
 tagline:          'Factor Graphs in R'
 description:      An R package for training and inference in factor grahs.
 url:              https://tobiasmadsen.github.io/dgRaph/
-baseurl:          /
+baseurl:          /dgRaph/
 
 author:
   name:           'Tobias Madsen'
