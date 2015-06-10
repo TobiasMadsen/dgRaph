@@ -1,0 +1,26 @@
+# Dependencies
+markdown:         redcarpet
+highlighter:      pygments
+
+# Permalinks
+permalink:        pretty
+relative_permalinks: true
+
+# Setup
+title:            dgRaph
+tagline:          'Factor Graphs in R'
+description:      An R package for training and inference in factor grahs.
+url:              https://tobiasmadsen.github.io/dgRaph/
+baseurl:          /
+
+author:
+  name:           'Tobias Madsen'
+  url:            http://tobiasmadsen.com
+
+paginate:         5
+
+# Custom vars
+version:          1.0.0
+
+github:
+  repo:           https://github.com/TobiasMadsen/dgRaph/

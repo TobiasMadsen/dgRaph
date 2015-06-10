@@ -1,0 +1,21 @@
+---
+layout: post
+title: Tutorial
+author: "Tobias Madsen"
+tags: [tutorial]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.path = "figs/tutorial/")
+knitr::opts_knit$set(base.url = '/')
+```
+
+A factor graph consists of factors and variables.
+
+![My helpful figure](/figs/shared/mixture_fac.svg)
+
+
+```{r}
+varDim <- c(2,2)
+varDim
+```

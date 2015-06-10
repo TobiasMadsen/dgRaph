@@ -1,1 +1,18 @@
-Test dgRaph page
+---
+layout: page
+title: dgRaph
+tagline: Factor Graphs in R
+---
+
+Just getting started? Have a look at
+<ul class="getting_started">
+<li><a href="{% post_url 2015-06-10-installation %}">Installation</a></li>
+<li><a href="{% post_url 2015-06-10-tutorial %}">Tutorial</a></li>
+</ul>
+List of posts:
+
+<ul class="posts">
+  {% for post in site.posts %}
+    <li> &raquo; <a href="{{ BASE_PATH }}{{ post.url }}">{{ post.title }}</a></li>
+  {% endfor %}
+</ul>

@@ -1,0 +1,33 @@
+---
+layout: post
+title: Installation
+author: "Tobias Madsen"
+tags: [tutorial]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.path = "figs/tutorial/")
+knitr::opts_knit$set(base.url = '/')
+```
+
+<!--
+Build post
+library(knitr)
+render_jekyll()
+knit(input = "../gh-pages-dgRaph/knitr//installation.Rmd", output = "../gh-pages-dgRaph/_posts/2015-06-10-installation.md")
+-->
+
+First step install the `devtools` package:
+
+```{r devtools, eval=FALSE}
+install.packages("devtools")
+```
+
+With `devtools` in place. Use `devtools` to install `dgRaph` directly from github:
+
+```{r install, eval=FALSE}
+devtools::install_github("TobiasMadsen/dgRaph")
+```
+
+If compilation fails please raise an issue on [github](https://github.com/TobiasMadsen/dgRaph/issues).
+
