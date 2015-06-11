@@ -81,14 +81,14 @@ normOptimize <- function(range = c(0,100)){
   varScaled <- rep(0, nrow(expCounts))
   pot <- t(apply(expCounts, 1, FUN=function(x){
     xs <- sum(x*seq_along(x) )
-    xm <- xs/sum(x)-1/2
+    xm <- xs/sum(x)
     xv <- (sum(x*seq_along(x)**2)-xs**2/sum(x))/sum(x)
     i <<- i + 1
     
-    meanScaled[i] <<- xm * (diff(range)/ncol(expCounts)) + range[1]
+    meanScaled[i] <<- (xm-0.5) * (diff(range)/ncol(expCounts)) + range[1]
     varScaled[i]  <<- xv * (diff(range)/ncol(expCounts))**2
     str <<- paste0(str, i, "\tmean:\t", signif(meanScaled[i], 5), "\tvar:\t", signif(varScaled[i], 5), '\n')
-    diff(pnorm( c(-Inf, 2:length(x), Inf), xm, sqrt(xv)))
+    diff(pnorm( c(-Inf, 2:length(x), Inf), xm+0.5, sqrt(xv)))
   }))
   return(list(pot = pot, str = str, means = meanScaled, vars = varScaled))
 }

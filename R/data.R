@@ -4,7 +4,7 @@
     stop("Data should either be matrix or data frame")
   
   # Number of columns matches number of variables
-  if( ! ncol(data) == length(dfg$varNames) )
+  if( ! ncol(data) == length(dfg$varDim) )
     stop("number of columns doesn't match number of variables")
   
   # Columns are numeric or logical

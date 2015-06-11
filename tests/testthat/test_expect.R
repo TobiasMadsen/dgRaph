@@ -12,9 +12,9 @@ test_that("Components", {
   
   mydfg <- dfg(varDim, facPot, facNbs)
   
-  res <- expect(mydfg, facExp)
-  expect_equal(res[1],6)
-  expect_equal(res[2],18)
+  res <- unname( expect(mydfg, facExp) )
+  expect_equal(unname(res[1]),6)
+  expect_equal(unname(res[2]),18)
 })
 
 test_that("Simple phylogenetic model",{
@@ -29,7 +29,7 @@ test_that("Simple phylogenetic model",{
               list(c(3L,4L)))
   mydfg <- dfg(varDim, facPot, facNbs)
   
-  res <- expect(mydfg, facExp)
+  res <- unname( expect(mydfg, facExp) )
   expect_equal(length(res),2)
   expect_equal(res[1],1)
   expect_equal(res[2],0.6)
@@ -47,7 +47,7 @@ test_that("Bernoulli connected to ancestor",{
   facExp <- .facPotToFunB(facPot1,facPot2)
   
   mydfg <- dfg(varDim, facPot, facNbs)
-  res <- expect(mydfg, facExp)
+  res <- unname(expect(mydfg, facExp))
   
   mgf <- function(t){(((1/2)**t+(3/2)**t)/2)**N}
   dtlogmgf <- function(t){N/((1/2)**t+(3/2)**t)*(log(1/2)*(1/2)**t+log(3/2)*(3/2)**t )}
@@ -68,7 +68,7 @@ test_that("Bernoulli disconnected",{
   facExp <- .facPotToFunB(facPot1,facPot2)
   
   mydfg <- dfg(varDim, facPot, facNbs)
-  res <- expect(mydfg, facExp)
+  res <- unname(expect(mydfg, facExp))
   
   mgf <- function(t){(((1/2)**t+(3/2)**t)/2)**N}
   dtlogmgf <- function(t){N/((1/2)**t+(3/2)**t)*(log(1/2)*(1/2)**t+log(3/2)*(3/2)**t )}

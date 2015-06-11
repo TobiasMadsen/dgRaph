@@ -14,6 +14,8 @@ expect.dfg <- function(x, facScores){
   stopifnot( length(facScores) == length(x$facPot))
   facPotBg <- potentials(x)
   stopifnot( all(sapply(seq_along(facPotBg), FUN=function(i){all(dim(facPotBg[[i]])==dim(facScores[[i]]))})) )
-  x$dfgmodule$expect(facScores)
+  ret <- x$dfgmodule$expect(facScores)
+  names(ret) <- c("Likelihood", "Expect")
+  ret
 }
 

@@ -63,7 +63,7 @@ normalPotential <- function(dim = c(1,100)){
   
   # Draw some means
   # TODO: Avoid means close to boundary
-  m <- (sample(dim[2], dim[1])/2)+dim[2]/4
+  m <- (sample(dim[2], dim[1])*0.8)+dim[2]*0.1
   t(sapply(m, FUN=function(x){
     diff(pnorm( c(-Inf, 1:(dim[2]-1)+0.5, Inf), x, dim[2]/5) )
   }))
