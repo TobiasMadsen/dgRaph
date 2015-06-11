@@ -166,6 +166,14 @@ a.sidebar-nav-item:focus {
   }
 }
 
+/*
+ * Center image from knitr
+ */
+
+[alt=center] {
+  display: block;
+  margin: auto;
+}
 
 
 /*
