@@ -68,6 +68,20 @@ test_that("Linreg optimizer 2",{
   expect_equal(linreg$var, 8)
 })
 
+test_that("Linreg optimizer 3",{
+  # Generate data
+  dat <- matrix(c(0,0,1,2,1,0),6,6, byrow = T)
+  linreg <- linregOptimize()(dat)
+  
+  # Rows identical
+  expect_equal(linreg$pot[1,], linreg$pot[2,])
+  
+  # Check equal to similar one dimensional update
+  datRow <- dat[1,,drop = F]
+  normopt <- normOptimize()(datRow)
+  expect_equal(normopt$pot[1,], linreg$pot[1,])
+})
+
 test_that("Normal optimizer",{
   # Generate data
   dat <- matrix(c(0,0,1,2,1,0), 1, 6)

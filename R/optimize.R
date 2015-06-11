@@ -45,7 +45,7 @@ normOptimize <- function(range = c(0,100)){
   SPD_xy <- SP_xy - S_x*S_y/N
   
   alpha <- SPD_xy / SSD_x
-  beta  <- (S_y - S_x* alpha) / N - 1/2
+  beta  <- (S_y - S_x* alpha) / N
   var   <- (SSD_y - SPD_xy * SPD_xy/SSD_x) / N
   if(var  <= 0)
     stop("Variance 0 or less")
@@ -56,7 +56,7 @@ normOptimize <- function(range = c(0,100)){
   
   # Scale to range
   alphaScaled <- alpha / (diff(range1)/nrow(expCounts)) * (diff(range2)/ncol(expCounts))
-  betaScaled <- beta * (diff(range2)/ncol(expCounts)) + range2[1]
+  betaScaled <- (beta-0.5) * (diff(range2)/ncol(expCounts)) + range2[1]
   varScaled <- var * (diff(range2)/ncol(expCounts))**2
   
   str <- "Linear Regression Potential\n"
