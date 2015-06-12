@@ -1,6 +1,19 @@
 library(dgRaph)
 context("Sampling")
 
+test_that("Set seed",{
+  source("cases/twoDepedentVariables.R")
+  mydfg <- twoDependentVariables()
+  
+  set.seed(1)
+  sim1 <- simulate(mydfg, 50)
+  
+  set.seed(1)
+  sim2 <- simulate(mydfg, 50)
+  
+  expect_equal(sim1, sim2)
+})
+
 test_that("Sampling from 2 state graph",{
   source("cases/twoDepedentVariables.R")
   mydfg <- twoDependentVariables()

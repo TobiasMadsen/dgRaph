@@ -50,9 +50,6 @@ NumericVector RDFG::expect(List const & facScores){
 }
 
 IntegerMatrix RDFG::simulate(int N){
-  // Setup
-  boost::mt19937 gen(std::time(0));
-
   // Calculate marginals
   dgRaph::stateMaskVec_t stateMasks( dfg.variables.size() );
   dfg.runSumProduct(stateMasks);
@@ -65,7 +62,7 @@ IntegerMatrix RDFG::simulate(int N){
   IntegerMatrix samples( N, dfg.variables.size() );
   for(int i = 0; i < N; ++i){
     std::vector<unsigned> sample(dfg.variables.size());
-    dfg.sample(gen, varMarginals, facMarginals, sample);
+    dfg.sample(varMarginals, facMarginals, sample);
     
     // Process
     for(int j = 0; j < sample.size(); ++j)

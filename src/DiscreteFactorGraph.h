@@ -16,8 +16,6 @@
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/io.hpp>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/variate_generator.hpp>
 #include <boost/foreach.hpp>
 #include <vector>
 #include <utility>
@@ -175,12 +173,12 @@ using namespace std;
     void consistencyCheck();
 
     /** Make a sample from conditional distribution induced by factorgraph, precondition sumProduct has been run */
-    void sample(boost::mt19937 & gen, vector<vector_t> const & varMarginals, vector<matrix_t> const & facMarginals, vector<unsigned> & sample);
-    vector<unsigned> sample(boost::mt19937 & gen, vector<vector_t> const & varMarginals, vector<matrix_t> const & facMarginals);
+    void sample(vector<vector_t> const & varMarginals, vector<matrix_t> const & facMarginals, vector<unsigned> & sample);
+    vector<unsigned> sample(vector<vector_t> const & varMarginals, vector<matrix_t> const & facMarginals);
 
     /** Precondition: calcFactorMarginals and calcVariableMarginals has been called on members factorMarginals and variableMarginals */
-    void simulateVariable(boost::mt19937 & gen, unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<unsigned> & sim);
-    void simulateFactor(boost::mt19937 & gen, unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<unsigned> & sim);
+    void simulateVariable(unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<unsigned> & sim);
+    void simulateFactor(unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<unsigned> & sim);
     
     /** write factor info to str */
     void writeInfo( ostream & str, vector<string> const & varNames = vector<string>(), vector<string> const & facNames = vector<string>() );

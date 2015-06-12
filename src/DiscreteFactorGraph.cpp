@@ -4,13 +4,10 @@
  * See README_license.txt for license agreement.
  *******************************************************************/
 #include "DiscreteFactorGraph.h"
+#include "Sample.h"
 
 #include <queue>
 
-#include <boost/tuple/tuple.hpp>
-#include <boost/iterator/zip_iterator.hpp>
-#include <boost/range/iterator_range.hpp>
-#include <boost/random/discrete_distribution.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 
 namespace dgRaph {
@@ -659,14 +656,14 @@ namespace dgRaph {
     }
   }
 
-  vector<unsigned> DFG::sample(boost::mt19937 & gen, vector<vector_t> const & varMarginals, vector<matrix_t> const & facMarginals){
+  vector<unsigned> DFG::sample(vector<vector_t> const & varMarginals, vector<matrix_t> const & facMarginals){
     vector<unsigned> ret;
-    sample(gen, varMarginals, facMarginals, ret);
+    sample(varMarginals, facMarginals, ret);
     return ret;
   }
 
   // Sample from factor graph
-  void DFG::sample(boost::mt19937 & gen, vector<vector_t> const & varMarginals, vector<matrix_t> const & facMarginals, vector<unsigned> & sim){
+  void DFG::sample(vector<vector_t> const & varMarginals, vector<matrix_t> const & facMarginals, vector<unsigned> & sim){
     
     //TODO: Do some input checks!
 
@@ -681,29 +678,27 @@ namespace dgRaph {
       	errorAbort("DiscreFactorGraph.cpp::DFG::sample: Root nodes currently have to be variables");
 
       unsigned varId = convNodeToVar(root);
-      boost::random::discrete_distribution<int, number_t> dist( varMarginals.at(varId).begin(), varMarginals.at(varId).end());
-      boost::variate_generator<boost::mt19937 &, boost::random::discrete_distribution< int, number_t> > distGen( gen, dist);
+      unsigned state = discreteSample( varMarginals.at(varId).begin(), varMarginals.at(varId).end());
 
-      unsigned state = distGen();
       sim.at(varId) = state;
 
       //Call simulateVariable
-      simulateVariable(gen, root, root, state, facMarginals, sim);
+      simulateVariable(root, root, state, facMarginals, sim);
     }
 
   }
 
-  void DFG::simulateVariable(boost::mt19937 & gen, unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<unsigned> & sim){
+  void DFG::simulateVariable(unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<unsigned> & sim){
     //Loop over neighbors except sender (notice if current==sender, this is the root node)
     vector<unsigned> const & nbs = neighbors.at(current);
     for(int i = 0; i < nbs.size(); ++i){
       unsigned nb = nbs.at(i);
       if(nb != sender)
-	simulateFactor(gen, nb, current, state, facMarginals, sim);
+	simulateFactor(nb, current, state, facMarginals, sim);
     }
   }
 
-  void DFG::simulateFactor(boost::mt19937 & gen, unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<unsigned> & sim){
+  void DFG::simulateFactor(unsigned current, unsigned sender, unsigned state, vector<matrix_t> const & facMarginals, vector<unsigned> & sim){
     //At most a single nb except root
     vector<unsigned> const & nbs = neighbors.at(current);
 
@@ -714,27 +709,23 @@ namespace dgRaph {
       unsigned facId = convNodeToFac(current);
       if(nbs[0] == sender){
         const boost::numeric::ublas::matrix_row<const matrix_t> prob( facMarginals.at(facId), state);
-	boost::random::discrete_distribution<int, number_t> dist( prob.begin(), prob.end() );
-	boost::variate_generator<boost::mt19937 &, boost::random::discrete_distribution<int, number_t> > distGen( gen, dist);
-	unsigned receiver_state = distGen();
+	unsigned receiver_state  = discreteSample( prob.begin(), prob.end() );
 	
 	//set state
 	sim.at( convNodeToVar(nbs[1])) = receiver_state;
 	
 	//call neighbour
-	simulateVariable(gen, nbs[1], current, receiver_state, facMarginals, sim);
+	simulateVariable(nbs[1], current, receiver_state, facMarginals, sim);
       }
       else if( nbs[1] == sender){
 	const boost::numeric::ublas::matrix_column<const matrix_t> prob( facMarginals.at(facId), state);
-	boost::random::discrete_distribution<int, number_t> dist( prob.begin(), prob.end() );
-	boost::variate_generator<boost::mt19937 &, boost::random::discrete_distribution<int, number_t> > distGen( gen, dist);
-	unsigned receiver_state = distGen();
+	unsigned receiver_state = discreteSample( prob.begin(), prob.end() );
 	
 	//set state
 	sim.at( convNodeToVar(nbs[0])) = receiver_state;
 	
 	//call neighbour
-	simulateVariable(gen, nbs[0], current, receiver_state, facMarginals, sim);
+	simulateVariable(nbs[0], current, receiver_state, facMarginals, sim);
       }
     }
     else{
