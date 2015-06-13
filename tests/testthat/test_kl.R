@@ -1,6 +1,18 @@
 library(dgRaph)
 context("Kullback-Leibler")
 
+test_that("Small probabilities",{
+  varDim <- c(2)
+  facPotBg <- list(matrix(c(1, 1e-14),1,2))
+  facPotFg <- list(matrix(c(1,0),1,2))
+  facNbs <- list(1)
+
+  dfg1 <- dfg(varDim, facPotBg, facNbs)
+  dfg2 <- dfg(varDim, facPotFg, facNbs)
+  
+  expect_false( is.infinite( kl(dfg1, dfg2)) )
+})
+
 test_that("Two independent variables",{
   varDim <- c(2,2)
   facPotBg <- list(matrix(c(0.5),1,2))

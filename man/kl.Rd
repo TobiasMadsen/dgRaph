@@ -13,6 +13,8 @@ kl(dfg1, dfg2)
 }
 \description{
 Calculates Kullback-leibler divergence KL(dfg1, dfg2)
-between two factor grahs with identical structure.
+between two factor grahs with identical structure. Beware that if for some potential f, and some
+variable configuration, x. f(x) > 0 in dfg1 and f(x) = 0 in dfg2, the KL divergence is infinite,
+here however, we ignore such entries and put f(x) = 0 in dfg1.
 }
 
