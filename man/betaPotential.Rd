@@ -3,17 +3,22 @@
 \name{betaPotential}
 \alias{betaPotential}
 \title{Beta Potential
-Initialize a beta distributed potential with random starting point}
+Initialize a beta distributed potential}
 \usage{
-betaPotential(dim = c(1, 100), range = c(0, 1))
+betaPotential(dim = c(1, 100), range = c(0, 1), alphas = NULL,
+  betas = NULL)
 }
 \arguments{
 \item{dim}{A vector with dimensions of potential}
 
 \item{range}{The limits of the binning scheme.}
+
+\item{alphas}{Provide an alpha for each class. If alphas and betas are not provided they will be selected randomly and such that the whole range is covered.}
+
+\item{betas}{Provide a beta for each class. See alphas}
 }
 \description{
 Beta Potential
-Initialize a beta distributed potential with random starting point
+Initialize a beta distributed potential
 }
 

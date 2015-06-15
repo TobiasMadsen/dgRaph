@@ -57,7 +57,7 @@ linregPotential <- function(dim = c(100,100)){
 #' Initialize a norm potential with random starting points
 #' @param dim     A vector with dimensions of potential
 #' @export
-normalPotential <- function(dim = c(1,100)){
+normalPotential <- function(dim = c(1,100), means = NULL){
   if(length(dim) != 2)
       stop("dim should be a vector of length 2")
   
@@ -81,23 +81,38 @@ multinomialPotential <- function(dim = c(1,5)){
 }
 
 #' Beta Potential
-#' Initialize a beta distributed potential with random starting point
+#' Initialize a beta distributed potential
 #' @param dim     A vector with dimensions of potential
 #' @param range   The limits of the binning scheme.
+#' @param alphas  Provide an alpha for each class. If alphas and betas are not provided they will be selected randomly and such that the whole range is covered.
+#' @param betas   Provide a beta for each class. See alphas
 #' @export
-betaPotential <- function(dim = c(1, 100), range = c(0,1)){
+betaPotential <- function(dim = c(1, 100), range = c(0,1), alphas = NULL, betas = NULL){
   if(length(dim) != 2)
     stop("dim should be a vector of length 2")
   if(length(range) != 2)
     stop("range should be a vector of length 2")
   
   # Draw means
-  m <- runif(dim[1], min = range[1]+0.2*diff(range), max = range[1]+0.8*diff(range))
-  v <- diff(range)**2 * 0.02
-  t(sapply(m, FUN=function(x){
-    a <- x*(x*(1-x)/v-1)
-    b <- a*(1/x-1)
-    diff(pbeta( range[1]+diff(range)*(0:dim[2]/dim[2]), a, b ) )
+  if(is.null(alphas) & is.null(betas)){
+    m <- runif(dim[1], min = range[1]+0.2*diff(range), max = range[1]+0.8*diff(range))
+    v <- diff(range)**2 * 0.02
+    alphas <- m*(m*(1-m)/v-1)
+    betas <- alphas*(1/m-1)
+  } else {
+    # Check alphas and betas
+    if( ! dim[1] == length(alphas))
+      stop("Provide as many alphas as dim[1]")
+    if( ! dim[1] == length(betas))
+      stop("Provide as many betas as dim[1]")
+    if( ! all(betas > 0))
+      stop("Betas must be positive")
+    if( ! all(alphas > 0))
+      stop("Alphas must be positive")
+  }
+  
+  t(sapply(seq_along(alphas), FUN=function(i){
+    diff(pbeta( range[1]+diff(range)*(0:dim[2]/dim[2]), alphas[i], betas[i] ) )
   }))
 }
 

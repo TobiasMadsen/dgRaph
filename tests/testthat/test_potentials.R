@@ -1,7 +1,7 @@
 library(dgRaph)
 context("Potentials")
 
-test_that("Beta potential",{
+test_that("Beta potential 1",{
   # Generate a beta potential
   for(i in 1:3){
     set.seed(i)
@@ -11,6 +11,21 @@ test_that("Beta potential",{
     expect_equal(rowSums(pot), c(1,1))
     expect_true(min(pot) >= 0)
   }
+})
+
+test_that("Beta potential 2",{
+  # Generate a beta potential with known parameters
+  val <- betaPotential(dim = c(2,100), alphas = c(2,3), betas = c(2,2))
+  
+  expect_equal(val[1,], diff(pbeta(seq(0,1,length.out = 101), 2, 2)))
+  expect_equal(val[2,], diff(pbeta(seq(0,1,length.out = 101), 3, 2)))
+})
+
+test_that("Beta potential 3",{
+  # Check range argument
+  val <- betaPotential(dim = c(1,100), range = c(0,1e-2), alphas = 2, betas = 800)
+  
+  expect_equal(val[1,], diff(pbeta(seq(0,1e-2,length.out = 101), 2, 800)))
 })
 
 test_that("Multinomial potential",{
