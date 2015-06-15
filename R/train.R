@@ -8,10 +8,11 @@
 #'                  "linreg" optizing a normal linear regression of x2 on x1
 #' @param optimFun A named list with additional optimization functions. 
 #'                  Refer to the optimization function by entry name in "optim".
-#' @return A dataframe with a column for each variable and the most probable state for each observation
+#' @return A discrete factor graph object with updated potentials
 #' @export
 train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, iter.max = 200, dataList = list()){
   .checkInputData(dfg, data, dataList)
+  trainedDfg <- .copy(dfg)
   
   # Output
   cat("Training...\n")
@@ -30,12 +31,12 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
       
       # Calculate likelihood of data
       oldLik <- curLik
-      curLik <- sum(likelihood(data, dfg, log = T, dataList = dataList))
+      curLik <- sum(likelihood(data, trainedDfg, log = T, dataList = dataList))
       likVec[iter] <- curLik
       lastIteration <- !(curLik-oldLik > threshold)
       
       # Obtain expectation counts
-      expCounts <- facExpectations(data, dfg, dataList = dataList)
+      expCounts <- facExpectations(data, trainedDfg, dataList = dataList)
       
       # Update potentials
       newPotentials <- lapply( seq_along(expCounts), FUN=function(i){
@@ -73,7 +74,7 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
         stop(paste0("No matching optimization function found for: ", optim[i]))
       })
 
-      potentials(dfg) <- newPotentials
+      potentials(trainedDfg) <- newPotentials
       
       if(lastIteration)
         break;
@@ -97,4 +98,5 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
     cat('\n')
   }
   
+  trainedDfg
 }
