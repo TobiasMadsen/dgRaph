@@ -14,9 +14,17 @@ namespace dgRaph {
     // Sample using Runif function
     double u = R::runif(0,1);
     double cumSum = 0;
-    
+    double sum = 0;
     Iterator p = beg;
-    while(p != end && cumSum < u){
+
+    // Calculate sum
+    while(p != end){
+      sum += *p++;
+    }
+
+    // Find variable
+    p = beg;
+    while(p != end && cumSum < u*sum){
       cumSum += *p++;
     }
 

@@ -1,6 +1,26 @@
 library(dgRaph)
 context("Tail approximations")
 
+test_that("IS sampling two dependent variables",{
+  varDim <- rep(2,2)
+  facPot <- c(list(matrix(0.5,1,2)),
+              list(matrix(0.5,2,2)))
+  facPotFg <- c(list(matrix(c(0.75,0.25),1,2)),
+                list(matrix(c(0.75,0.25,0.25,0.75),2,2)))
+  facNbs <- c(list(c(1L)),
+              list(c(1L,2L)))
+  
+  mydfg <- dfg(varDim, facPot, facNbs)
+  is <- tailIS(x = 0.81, n = 10000, alpha = 1.5, dfg = mydfg, facPotFg = facPotFg)
+  naive <- tailIS(x = 0.81, n = 10000, alpha = 0.0, dfg = mydfg, facPotFg = facPotFg)
+  
+  # Test estimates are close
+  expect_less_than( abs(is$p - naive$p), 0.02)
+  # Test confidence intervals overlap
+  expect_less_than( is$low, naive$high)
+  expect_less_than( naive$low, is$high)
+})
+
 test_that("NA when out of range saddlepoint",{
   varDim <- 2L
   facPot <- c(list(matrix(c(0.5,0.5),1,2)) )

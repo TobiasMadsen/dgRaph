@@ -28,7 +28,7 @@ test_that("Sampling from 2 state graph",{
   expect_more_than( sum(sim$x == 1) , 644)
 })
 
-test_that("Sampling unnormalized",{
+test_that("Sampling unnormalized 1",{
   varDim <- c(2)
   facPot <- list(matrix(c(4,1),1,2))
   facNbs <- list(1)
@@ -38,4 +38,20 @@ test_that("Sampling unnormalized",{
   # Stochastic test
   expect_less_than( sum(sim[,1] == 1), 900)
   expect_more_than( sum(sim[,1] == '1'), 700)
+})
+
+test_that("Sampling unnormalized 2",{
+  varDim <- rep(2,2)
+  facPot <- c(list(matrix(c(0.75,0.25),1,2)),
+              list(matrix(c(0.75,0.25,0.25,0.75),2,2)))
+  facNbs <- c(list(c(1L)),
+              list(c(1L,2L)))
+  mydfg <- dfg(varDim, facPot, facNbs)  
+  
+  sim <- simulate(mydfg, 100000)
+  
+  expect_true( findInterval(sum(sim[,1] == 1 & sim[,2] == 1), 9/16*100000*c(0.975,1.025)) == 1 )
+  expect_true( findInterval(sum(sim[,1] == 2 & sim[,2] == 1), 1/16*100000*c(0.975,1.025)) == 1 )
+  expect_true( findInterval(sum(sim[,1] == 1 & sim[,2] == 2), 3/16*100000*c(0.975,1.025)) == 1 )
+  expect_true( findInterval(sum(sim[,1] == 2 & sim[,2] == 2), 3/16*100000*c(0.975,1.025)) == 1 )
 })
