@@ -82,7 +82,7 @@ test_that("Set potentials no update",{
   
   newFacPot <- c(list(matrix(c(0.5,0.5),1,2)),
                  list(matrix(0,0,0)))
-  mydfg$dfgmodule$resetPotentials( newFacPot )
+  potentials(mydfg) <- newFacPot
   expect_equal( newFacPot[[1]], potentials(mydfg)[[1]])
   expect_equal( pot2, potentials(mydfg)[[2]] )
 })

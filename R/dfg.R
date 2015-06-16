@@ -9,7 +9,7 @@
 #' @examples
 #' varDim <- c(2L,3L)
 #' facPot <- list(matrix(c(1:6),2,3))
-#' facNbs <- list( c(0L,1L))
+#' facNbs <- list( c(1L,2L))
 #' mydfg <- dfg(varDim, facPot, facNbs)
 dfg <- function(varDim,
                 facPot,
@@ -31,6 +31,10 @@ dfg <- function(varDim,
     stop("facNbs must be a list of vectors")
   if( ! all(sapply(facNbs, function(x) all(x %% 1 ==0))) )
     stop("facNbs must be a list of integer vectors")
+  
+  #Check all facNbs are in 1:seq_along(varDim)
+  if( max(unlist(facNbs)) > length(varDim) || min(unlist(facNbs)) <= 0 )
+    stop("facNbs should be integers 1,2,...,length(varDim)")
   
   #Check that potential dimensions matches var dimensions
   if( ! length(facNbs) == length(potMap) )
@@ -66,7 +70,6 @@ dfg <- function(varDim,
                  facPot=facPot,
                  facNbs=facNbs,
                  potMap=potMap,
-                 dfgmodule=new("RDFG", varDim, facPot, facNbs, potMap-1),
                  varNames=varNames,
                  facNames=facNames),
             class = "dfg")

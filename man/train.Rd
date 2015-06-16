@@ -22,7 +22,7 @@ NA will be interpreted as a missing variable}
 Refer to the optimization function by entry name in "optim".}
 }
 \value{
-A dataframe with a column for each variable and the most probable state for each observation
+A discrete factor graph object with updated potentials
 }
 \description{
 EM training

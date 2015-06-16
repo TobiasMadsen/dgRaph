@@ -12,8 +12,9 @@
 #' @export
 train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, iter.max = 200, dataList = list()){
   .checkInputData(dfg, data, dataList)
-  trainedDfg <- .copy(dfg)
-  
+  dfgTrained <- .copy(dfg)
+  moduleTrained <- .build(dfg)
+      
   # Output
   cat("Training...\n")
   
@@ -31,12 +32,12 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
       
       # Calculate likelihood of data
       oldLik <- curLik
-      curLik <- sum(likelihood(data, trainedDfg, log = T, dataList = dataList))
+      curLik <- sum(.likelihood(data, dfgTrained, log = T, dataList = dataList, module = moduleTrained))
       likVec[iter] <- curLik
       lastIteration <- !(curLik-oldLik > threshold)
       
       # Obtain expectation counts
-      expCounts <- facExpectations(data, trainedDfg, dataList = dataList)
+      expCounts <- .facExpectations(data, dfgTrained, dataList = dataList, module = moduleTrained)
       
       # Update potentials
       newPotentials <- lapply( seq_along(expCounts), FUN=function(i){
@@ -74,12 +75,15 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
         stop(paste0("No matching optimization function found for: ", optim[i]))
       })
 
-      potentials(trainedDfg) <- newPotentials
+      # potentials(dfgTrained) <- newPotentials
+      moduleTrained$resetPotentials( newPotentials )
       
       if(lastIteration)
         break;
   }
   cat("\n")
+
+  potentials(dfgTrained) <- moduleTrained$getPotentials()
   
   # Summary
   # Iterations / Convergence
@@ -98,5 +102,5 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
     cat('\n')
   }
   
-  trainedDfg
+  invisible(dfgTrained)
 }

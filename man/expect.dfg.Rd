@@ -2,11 +2,11 @@
 % Please edit documentation in R/expect.R
 \name{expect.dfg}
 \alias{expect.dfg}
-\title{Expections in DFG}
+\title{Expectations in DFG}
 \usage{
-\method{expect}{dfg}(x, facScores)
+\method{expect}{dfg}(dfg, facScores)
 }
 \description{
-Expections in DFG
+Expectations in DFG
 }
 

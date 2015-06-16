@@ -3,10 +3,17 @@
 #' @param dfg       discrete factor graph object
 #' @return A dataframe with a column for each variable and the most probable state for each observation
 mps <- function(data, dfg, dataList = list()){
-  .checkInputData(dfg, data, dataList)
+  .mps(data, dfg, dataList)
+}
 
+.mps <- function(data, dfg, dataList = list(), module = NULL){
+  .checkInputData(dfg, data, dataList)
+  
+  if(is.null(module))
+    module <- .build(dfg)
+  
   # Calculate mps
-  ret <- data.frame(dfg$dfgmodule$mps(as.matrix(data), dataList))
+  ret <- data.frame(module$mps(as.matrix(data), dataList))
   colnames(ret) <- dfg$varNames
   return(ret)
 }

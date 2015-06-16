@@ -5,15 +5,18 @@
 \title{dfg
 Construct a probalistic graphical model}
 \usage{
-dfg(varDim, facPot, facNbs, varNames = seq_along(varDim),
-  facNames = (length(varDim) + seq_along(facPot)))
+dfg(varDim, facPot, facNbs, potMap = 1:length(facPot),
+  varNames = seq_along(varDim), facNames = (length(varDim) +
+  seq_along(potMap)), optim = NULL)
 }
 \arguments{
 \item{varDim}{Vector of integers containing variable dimensions}
 
-\item{facPot}{List of matrices containing factor potentials for null model}
+\item{facPot}{List of matrices containing potentials}
 
 \item{facNbs}{List of vector containing describing neighbouring variables for each factor}
+
+\item{potMap}{A vector of integers mapping with corresponding potential for each factor}
 }
 \description{
 dfg
@@ -22,7 +25,7 @@ Construct a probalistic graphical model
 \examples{
 varDim <- c(2L,3L)
 facPot <- list(matrix(c(1:6),2,3))
-facNbs <- list( c(0L,1L))
-my_pgm <- dfg(varDim, facPot, facNbs)
+facNbs <- list( c(1L,2L))
+mydfg <- dfg(varDim, facPot, facNbs)
 }
 

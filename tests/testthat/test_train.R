@@ -12,7 +12,7 @@ test_that("Training returns dfg",{
   finally = {sink()})
   
   expect_true(is.dfg(optDfg))
-  expect_false( identical(optDfg$dfgmodule, mydfg$dfgmodule))
+  expect_false( identical(optDfg, mydfg))
 })
 
 test_that("Custom Optimization", {

@@ -5,7 +5,7 @@
 potentials <- function(dfg){
     stopifnot(is.dfg(dfg))
 
-    dfg$dfgmodule$getPotentials()
+    dfg$facPot
 }
 
 #' Potentials <- 
@@ -26,9 +26,14 @@ potentials <- function(dfg){
       }
     })
   
+  for(i in seq_along(dfg$facPot)){
+    if( all(dim(value[[i]]) == c(0,0))){
+      value[[i]] <- dfg$facPot[[i]]
+    }
+  }
+  
   # Set potentials
   dfg$facPot <- value
-  dfg$dfgmodule$resetPotentials( value)
   dfg
 }
 

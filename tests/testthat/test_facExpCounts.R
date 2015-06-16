@@ -41,16 +41,17 @@ test_that("Factor Marginals Interface 3 Shared Potentials",{
 test_that("Factor Marginals C++ level 1",{
   source("cases/fourIndependentVariables.R")
   mydfg <- fourIndependentVariables()
-
+  module <- .build(mydfg)
+  
   #Single observation
-  facExp <- mydfg$dfgmodule$facExpCounts(matrix(c(NA,2,3,4),1,4), list() )
+  facExp <- module$facExpCounts(matrix(c(NA,2,3,4),1,4), list() )
   
   expect_equal( as.vector(facExp[[1]]), c(0.05,0.05,0.20,0.70) )
   expect_equal( as.vector(facExp[[2]]), c(0,1,0,0))
   
   #Multiple observations
-  facExp <- mydfg$dfgmodule$facExpCounts(matrix(c(NA,2,3,4,
-                                                  3,NA,NA,NA), 2, 4, byrow=T), list() )
+  facExp <- module$facExpCounts(matrix(c(NA,2,3,4,
+                                         3,NA,NA,NA), 2, 4, byrow=T), list() )
   
   expect_equal( as.vector(facExp[[1]]), c(0.05,0.05,0.20,0.70) + c(0,0,1,0) )
   expect_equal( as.vector(facExp[[4]]), c(0,0,0,1) + c(0.05,0.70,0.20,0.05) )
@@ -60,12 +61,13 @@ test_that("Factor Marginals C++ level 2",{
   source("cases/twoDepedentVariables.R")
   mydfg <- twoDependentVariables()
   
-  facExp <- mydfg$dfgmodule$facExpCounts(matrix(c(NA,2), 1, 2), list() )
+  module <- .build(mydfg)
+  facExp <- module$facExpCounts(matrix(c(NA,2), 1, 2), list() )
   expect_equal( as.vector(facExp[[1]]), c(0.4375,0.5625))
   expect_equal( facExp[[2]], matrix(c(0,0,0.4375,0.5625),2,2))
   
-  facExp <- mydfg$dfgmodule$facExpCounts(matrix(c(NA,2,
-                                                  1,NA), 2, 2, byrow=T), list())
+  facExp <- module$facExpCounts(matrix(c(NA,2,
+                                         1,NA), 2, 2, byrow=T), list())
   expect_equal( as.vector(facExp[[1]]), c(0.4375,0.5625)+c(1,0))
   expect_equal( facExp[[2]], matrix(c(0,0,0.4375,0.5625),2,2) + matrix(c(0.75,0,0.25,0),2,2) )
 })

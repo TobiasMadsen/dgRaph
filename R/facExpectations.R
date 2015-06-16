@@ -4,10 +4,16 @@
 #' @return A list of matrices containing the expectation counts for each factor
 
 facExpectations <- function(data, dfg, dataList = list()){
-    .checkInputData(dfg, data, dataList)
+  .facExpectations(data, dfg, dataList)
+}
 
-    # Calculate expectation counts
-    res <- dfg$dfgmodule$facExpCounts(as.matrix(data), dataList)
-    #names(res) <- dfg$facNames
-    return(res)
+.facExpectations <- function(data, dfg, dataList = list(), module = NULL){
+  .checkInputData(dfg, data, dataList)
+  
+  if(is.null(module))
+    module <- .build(dfg)
+  
+  # Calculate expectation counts
+  res <- module$facExpCounts(as.matrix(data), dataList)
+  return(res)
 }

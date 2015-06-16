@@ -5,12 +5,22 @@
 #' @return A vector of likelihoods for each observation
 #' @export
 likelihood <- function(data, dfg, log = FALSE, dataList = list()){
+  .likelihood(data, dfg, log, dataList)
+}
+
+# Hidden option: provide module to avoid rebuilding module for repeated evaluation
+.likelihood <- function(data, dfg, log = FALSE, dataList = list(), module = NULL){
   .checkInputData(dfg, data, dataList)
+  
+  if(is.null(module))
+    module <- .build(dfg)
   
   # Calculate likelihood
   if( log ){
-    dfg$dfgmodule$calcLogLikelihood(as.matrix(data), dataList)
+    module$calcLogLikelihood(as.matrix(data), dataList)
   } else{
-    dfg$dfgmodule$calcLikelihood(as.matrix(data), dataList)
+    module$calcLikelihood(as.matrix(data), dataList)
   }
 }
+
+

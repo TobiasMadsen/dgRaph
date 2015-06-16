@@ -7,10 +7,17 @@
 #' @param dfg1    Discrete factor graph object describing background distribution
 #' @param dfg2    Discrete factor graph object describing foreground distribution
 kl <- function(dfg1, dfg2){
+  .kl(dfg1, dfg2)
+}
+
+.kl <- function(dfg1, dfg2, module = NULL){
   if(! is.dfg(dfg1))
     stop("dfg1 must be a dfg object")
   if(! is.dfg(dfg2))
     stop("dfg2 must be a dfg object")
+
+  if(is.null(module))
+    module <- .build(dfg1)
   
   # Check same structure
   if( length(dfg1$facPot) != length(dfg2$facPot))
@@ -29,7 +36,7 @@ kl <- function(dfg1, dfg2){
     m[dfg1$facPot[[i]] == 0 | dfg2$facPot[[i]] == 0] <- 0
     m
   })
-  res <- expect(dfg1, scores)[2]
+  res <- .expect.dfg(dfg1, scores, module = module)[2]
   names(res) <- "kl"
   res
 }

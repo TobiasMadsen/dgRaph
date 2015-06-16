@@ -32,6 +32,9 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg, facPotFg, observed = NULL){
   
   # Data frame to return
   ret <- data.frame(x = numeric(0), p = numeric(0), low = numeric(0), high = numeric(0), p_lower = numeric(0), alpha = numeric(0))
+
+  # Build bg module
+  moduleBg <- .build(dfg)
   
   for(i in seq_along(alpha)){
     if( length(x) == 0) #check if any samples are assigned
@@ -48,7 +51,8 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg, facPotFg, observed = NULL){
       m
       })
     potentials(dfgIS) <- facPotIS
-    samples <- simulate(dfgIS, n)
+    moduleIS <- .build(dfgIS)
+    samples <- .simulate.dfg(dfgIS, n, module = moduleIS)
     if(!is.null(observed)){
       # Change unobserved columns to NA
       samples[,which(observed)] <- NA
@@ -57,9 +61,10 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg, facPotFg, observed = NULL){
     # Calculate weights and scores
     dfgFg <- .copy(dfg)
     potentials(dfgFg) <- facPotFg
-    ncIS <- likelihood(matrix(NA, 1, length(dfg$varDim)), dfgIS, log = T) # dfgIS is not normalized
-    weights <- exp(likelihood(samples, dfg, log = T) - likelihood(samples, dfgIS, log = T) + ncIS)
-    scores <- likelihood(samples, dfgFg, log = T) - likelihood(samples, dfg, log = T)
+    moduleFg <- .build(dfgFg)
+    ncIS <- .likelihood(matrix(NA, 1, length(dfg$varDim)), dfgIS, log = T, module = moduleIS) # dfgIS is not normalized
+    weights <- exp(.likelihood(samples, dfg, log = T, module = moduleBg) - .likelihood(samples, dfgIS, log = T, module = moduleIS) + ncIS)
+    scores <- .likelihood(samples, dfgFg, log = T, module = moduleFg) - .likelihood(samples, dfg, log = T, module = moduleBg)
     
     #Tail probabilities P(S > x)
     cdf_upper_tail <- sapply(x, function(s){
@@ -128,7 +133,7 @@ tailSaddle <- function(x, dfg, facPotFg){
   for(i in seq_along(x)){
     t <- x[i]
     
-    dfgSaddle <- .copy(dfg)
+    moduleSaddle <- .build(dfg)
     
     #Solve d/dt k(theta) = t
     #where k(theta) is the cumulant transform
@@ -136,9 +141,9 @@ tailSaddle <- function(x, dfg, facPotFg){
     {
       uniroot(function(z)
       {
-        potentials(dfgSaddle) <- .facPotToFunA(facPotBg, facPotFg, z)
+        moduleSaddle$resetPotentials( .facPotToFunA(facPotBg, facPotFg, z) )
         facScore <- .facPotToFunB(facPotBg, facPotFg)
-        res <- expect(dfgSaddle, facScore)
+        res <- .expect.dfg(dfg, facScore, module = moduleSaddle)
         return(res[2]/res[1]-t)
       }, c(-5,5))$root
     },
@@ -153,16 +158,16 @@ tailSaddle <- function(x, dfg, facPotFg){
     
     #Numerically find d/dt^2 k(t)
     kud2 <- grad(function(x){
-      potentials(dfgSaddle) <- .facPotToFunA(facPotBg, facPotFg, x)
+      moduleSaddle$resetPotentials( .facPotToFunA(facPotBg, facPotFg, x) )
       facScore <- .facPotToFunB(facPotBg, facPotFg)
-      res <- expect(dfgSaddle, facScore)
+      res <- .expect.dfg(dfg, facScore, module = moduleSaddle)
       return(res[2]/res[1])
     }, theta)
     
     
     #Find MGF in theta
-    potentials(dfgSaddle) <- .facPotToFunA(facPotBg, facPotFg, theta)
-    phi <- expect(dfgSaddle, .facPotToFunB(facPotBg, facPotFg))[1]
+    moduleSaddle$resetPotentials( .facPotToFunA(facPotBg, facPotFg, theta) )
+    phi <- .likelihood(data = matrix(NA, 1, length(dfg$varDim)), dfg = dfg, module = moduleSaddle)[1]
     
     #Calculate 
     la <- theta*sqrt(kud2)
