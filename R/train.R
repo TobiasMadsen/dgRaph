@@ -8,15 +8,16 @@
 #'                  "linreg" optizing a normal linear regression of x2 on x1
 #' @param optimFun A named list with additional optimization functions. 
 #'                  Refer to the optimization function by entry name in "optim".
+#' @param verbose  A TRUE/FALSE statement enabling console output of information about the training process
 #' @return A discrete factor graph object with updated potentials
 #' @export
-train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, iter.max = 200, dataList = list(), verbose=c("OFF","Training","Potentials","Full")){
+train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, iter.max = 200, dataList = list(), verbose = FALSE){
   .checkInputData(dfg, data, dataList)
   dfgTrained <- .copy(dfg)
   moduleTrained <- .build(dfg)
   
   # Output
-  if (verbose == "Training" | verbose == "Full") cat("Training...\n")
+  if (verbose) cat("Training...\n")
   
   # Info from potential updates
   strPotential <- list()
@@ -25,10 +26,10 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
   likVec <- rep(0, iter.max)
   curLik <- -Inf
   iter <- 0
-  if (verbose == "Training" | verbose == "Full") cat("Iterations:")
+  if (verbose) cat("Iterations:")
   while( iter < iter.max){
     iter <- iter + 1
-    if (verbose == "Training" | verbose == "Full") cat(".")
+    if (verbose) cat(".")
     
     # Calculate likelihood of data
     oldLik <- curLik
@@ -81,22 +82,22 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
     if(lastIteration)
       break;
   }
-  if (verbose == "Training" | verbose == "Full") cat("\n")
+  if (verbose) cat("\n")
   
   potentials(dfgTrained) <- moduleTrained$getPotentials()
   
   # Summary
   # Iterations / Convergence
-  if (verbose == "Training" | verbose == "Full") if(iter == iter.max){
+  if (verbose) if(iter == iter.max){
     cat("EM-algorithm did not converge in", iter.max, "iterations\n")
   } else{
     cat("EM-algorithm converged after", iter, "iterations\n")
   }
-  if (verbose == "Training" | verbose == "Full") cat("Likelihood:", curLik, "\n\n")
+  if (verbose) cat("Likelihood:", curLik, "\n\n")
   plot(likVec[1:iter], type = 'l', xlab = "Iteration", ylab = "likelihood", main = "EM-convergence") 
   
   # Output from optimization functions(i.e. parameters)
-  if (verbose == "Potentials" | verbose == "Full") for(i in seq_along(strPotential)){
+  if (verbose) for(i in seq_along(strPotential)){
     cat(i,'th potential\n',sep = '')
     cat(strPotential[[i]])
     cat('\n')
