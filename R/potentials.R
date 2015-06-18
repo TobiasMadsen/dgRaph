@@ -37,40 +37,79 @@ potentials <- function(dfg){
   dfg
 }
 
+# Helper function: returns midpoints of even intervals between from and to
+# E.g.
+# midpoint(2,10,4)
+# 3,5,7,9
+.midpoints <- function(from = 1, to = 1, length.out = 1){
+  x <- seq(from, to, length.out = length.out + 1)
+  (tail(x, -1)+head(x, -1))/2
+}
+
 #' Linear Regression Potential
-#' Initialize a linear regression to reasonable defaults
+#' Initialize a linear regression to reasonable (random) defaults. If alpha, beta and var is provided they will be used
 #' @param dim     A vector with dimensions of potential
+#' @param range1  Range of independent variable
+#' @param range2  Range of dependent variable
+#' @param alpha   Slope of linear regression
+#' @param beta    Intercept of linear regression
+#' @param var     Variance
 #' @export
-linregPotential <- function(dim = c(100,100)){
+linregPotential <- function(dim = c(100,100), range1 = c(0,100), range2 = c(0,100), alpha = NULL, beta = NULL, var = NULL){
   if(length(dim) != 2)
     stop("dim should be a vector of length 2")
   
-  # Increasing or decreasing
-  monotonicity <- ifelse(runif(1) > .5, 1, -1)
+  if(is.null(alpha) & is.null(beta) & is.null(var)){
+    # Draw alpha beta and var
+    # Increasing or decreasing
+    monotonicity <- ifelse(runif(1) > .5, 1, -1)
+    alpha <- monotonicity*runif(1, 0, diff(range2)/3/diff(range1) )
+    beta <- runif(1, range2[1]+diff(range2)/3, range2[2]-diff(range2)/3)
+    var <- diff(range2)**2/25
+  } else {
+    # Check mean, var and alpha
+    if( is.null(alpha) | is.null(beta) | is.null(var))
+      stop("Provide either all of alpha, beta and var or none of them")
+    if( ! var > 0 )
+      stop("var must be positive")
+  }
   
-  # Standard deviation
-  sd <- dim[2]/8
-  m  <- dim[2]/3*monotonicity*(1:dim[1]-.5)/dim[1] +
-    ifelse(monotonicity == 1, dim[2]/3, dim[2]*2/3)
+  # Means
+  means <- .midpoints(range1[1], range1[2], dim[1])*alpha+beta
   
-  t(sapply(m, FUN=function(x){
-    diff(pnorm( c(-Inf, 1:(dim[2]-1)+0.5, Inf), x, sd) )
+  t(sapply(means, FUN=function(x){
+    dnorm(.midpoints(range2[1], range2[2], dim[2]),x,sqrt(var))/dim[2]*diff(range2)
   }))
 }
 
 #' Normal Potential
-#' Initialize a norm potential with random starting points
+#' Initialize a norm potential if means and vars are not provided they will be initialized at random such that the whole range is covered.
 #' @param dim     A vector with dimensions of potential
+#' @param means   A vector of means. Provide a mean for each class.
+#' @param vars    A vector of vars. Provide a variance for each class.
 #' @export
-normalPotential <- function(dim = c(1,100), means = NULL){
+normalPotential <- function(dim = c(1,100), range = c(0,100), means = NULL, vars = NULL){
   if(length(dim) != 2)
-      stop("dim should be a vector of length 2")
+    stop("dim should be a vector of length 2")
+  if(length(range) != 2)
+    stop("range should be a vector of length 2")
   
-  # Draw some means
-  # TODO: Avoid means close to boundary
-  m <- (sample(dim[2], dim[1])*0.8)+dim[2]*0.1
-  t(sapply(m, FUN=function(x){
-    diff(pnorm( c(-Inf, 1:(dim[2]-1)+0.5, Inf), x, dim[2]/5) )
+  if(is.null(means) & is.null(vars)){
+    # Draw means
+    means <- runif(dim[1], range[1]+0.3*diff(range), range[2]-0.3*diff(range))
+    vars <- rep( diff(range)**2/25, dim[1])
+  } else {
+    # Check means and vars
+    if( ! dim[1] == length(means))
+      stop("Provide as many means as dim[1]")
+    if( ! dim[1] == length(vars))
+      stop("Provide as many vars as dim[1]")
+    if( ! all(vars > 0))
+      stop("vars must be positive")
+  }
+  
+  t(sapply(seq_along(means), FUN=function(i){
+    dnorm(.midpoints(range[1], range[2], dim[2]), means[i], sqrt(vars[i]))/dim[2]*diff(range)
   }))
 }
 
@@ -117,33 +156,6 @@ betaPotential <- function(dim = c(1, 100), range = c(0,1), alphas = NULL, betas 
   }
   
   t(sapply(seq_along(alphas), FUN=function(i){
-    diff(pbeta( range[1]+diff(range)*(0:dim[2]/dim[2]), alphas[i], betas[i] ) )
-  }))
-}
-
-#' Fixed Normal Potential
-#' @param dim     A vector with dimensions of potential
-#' @param range1  The limits of binning scheme 1st variable
-#' @param range2  The limits of binning scheme 2nd variable
-#' @param a       Slope
-#' @param b       Intercept
-#' @param sd      standard deviation
-#' @export
-fixedNormalPotential <- function(dim = c(100, 100), range1 = c(0, 100), range2 = c(0, 100), a = 1, b = 0, sd = diff(range2)/5){
-  if(length(dim) != 2)
-    stop("dim should be a vector of length 2")
-  if(length(range1) != 2)
-    stop("range1 should be a vector of length 2")
-  if(length(range2) != 2)
-    stop("range1 should be a vector of length 2")
-  
-  # Means
-  a_ <- a * dim[2] / diff(range2) / dim[1] * diff( range1 ) # slope in "bin" space
-  b_ <- (b-range1[1])/(range1[2]-range1[1])*dim[1] # intercept in "bin" space
-  m <- b_ + 1:dim[1] * a_
-  sd_ <- sd * dim[2] / diff(range2) # standard deviation in "bin" space
-  
-  t(sapply(m, FUN=function(x){
-    diff(pnorm( c(-Inf, 1:(dim[2]-1)+0.5, Inf), x, sd_) )
+    dbeta(.midpoints(range[1], range[2], dim[2]), alphas[i], betas[i])/dim[2]*diff(range)
   }))
 }

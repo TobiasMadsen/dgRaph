@@ -3,15 +3,26 @@
 \name{linregPotential}
 \alias{linregPotential}
 \title{Linear Regression Potential
-Initialize a linear regression to reasonable defaults}
+Initialize a linear regression to reasonable (random) defaults. If alpha, beta and var is provided they will be used}
 \usage{
-linregPotential(dim = c(100, 100))
+linregPotential(dim = c(100, 100), range1 = c(0, 100), range2 = c(0, 100),
+  alpha = NULL, beta = NULL, var = NULL)
 }
 \arguments{
 \item{dim}{A vector with dimensions of potential}
+
+\item{range1}{Range of independent variable}
+
+\item{range2}{Range of dependent variable}
+
+\item{alpha}{Slope of linear regression}
+
+\item{beta}{Intercept of linear regression}
+
+\item{var}{Variance}
 }
 \description{
 Linear Regression Potential
-Initialize a linear regression to reasonable defaults
+Initialize a linear regression to reasonable (random) defaults. If alpha, beta and var is provided they will be used
 }
 

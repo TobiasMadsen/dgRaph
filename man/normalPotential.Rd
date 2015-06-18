@@ -3,15 +3,20 @@
 \name{normalPotential}
 \alias{normalPotential}
 \title{Normal Potential
-Initialize a norm potential with random starting points}
+Initialize a norm potential if means and vars are not provided they will be initialized at random such that the whole range is covered.}
 \usage{
-normalPotential(dim = c(1, 100))
+normalPotential(dim = c(1, 100), range = c(0, 100), means = NULL,
+  vars = NULL)
 }
 \arguments{
 \item{dim}{A vector with dimensions of potential}
+
+\item{means}{A vector of means. Provide a mean for each class.}
+
+\item{vars}{A vector of vars. Provide a variance for each class.}
 }
 \description{
 Normal Potential
-Initialize a norm potential with random starting points
+Initialize a norm potential if means and vars are not provided they will be initialized at random such that the whole range is covered.
 }
 

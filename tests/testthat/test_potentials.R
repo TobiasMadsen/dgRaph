@@ -8,7 +8,7 @@ test_that("Beta potential 1",{
     pot <- betaPotential(dim = c(2,100))
     expect_true(is.matrix(pot))
     expect_equal(dim(pot), c(2,100))
-    expect_equal(rowSums(pot), c(1,1))
+    expect_equal(rowSums(pot), c(1,1), tolerance = 1e-4)
     expect_true(min(pot) >= 0)
   }
 })
@@ -17,15 +17,22 @@ test_that("Beta potential 2",{
   # Generate a beta potential with known parameters
   val <- betaPotential(dim = c(2,100), alphas = c(2,3), betas = c(2,2))
   
-  expect_equal(val[1,], diff(pbeta(seq(0,1,length.out = 101), 2, 2)))
-  expect_equal(val[2,], diff(pbeta(seq(0,1,length.out = 101), 3, 2)))
+  expect_equal(val[1,], diff(pbeta(seq(0,1,length.out = 101), 2, 2)), tolerance = 1e-4)
+  expect_equal(val[2,], diff(pbeta(seq(0,1,length.out = 101), 3, 2)), tolerance = 1e-4)
 })
 
 test_that("Beta potential 3",{
   # Check range argument
   val <- betaPotential(dim = c(1,100), range = c(0,1e-2), alphas = 2, betas = 800)
   
-  expect_equal(val[1,], diff(pbeta(seq(0,1e-2,length.out = 101), 2, 800)))
+  expect_equal(val[1,], diff(pbeta(seq(0,1e-2,length.out = 101), 2, 800)), tolerance = 1e-3)
+})
+
+test_that("Beta potential 4",{
+  # Check range argument both ends
+  val <- betaPotential(dim = c(1,100), range = c(1e-3,1e-2), alphas = 2, betas = 800)
+  
+  expect_equal(val[1,], diff(pbeta(seq(1e-3,1e-2,length.out = 101), 2, 800)), tolerance = 1e-4)
 })
 
 test_that("Multinomial potential",{
@@ -40,16 +47,20 @@ test_that("Multinomial potential",{
   }
 })
 
-test_that("Normal potential", {
+test_that("Normal potential 1", {
   # Generate a normal potential
   for(i in 1:3){
     set.seed(i)
     pot <- normalPotential(dim = c(3,100))
     expect_true(is.matrix(pot))
     expect_equal(dim(pot), c(3,100))
-    expect_equal(rowSums(pot), c(1,1,1))
+    expect_equal(rowSums(pot), c(1,1,1), tolerance = 5e-2)
     expect_true(min(pot) >= 0)
   }
+})
+
+test_that("Normal potential 2",{
+  normalPotential(dim = c(1,200))
 })
 
 test_that("Get potentials",{
