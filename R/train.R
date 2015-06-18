@@ -8,95 +8,96 @@
 #'                  "linreg" optizing a normal linear regression of x2 on x1
 #' @param optimFun A named list with additional optimization functions. 
 #'                  Refer to the optimization function by entry name in "optim".
+#' @param verbose  A TRUE/FALSE statement enabling console output of information about the training process
 #' @return A discrete factor graph object with updated potentials
 #' @export
-train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, iter.max = 200, dataList = list()){
+train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, iter.max = 200, dataList = list(), verbose = FALSE){
   .checkInputData(dfg, data, dataList)
   dfgTrained <- .copy(dfg)
   moduleTrained <- .build(dfg)
-      
+  
   # Output
-  cat("Training...\n")
+  if (verbose) cat("Training...\n")
   
   # Info from potential updates
   strPotential <- list()
-
+  
   # Iterate till convergence
   likVec <- rep(0, iter.max)
   curLik <- -Inf
   iter <- 0
-  cat("Iterations:")
+  if (verbose) cat("Iterations:")
   while( iter < iter.max){
-      iter <- iter + 1
-      cat(".")
-      
-      # Calculate likelihood of data
-      oldLik <- curLik
-      curLik <- sum(.likelihood(data, dfgTrained, log = T, dataList = dataList, module = moduleTrained))
-      likVec[iter] <- curLik
-      lastIteration <- !(curLik-oldLik > threshold)
-      
-      # Obtain expectation counts
-      expCounts <- .facExpectations(data, dfgTrained, dataList = dataList, module = moduleTrained)
-      
-      # Update potentials
-      newPotentials <- lapply( seq_along(expCounts), FUN=function(i){
-        if(is.null(optim) || optim[i] == 'row'){ # Default optimization
-          opt <- .rowOptimize(expCounts[[i]])
-          if(lastIteration)
-            strPotential[[i]] <<- opt[['str']]
-          return(opt[['pot']])
-        }
-        if(optim[i] == 'noopt'){
-          if(lastIteration)
-            strPotential[[i]] <<- "No optimization performed\n"
-          return( matrix(0,0,0) )
-        }
-        if(optim[i] == 'norm'){
-          opt <- .normOptimize(expCounts[[i]])
-          if(lastIteration)
-            strPotential[[i]] <<- opt[['str']]
-          return(opt[['pot']])
-        }
-        if(optim[i] == 'beta'){
-          opt <- .betaOptimize(expCounts[[i]])
-          if(lastIteration)
-            strPotential[[i]] <<- opt[['str']]
-          return(opt[['pot']])
-        }
-        if(!is.null(optimFun) && optim[i] %in% names(optimFun)){
-          if(!is.function(optimFun[[optim[i]]]))
-            stop("optimFun should contain functions that take expectation counts and return potentials")
-          opt <- optimFun[[optim[i]]](expCounts[[i]])
-          if(lastIteration)
-            strPotential[[i]] <<- opt[['str']]
-          return(opt[['pot']])
-        }
-        stop(paste0("No matching optimization function found for: ", optim[i]))
-      })
-
-      # potentials(dfgTrained) <- newPotentials
-      moduleTrained$resetPotentials( newPotentials )
-      
-      if(lastIteration)
-        break;
+    iter <- iter + 1
+    if (verbose) cat(".")
+    
+    # Calculate likelihood of data
+    oldLik <- curLik
+    curLik <- sum(.likelihood(data, dfgTrained, log = T, dataList = dataList, module = moduleTrained))
+    likVec[iter] <- curLik
+    lastIteration <- !(curLik-oldLik > threshold)
+    
+    # Obtain expectation counts
+    expCounts <- .facExpectations(data, dfgTrained, dataList = dataList, module = moduleTrained)
+    
+    # Update potentials
+    newPotentials <- lapply( seq_along(expCounts), FUN=function(i){
+      if(is.null(optim) || optim[i] == 'row'){ # Default optimization
+        opt <- .rowOptimize(expCounts[[i]])
+        if(lastIteration)
+          strPotential[[i]] <<- opt[['str']]
+        return(opt[['pot']])
+      }
+      if(optim[i] == 'noopt'){
+        if(lastIteration)
+          strPotential[[i]] <<- "No optimization performed\n"
+        return( matrix(0,0,0) )
+      }
+      if(optim[i] == 'norm'){
+        opt <- .normOptimize(expCounts[[i]])
+        if(lastIteration)
+          strPotential[[i]] <<- opt[['str']]
+        return(opt[['pot']])
+      }
+      if(optim[i] == 'beta'){
+        opt <- .betaOptimize(expCounts[[i]])
+        if(lastIteration)
+          strPotential[[i]] <<- opt[['str']]
+        return(opt[['pot']])
+      }
+      if(!is.null(optimFun) && optim[i] %in% names(optimFun)){
+        if(!is.function(optimFun[[optim[i]]]))
+          stop("optimFun should contain functions that take expectation counts and return potentials")
+        opt <- optimFun[[optim[i]]](expCounts[[i]])
+        if(lastIteration)
+          strPotential[[i]] <<- opt[['str']]
+        return(opt[['pot']])
+      }
+      stop(paste0("No matching optimization function found for: ", optim[i]))
+    })
+    
+    # potentials(dfgTrained) <- newPotentials
+    moduleTrained$resetPotentials( newPotentials )
+    
+    if(lastIteration)
+      break;
   }
-  cat("\n")
-
+  if (verbose) cat("\n")
+  
   potentials(dfgTrained) <- moduleTrained$getPotentials()
   
   # Summary
   # Iterations / Convergence
-  if(iter == iter.max){
+  if (verbose) if(iter == iter.max){
     cat("EM-algorithm did not converge in", iter.max, "iterations\n")
   } else{
     cat("EM-algorithm converged after", iter, "iterations\n")
   }
-  cat("Likelihood:", curLik, "\n\n")
+  if (verbose) cat("Likelihood:", curLik, "\n\n")
   plot(likVec[1:iter], type = 'l', xlab = "Iteration", ylab = "likelihood", main = "EM-convergence") 
   
   # Output from optimization functions(i.e. parameters)
-  for(i in seq_along(strPotential)){
+  if (verbose) for(i in seq_along(strPotential)){
     cat(i,'th potential\n',sep = '')
     cat(strPotential[[i]])
     cat('\n')
