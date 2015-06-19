@@ -133,10 +133,10 @@ test_that("Normal optimizer 1",{
   
   # Reflection
   expect_equal(normopt$pot, 
-               normalPotential(dim = c(1,6), 
+               normalPotential(dim = c(2,6), 
                                range = c(1,13), 
-                               means = 8, 
-                               vars = 2))
+                               means = c(8,6), 
+                               vars = c(2,0.8)))
 })
 
 test_that("Normal optimizer 2",{
@@ -160,4 +160,50 @@ test_that("Normal optimizer 2",{
                                range = c(100,300), 
                                means = 200, 
                                vars = 1.05))
+})
+
+test_that("Fixedlink optimizer 1",{
+  # Generate data
+  dat <- matrix(c(1,1,0,0,0,
+                  0,1,1,0,0,
+                  0,0,1,1,0,
+                  0,0,0,1,1), 4, 5, byrow = T)
+  
+  # Optimize
+  fixedopt <- fixedlinkOptimize(range1 = c(0.5,4.5), range2 = c(0.5,5.5), alpha = 1, beta = 0)(dat)
+  
+  # Tests
+  expect_equal(fixedopt$var, 0.5)
+  
+  # Reflection
+  expect_equal(fixedopt$pot, 
+               linregPotential(dim = dim(dat), 
+                               range1 = c(0.5,4.5), 
+                               range2 = c(0.5,5.5), 
+                               alpha = 1, 
+                               beta = 0, 
+                               var = 0.5))
+})
+
+test_that("Fixedlink optimizer 2",{
+  # Generate data
+  dat <- matrix(c(0,1,1,0,0,
+                  0,0,0,0,0,
+                  0,0,1,1,0,
+                  0,0,0,0,0), 4, 5, byrow = T)
+  
+  # Optimize
+  fixedopt <- fixedlinkOptimize(range1 = c(2.5,6.5), range2 = c(0,10), alpha = 2, beta = -3)(dat)
+  
+  # Tests
+  expect_equal(fixedopt$var, 2)
+  
+  # Reflection
+  expect_equal(fixedopt$pot, 
+               linregPotential(dim = dim(dat), 
+                               range1 = c(2.5,6.5), 
+                               range2 = c(0,10), 
+                               alpha = 2, 
+                               beta = -3, 
+                               var = 2))
 })

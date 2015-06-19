@@ -17,8 +17,8 @@ test_that("Beta potential 2",{
   # Generate a beta potential with known parameters
   val <- betaPotential(dim = c(2,100), alphas = c(2,3), betas = c(2,2))
   
-  expect_equal(val[1,], diff(pbeta(seq(0,1,length.out = 101), 2, 2)), tolerance = 1e-4)
-  expect_equal(val[2,], diff(pbeta(seq(0,1,length.out = 101), 3, 2)), tolerance = 1e-4)
+  expect_equal(val[1,], diff(pbeta(seq(0,1,length.out = 101), 2, 2)), tolerance = 1e-3)
+  expect_equal(val[2,], diff(pbeta(seq(0,1,length.out = 101), 3, 2)), tolerance = 1e-3)
 })
 
 test_that("Beta potential 3",{
@@ -32,7 +32,7 @@ test_that("Beta potential 4",{
   # Check range argument both ends
   val <- betaPotential(dim = c(1,100), range = c(1e-3,1e-2), alphas = 2, betas = 800)
   
-  expect_equal(val[1,], diff(pbeta(seq(1e-3,1e-2,length.out = 101), 2, 800)), tolerance = 1e-4)
+  expect_equal(val[1,], diff(pbeta(seq(1e-3,1e-2,length.out = 101), 2, 800)), tolerance = 1e-3)
 })
 
 test_that("Multinomial potential",{

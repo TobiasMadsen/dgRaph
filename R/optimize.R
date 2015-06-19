@@ -26,13 +26,23 @@ normOptimize <- function(range = c(0,100)){
   return(function(expCounts){.normOptimize(expCounts, range = range)})
 }
 
+#' Fixed link optimization
+#' Known linear relationship between two variables but unknown variance
+#' @param range1    range of independent variable
+#' @param range2    range of dependent variable
+#' @param alpha     known slope
+#' @param beta      known intercept
+#' @export
+fixedlinkOptimize <- function(range1 = c(0,100), range2 = c(0,100), alpha = 1, beta = 0){
+  return(function(expCounts){.fixedlinkOptimize(expCounts, range1 = range1, range2 = range2, alpha = alpha, beta = beta)})
+}
+
 #################################################
 # Built-in optimization functions
 # Take expectation counts and return a potential
 #################################################
 
-.linregOptimize <- function(expCounts, range1 = c(1,nrow(expCounts)), range2 = c(1,ncol(expCounts))){
-  # Ranges are only used for output
+.linregOptimize <- function(expCounts, range1 = c(0,nrow(expCounts)), range2 = c(0,ncol(expCounts))){
   SP_xy <- sum(row(expCounts) * col(expCounts) * expCounts)
   S_x   <- sum(row(expCounts) * expCounts) # x runs along rows
   S_y   <- sum(col(expCounts)* expCounts) # y runs along columns
@@ -66,6 +76,26 @@ normOptimize <- function(range = c(0,100)){
   str <- "Linear Regression Potential\n"
   str <- paste0(str, "alpha:\t", signif(alphaScaled, 5), "\nbeta:\t", signif(betaScaled, 5), '\nvar:\t', signif(varScaled, 5), '\n')
   return(list(pot = pot, str = str, alpha = alphaScaled, beta = betaScaled, var = varScaled))    
+}
+
+.fixedlinkOptimize <- function(expCounts, range1 = c(1,nrow(expCounts)), range2 = c(1,ncol(expCounts)), alpha = 1, beta = 0){
+  # Find means
+  m <- matrix(.midpoints(range1[1], range1[2], nrow(expCounts))*alpha+beta, nrow(expCounts), ncol(expCounts))
+  v <- matrix(.midpoints(range2[1], range2[2], ncol(expCounts)), nrow(expCounts), ncol(expCounts), byrow = T)
+  
+  # Var
+  var <- sum((m-v)**2*expCounts) / sum(expCounts)
+  
+  # Return
+  pot <- linregPotential(dim = dim(expCounts), 
+                         range1 = range1,
+                         range2 = range2,
+                         alpha = alpha,
+                         beta = beta,
+                         var = var)
+  str <- "Fixed link regression potential\n"
+  str <- paste0(str, "alpha:\t", signif(alpha, 5), "\nbeta:\t", signif(beta, 5), '\nvar:\t', signif(var, 5), '\n')
+  return(list(pot = pot, str = str, range1 = range1, range2 = range2, alpha = alpha, beta = beta, var = var))
 }
 
 .rowOptimize <- function(expCounts){

@@ -37,15 +37,6 @@ potentials <- function(dfg){
   dfg
 }
 
-# Helper function: returns midpoints of even intervals between from and to
-# E.g.
-# midpoint(2,10,4)
-# 3,5,7,9
-.midpoints <- function(from = 1, to = 1, length.out = 1){
-  x <- seq(from, to, length.out = length.out + 1)
-  (tail(x, -1)+head(x, -1))/2
-}
-
 #' Linear Regression Potential
 #' Initialize a linear regression to reasonable (random) defaults. If alpha, beta and var is provided they will be used
 #' @param dim     A vector with dimensions of potential
@@ -78,7 +69,9 @@ linregPotential <- function(dim = c(100,100), range1 = c(0,100), range2 = c(0,10
   means <- .midpoints(range1[1], range1[2], dim[1])*alpha+beta
   
   t(sapply(means, FUN=function(x){
-    dnorm(.midpoints(range2[1], range2[2], dim[2]),x,sqrt(var))/dim[2]*diff(range2)
+    (head(dnorm(seq(range2[1], range2[2], length.out = dim[2] + 1),x,sqrt(var)),-1) +
+      tail(dnorm(seq(range2[1], range2[2], length.out = dim[2] + 1),x,sqrt(var)),-1)) /
+      dim[2]*diff(range2)/2
   }))
 }
 
@@ -109,7 +102,9 @@ normalPotential <- function(dim = c(1,100), range = c(0,100), means = NULL, vars
   }
   
   t(sapply(seq_along(means), FUN=function(i){
-    dnorm(.midpoints(range[1], range[2], dim[2]), means[i], sqrt(vars[i]))/dim[2]*diff(range)
+    (head(dnorm(seq(range[1], range[2], length.out = dim[2] + 1),means[i],sqrt(vars[i])),-1) +
+       tail(dnorm(seq(range[1], range[2], length.out = dim[2] + 1),means[i],sqrt(vars[i])),-1)) /
+    dim[2]*diff(range)/2
   }))
 }
 
@@ -156,6 +151,8 @@ betaPotential <- function(dim = c(1, 100), range = c(0,1), alphas = NULL, betas 
   }
   
   t(sapply(seq_along(alphas), FUN=function(i){
-    dbeta(.midpoints(range[1], range[2], dim[2]), alphas[i], betas[i])/dim[2]*diff(range)
+    (head(dbeta(seq(range[1], range[2], length.out = dim[2] + 1), alphas[i], betas[i]),-1) +
+       tail(dbeta(seq(range[1], range[2], length.out = dim[2] + 1), alphas[i], betas[i]),-1)) /
+      dim[2]*diff(range)/2
   }))
 }
