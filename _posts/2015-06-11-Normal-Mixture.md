@@ -137,16 +137,16 @@ optimFun <- list(mixNorm = normOptimize(range = c(0, 30)))
 
 
 {% highlight r %}
-train(data_discrete, mixDfg, optim = c("row", "mixNorm"), optimFun = optimFun, iter.max = 500)
+mixDfg <- train(data_discrete, mixDfg, optim = c("row", "mixNorm"), optimFun = optimFun, iter.max = 500, verbose = T)
 {% endhighlight %}
 
 
 
 {% highlight text %}
 ## Training...
-## Iterations:.........................................................................................................
-## EM-algorithm converged after 105 iterations
-## Likelihood: -3772.363
+## Iterations:.............................................................................................
+## EM-algorithm converged after 93 iterations
+## Likelihood: -3772.365
 {% endhighlight %}
 
 ![center](/dgRaph/figs/normalMixture/train-1.png) 
@@ -155,12 +155,12 @@ train(data_discrete, mixDfg, optim = c("row", "mixNorm"), optimFun = optimFun, i
 ## 1th potential
 ## Row normalized multinomial potential
 ## 	1	2
-## 1	0.33488	0.66512
+## 1	0.33486	0.66514
 ## 
 ## 2th potential
 ## norm-potential update
-## 1	mean:	20.003	var:	7.6938
-## 2	mean:	10.268	var:	7.9092
+## 1	mean:	20.003	var:	7.7003
+## 2	mean:	10.269	var:	7.9146
 {% endhighlight %}
 
 ### Inference

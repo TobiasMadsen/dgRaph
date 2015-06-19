@@ -114,7 +114,7 @@ optimFun <- list(mixNorm = normOptimize(range = c(0, 30)))
 ```
 
 ```{r train, fig.cap="center"}
-train(data_discrete, mixDfg, optim = c("row", "mixNorm"), optimFun = optimFun, iter.max = 500)
+mixDfg <- train(data_discrete, mixDfg, optim = c("row", "mixNorm"), optimFun = optimFun, iter.max = 500, verbose = T)
 ```
 
 ### Inference

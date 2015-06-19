@@ -38,7 +38,7 @@ data_discrete <- data %>%
 #################################################
 
 optimFun <- list(mixNorm = normOptimize(range = c(0, 30)))
-train(data_discrete, mixDfg, optim = c("row", "mixNorm"), optimFun = optimFun, iter.max = 500)
+mixDfg <- train(data_discrete, mixDfg, optim = c("row", "mixNorm"), optimFun = optimFun, iter.max = 500)
 
 #################################################
 # Inspect
