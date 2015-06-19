@@ -94,7 +94,7 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
     cat("EM-algorithm converged after", iter, "iterations\n")
   }
   if (verbose) cat("Likelihood:", curLik, "\n\n")
-  plot(likVec[1:iter], type = 'l', xlab = "Iteration", ylab = "likelihood", main = "EM-convergence") 
+  if (verbose) plot(likVec[1:iter], type = 'l', xlab = "Iteration", ylab = "likelihood", main = "EM-convergence") 
   
   # Output from optimization functions(i.e. parameters)
   if (verbose) for(i in seq_along(strPotential)){
