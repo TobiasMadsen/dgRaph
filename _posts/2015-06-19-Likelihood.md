@@ -1,0 +1,71 @@
+---
+layout: post
+title: Likelihood
+author: "Tobias Madsen"
+tags: [tutorial]
+---
+
+
+
+<!--
+Build post
+setwd("../gh-pages-dgRaph/")
+library(knitr)
+render_jekyll()
+knit(input = "../gh-pages-dgRaph/knitr//likelihood.Rmd", output = "../gh-pages-dgRaph/_posts/2015-06-19-Likelihood.md")
+setwd("../dgRaph/")
+-->
+
+### Likelihood 
+
+Let us build a simple factor graph with two variables $X\_1$ having a prior distribution,
+
+$$
+P(X\_1 = 1) = 0.7 \\\\
+P(X\_1 = 2) = 0.3.
+$$
+
+and $X\_2$ with a conditional distribution,
+
+$$
+P(X\_2 = 1 \mid X\_1 = 1) = 0.8 \\\\
+P(X\_2 = 2 \mid X\_1 = 1) = 0.2 \\\\
+P(X\_2 = 1 \mid X\_1 = 2) = 0.4 \\\\
+P(X\_2 = 2 \mid X\_1 = 2) = 0.6
+$$
+
+![center](/dgRaph/figs/shared/mixture_fac.svg)
+
+We can build this model as follows
+
+
+{% highlight r %}
+varDim <- c(2,2)
+facPot <- list(matrix(c(0.7,0.3),1,2),
+               matrix(c(0.8,0.4,0.2,0.6),2,2))
+facNbs <- list(c(1),c(1,2))
+mydfg <- dfg(varDim, facPot, facNbs)
+{% endhighlight %}
+
+### Summing out variables
+
+It is easy to calculate the likelihood of a full observation. E.g.
+$$
+\begin{align}
+P(X\_1 = 1, X\_2 = 2) & = P(X\_1 = 1)P(X\_2 = 2 \mid X\_1 = 1) \\\\
+                      & = 0.7\cdot 0.2 \\\\
+                      & = 0.14
+\end{align}
+$$
+
+
+{% highlight r %}
+dat <- matrix(c(1,2),1,2)
+likelihood( dat, dfg = mydfg)
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## [1] 0.14
+{% endhighlight %}
