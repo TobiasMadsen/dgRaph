@@ -35,6 +35,15 @@ test_that("Beta potential 4",{
   expect_equal(val[1,], diff(pbeta(seq(1e-3,1e-2,length.out = 101), 2, 800)), tolerance = 1e-3)
 })
 
+test_that("Beta potential 5",{
+  # Check not infinite in either end
+  val <- betaPotential(dim = c(1,100), range = c(0,1), alpha = 0.5, beta = 3)
+  expect_equal( sum(is.infinite(val)), 0)
+  
+  val <- betaPotential(dim = c(1,100), range = c(0,1), alpha = 3, beta = 0.5)
+  expect_equal( sum(is.infinite(val)), 0)
+})
+
 test_that("Multinomial potential",{
   # Generate a multinomial potential
   for(i in 1:3){

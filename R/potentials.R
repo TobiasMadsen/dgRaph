@@ -151,8 +151,6 @@ betaPotential <- function(dim = c(1, 100), range = c(0,1), alphas = NULL, betas 
   }
   
   t(sapply(seq_along(alphas), FUN=function(i){
-    (head(dbeta(seq(range[1], range[2], length.out = dim[2] + 1), alphas[i], betas[i]),-1) +
-       tail(dbeta(seq(range[1], range[2], length.out = dim[2] + 1), alphas[i], betas[i]),-1)) /
-      dim[2]*diff(range)/2
+    dbeta(.midpoints(range[1], range[2], length.out = dim[2]), alphas[i], betas[i]) / dim[2]*diff(range)
   }))
 }
