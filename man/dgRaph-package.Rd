@@ -3,11 +3,10 @@
 \alias{dgRaph}
 \docType{package}
 \title{
-What the package does (short line)
+Inference in Factor Graphs
 }
 \description{
-More about what it does (maybe more than one line)
-~~ A concise (1-5 lines) description of the package ~~
+Training and evaluation of factor graphs.
 }
 \details{
 \tabular{ll}{
@@ -15,25 +14,18 @@ Package: \tab dgRaph\cr
 Type: \tab Package\cr
 Version: \tab 1.0\cr
 Date: \tab 2015-01-06\cr
-License: \tab What Licence is it under ?\cr
+License: \tab GPL-3 \cr
 }
-~~ An overview of how to use the package, including the most important functions ~~
 }
 \author{
-Who wrote it
+Tobias Madsen
 
-Maintainer: Who to complain to <yourfault@somewhere.net>
+Maintainer: Tobias Madsen <tobias.madsen@gmail.com>
 }
 \references{
-~~ Literature or other references for background information ~~
+For an introduction to factor graphs see chapter 8 in \emph{Pattern Recognition and Machine Learning, Bishop. C., 2007 }
 }
 \keyword{ package }
 \seealso{
-~~ Optional links to other man pages, e.g. ~~
-~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~
-}
-\examples{
-%% ~~ simple examples of the most important functions ~~
-x <- c(0.1,0.2,0.3)
-evalDFG(x)
+\code{\link[dgRaph:dfg]{dfg}}
 }

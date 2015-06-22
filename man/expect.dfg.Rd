@@ -4,7 +4,14 @@
 \alias{expect.dfg}
 \title{Expectations in DFG}
 \usage{
-\method{expect}{dfg}(dfg, facScores)
+\method{expect}{dfg}(x, facScores, ...)
+}
+\arguments{
+\item{x}{dfg object}
+
+\item{facScores}{A list of matrices similar to factor potentials indicating a function which expectation should be evaluated}
+
+\item{...}{Arguments to be passed to methods.}
 }
 \description{
 Expectations in DFG

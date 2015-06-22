@@ -1,20 +1,21 @@
 Package: dgRaph
 Type: Package
-Title: What the package does (short line)
+Title: Inference in factor graphs
 Version: 1.0
 Date: 2015-01-06
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What Licence is it under ?
+Author: Tobias Madsen
+Maintainer: Tobias Madsen <tobias.madsen@gmail.com>
+Description: This package facilitates training and evaluation of factor graphs. 
+License: GPL-3
 Depends: 
   Rcpp (>= 0.11.2.2),
 Imports: 
-  BH
+  numDeriv
 LinkingTo: 
   Rcpp,
   BH
 Suggests: 
+  ggplot2,
   testthat,
   igraph,
   knitr

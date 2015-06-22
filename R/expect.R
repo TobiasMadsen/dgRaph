@@ -1,15 +1,17 @@
+#' Expectation
+#' Generic function for finding expectancy of function under a distribution x
+#' @param x   distribution under which the expecation should be evaluated
+#' @param ... Arguments to be passed to methods.
 expect <- function(x, ...){
   UseMethod("expect")
 }
 
-expect.default <- function(x){
-  stop("expect not implemented for class: ", class(x))
-}
-
 #' Expectations in DFG
-#' 
-expect.dfg <- function(dfg, facScores){
-  .expect.dfg(dfg, facScores)
+#' @param x   dfg object 
+#' @param facScores   A list of matrices similar to factor potentials indicating a function which expectation should be evaluated
+#' @param ... Arguments to be passed to methods.
+expect.dfg <- function(x, facScores, ...){
+  .expect.dfg(x, facScores)
 }
 
 .expect.dfg <- function(dfg, facScores, module = NULL){

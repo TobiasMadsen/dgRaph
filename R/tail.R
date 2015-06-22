@@ -124,9 +124,6 @@ tailSaddle <- function(x, dfg, facPotFg){
   stopifnot( all(sapply(seq_along(dfg$facPot), FUN=function(i){all(dim(dfg$facPot[[i]])==dim(facPotFg[[i]]))})) )
   facPotBg <- potentials(dfg)
   
-  #For numerical derivative
-  require(numDeriv, quietly = TRUE)
-  
   #Setup data structures
   cdf_upper_tail <- rep(NA, length(x))
   

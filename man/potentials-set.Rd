@@ -8,8 +8,22 @@ potentials(dfg) <- value
 }
 \arguments{
 \item{dfg}{discrete factor graph object}
+
+\item{value}{a list of new factor potentials}
 }
 \description{
 Potentials <-
+}
+\examples{
+varDim <- rep(2,2)
+facPot <- list(matrix(c(0.7,0.3),1,2),
+               matrix(c(0.75,0.25,0.25,0.75),2,2))
+facNbs <- c(list(c(1L)),
+            list(c(1L,2L)))
+mydfg <- dfg(varDim, facPot, facNbs, varNames = c('x', 'y'))
+
+newFacPot <- list(matrix(c(0.5,0.5),1,2),
+                  matrix(c(0.4,0.6,0.7,0.3),2,2))
+potentials(mydfg) <- newFacPot
 }
 

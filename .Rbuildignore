@@ -1,2 +1,10 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+
+^inst/slides$
+
+^inst/html$
+
+^tests/examples$
+
+^tests/boost$

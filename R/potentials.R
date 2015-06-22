@@ -1,6 +1,15 @@
 #' Potentials
 #' @param dfg     discrete factor graph object
 #' @return A list of current factors
+#' @examples
+#' varDim <- rep(2,2)
+#' facPot <- list(matrix(c(0.7,0.3),1,2),
+#'                matrix(c(0.75,0.25,0.25,0.75),2,2))
+#' facNbs <- c(list(c(1L)),
+#'             list(c(1L,2L)))
+#' mydfg <- dfg(varDim, facPot, facNbs, varNames = c('x', 'y'))  
+#' 
+#' potentials(mydfg)
 #' @export
 potentials <- function(dfg){
     stopifnot(is.dfg(dfg))
@@ -10,6 +19,18 @@ potentials <- function(dfg){
 
 #' Potentials <- 
 #' @param dfg     discrete factor graph object
+#' @param value   a list of new factor potentials
+#' @examples
+#' varDim <- rep(2,2)
+#' facPot <- list(matrix(c(0.7,0.3),1,2),
+#'                matrix(c(0.75,0.25,0.25,0.75),2,2))
+#' facNbs <- c(list(c(1L)),
+#'             list(c(1L,2L)))
+#' mydfg <- dfg(varDim, facPot, facNbs, varNames = c('x', 'y'))  
+#' 
+#' newFacPot <- list(matrix(c(0.5,0.5),1,2),
+#'                   matrix(c(0.4,0.6,0.7,0.3),2,2))
+#' potentials(mydfg) <- newFacPot
 #' @export
 "potentials<-" <- function(dfg, value){
   # Perform input check
@@ -78,6 +99,7 @@ linregPotential <- function(dim = c(100,100), range1 = c(0,100), range2 = c(0,10
 #' Normal Potential
 #' Initialize a norm potential if means and vars are not provided they will be initialized at random such that the whole range is covered.
 #' @param dim     A vector with dimensions of potential
+#' @param range   A vector with two entries providing the range of the variable.
 #' @param means   A vector of means. Provide a mean for each class.
 #' @param vars    A vector of vars. Provide a variance for each class.
 #' @export

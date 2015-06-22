@@ -2,7 +2,8 @@
 % Please edit documentation in R/likelihood.R
 \name{likelihood}
 \alias{likelihood}
-\title{Calculate likelihood of observation}
+\title{Calculate likelihood of observation
+This method calculates the likelihood of an observation using the sum-product algorithm.}
 \usage{
 likelihood(data, dfg, log = FALSE, dataList = list())
 }
@@ -12,11 +13,26 @@ likelihood(data, dfg, log = FALSE, dataList = list())
 \item{dfg}{discrete factor graph object}
 
 \item{log}{calculate loglikelihood}
+
+\item{dataList}{provides support for partially observed data. See online documentation.}
 }
 \value{
 A vector of likelihoods for each observation
 }
 \description{
 Calculate likelihood of observation
+This method calculates the likelihood of an observation using the sum-product algorithm.
+}
+\examples{
+varDim <- c(2,2)
+facPot <- list(matrix(c(0.7,0.3),1,2),
+               matrix(c(0.8,0.4,0.2,0.6),2,2))
+facNbs <- list(c(1),c(1,2))
+mydfg <- dfg(varDim, facPot, facNbs)
+
+dat <- matrix(c(1,2),1,2)
+likelihood( dat, dfg = mydfg)
+dat <- matrix(c(NA,2),1,2)
+likelihood( dat, dfg = mydfg)
 }
 

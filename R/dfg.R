@@ -5,6 +5,8 @@
 #' @param  facPot  List of matrices containing potentials
 #' @param  facNbs  List of vector containing describing neighbouring variables for each factor
 #' @param  potMap  A vector of integers mapping with corresponding potential for each factor
+#' @param  varNames  A character vector of names for each variable
+#' @param  facNames  A character vector of names for each potential
 #' 
 #' @examples
 #' varDim <- c(2L,3L)
@@ -16,8 +18,7 @@ dfg <- function(varDim,
                 facNbs,
                 potMap = 1:length(facPot),
                 varNames = seq_along(varDim),
-                facNames = (length(varDim)+seq_along(potMap)),
-                optim    = NULL){
+                facNames = (length(varDim)+seq_along(potMap))){
   #Check varDim is a vector of integers
   if( ! is.vector(varDim, mode="numeric") |  ! all(varDim %% 1 == 0) )
     stop("varDim must be a vector of integers")
@@ -82,25 +83,45 @@ dfg <- function(varDim,
 #' @param x object to be tested
 is.dfg <- function(x) inherits(x, "dfg")
 
-plot.dfg <- function(x){
+#' plot.dfg
+#' 
+#' Plot the graphical structure of a dfg object
+#' 
+#' @param x   dfg object to plot
+#' @param ... Arguments to be passed to plotting method. Typically \code{layout}, for connected graphs \code{layout = layout.reingold.tilford} gives good results.
+#' @examples
+#' library(dgRaph)
+#' varDim <- rep(4,5)
+#' facPot <- list(multinomialPotential(c(1,4)),
+#'                multinomialPotential(c(4,4)))
+#' facNbs <- list(c(1L),
+#'                c(1L,2L),
+#'                c(1L,3L),
+#'                c(3L,4L),
+#'                c(3L,5L))
+#' potMap <- c(1,2,2,2,2)
+#' facNames <- c("P",rep("I",4))
+#' varNames <- c("Do","Re","Mi","Fa","Sol")
+#' mydfg <- dfg(varDim, facPot, facNbs, potMap, varNames, facNames)
+#' plot(mydfg)
+#' plot(mydfg, layout = layout.reingold.tilford)
+plot.dfg <- function(x, ...){
   if(require(igraph)){
     graph <- graph.empty(directed=F) + vertices(x$facNames, color="red", shape="rectangle", size2=18, size=12*nchar(x$facNames))
     graph <- graph + vertices(x$varNames, color="blue", shape="crectangle", size2=18, size=12*nchar(x$varNames))
     
-    lapply(seq_along(facNbs),FUN=function(i){
+    lapply(seq_along(x$facNbs),FUN=function(i){
       graph <<- graph + edges( c(i, length(x$facNbs)+x$facNbs[[i]][1]), mode="mutual")
       if(length(x$facNbs[[i]]) == 2)
         graph <<- graph + edges( c(i, length(x$facNbs)+x$facNbs[[i]][2]) )
     })
     
-    plot(graph, layout = layout.reingold.tilford,
+    plot(graph,
          main = "DFG",
          vertex.frame.color = "white",
          vertex.label.color = "white",
          vertex.label.family = "sans",
          edge.width = 3,
-         edge.color = "black")
-  } else{
-    warning("igraph not installed: Check manually that your graph is acyclic")
+         edge.color = "black", ...)
   }
 }

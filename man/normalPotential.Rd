@@ -11,6 +11,8 @@ normalPotential(dim = c(1, 100), range = c(0, 100), means = NULL,
 \arguments{
 \item{dim}{A vector with dimensions of potential}
 
+\item{range}{A vector with two entries providing the range of the variable.}
+
 \item{means}{A vector of means. Provide a mean for each class.}
 
 \item{vars}{A vector of vars. Provide a variance for each class.}

@@ -10,6 +10,8 @@ facExpectations(data, dfg, dataList = list())
 \item{data}{dataframe or matrix with observed data. The mapping between columns and rows will be performed automatically. NA will be interpreted as a missing variable}
 
 \item{dfg}{discrete factor graph object}
+
+\item{dataList}{provides support for partially observed data. See online documentation.}
 }
 \value{
 A list of matrices containing the expectation counts for each factor

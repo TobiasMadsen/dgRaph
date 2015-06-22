@@ -10,6 +10,8 @@ mps(data, dfg, dataList = list())
 \item{data}{dataframe or matrix with observed data. The mapping between columns and rows will be performed automatically. NA will be interpreted as a missing variable}
 
 \item{dfg}{discrete factor graph object}
+
+\item{dataList}{provides support for partially observed data. See online documentation.}
 }
 \value{
 A dataframe with a column for each variable and the most probable state for each observation

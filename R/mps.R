@@ -1,6 +1,7 @@
 #' Most Probable State
 #' @param data      dataframe or matrix with observed data. The mapping between columns and rows will be performed automatically. NA will be interpreted as a missing variable
 #' @param dfg       discrete factor graph object
+#' @param dataList  provides support for partially observed data. See online documentation.
 #' @return A dataframe with a column for each variable and the most probable state for each observation
 mps <- function(data, dfg, dataList = list()){
   .mps(data, dfg, dataList)

@@ -6,8 +6,11 @@
 #'                  "row" optimizing a multinomial conditional distribution 
 #'                  "norm" optimizing a discretized normal conditional distribution
 #'                  "linreg" optizing a normal linear regression of x2 on x1
-#' @param optimFun A named list with additional optimization functions. 
+#' @param optimFun  A named list with additional optimization functions. 
 #'                  Refer to the optimization function by entry name in "optim".
+#' @param threshold Stop training when difference in likelihood between two iterations is below threshold
+#' @param iter.max  Maximal number of iterations of the EM-algorithm.
+#' @param dataList  provides support for partially observed data. See online documentation.
 #' @param verbose  A TRUE/FALSE statement enabling console output of information about the training process
 #' @return A discrete factor graph object with updated potentials
 #' @export
