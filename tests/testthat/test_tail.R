@@ -36,7 +36,7 @@ test_that("Remapping of structures 2",{
   # With probability 0.2*0.7*0.2 = 0.028
   naive <- tailIS(x = 2.7, n = 4000, alpha = 0, dfg1 = dfg1, dfg2 = dfg2)
   is    <- tailIS(x = 2.7, n = 4000, alpha = 1.5, dfg1 = dfg1, dfg2 = dfg2)
-  expect_less_than( abs(naive$p-0.028), 0.001)
+  expect_less_than( abs(naive$p-0.028), 0.01)
   expect_less_than( abs(is$p-0.028), 0.001) 
   
 })

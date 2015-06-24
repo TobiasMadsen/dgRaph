@@ -5,7 +5,8 @@
 #' @param optim     character vector with an optimization function for each potential. The built-in functions are
 #'                  "row" optimizing a multinomial conditional distribution 
 #'                  "norm" optimizing a discretized normal conditional distribution
-#'                  "linreg" optizing a normal linear regression of x2 on x1
+#'                  "linreg" optimizing a normal linear regression of x2 on x1
+#'                  "beta" optimizing a discretized beta conditional distribution
 #' @param optimFun  A named list with additional optimization functions. 
 #'                  Refer to the optimization function by entry name in "optim".
 #' @param threshold Stop training when difference in likelihood between two iterations is below threshold
@@ -16,8 +17,7 @@
 #' @export
 train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, iter.max = 200, dataList = list(), verbose = FALSE){
   .checkInputData(dfg, data, dataList)
-  dfgTrained <- .copy(dfg)
-  moduleTrained <- .build(dfg)
+  module <- .build(dfg)
   
   # Output
   if (verbose) cat("Training...\n")
@@ -36,12 +36,12 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
     
     # Calculate likelihood of data
     oldLik <- curLik
-    curLik <- sum(.likelihood(data, dfgTrained, log = T, dataList = dataList, module = moduleTrained))
+    curLik <- sum(.likelihood(data, dfg, log = T, dataList = dataList, module = module))
     likVec[iter] <- curLik
     lastIteration <- !(curLik-oldLik > threshold)
     
     # Obtain expectation counts
-    expCounts <- .facExpectations(data, dfgTrained, dataList = dataList, module = moduleTrained)
+    expCounts <- .facExpectations(data, dfg, dataList = dataList, module = module)
     
     # Update potentials
     newPotentials <- lapply( seq_along(expCounts), FUN=function(i){
@@ -79,15 +79,15 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
       stop(paste0("No matching optimization function found for: ", optim[i]))
     })
     
-    # potentials(dfgTrained) <- newPotentials
-    moduleTrained$resetPotentials( newPotentials )
+    # potentials(dfg) <- newPotentials
+    module$resetPotentials( newPotentials )
     
     if(lastIteration)
       break;
   }
   if (verbose) cat("\n")
   
-  potentials(dfgTrained) <- moduleTrained$getPotentials()
+  potentials(dfg) <- module$getPotentials()
   
   # Summary
   # Iterations / Convergence
@@ -106,5 +106,5 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
     cat('\n')
   }
   
-  invisible(dfgTrained)
+  invisible(dfg)
 }
