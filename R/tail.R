@@ -2,11 +2,11 @@
 #' @param x         points to evaluate tail probabilities in
 #' @param n         number of samples
 #' @param alpha     Tuning parameter, alpha=0 is naive sampling the higher alpha the more extreme observations
-#' @param dfg       Probabilistic graphical model specifying null model
-#' @param facPotFg  Foreground model
+#' @param dfg1      dfg object specifying null model
+#' @param dfg2      dfg object specifying foreground model
 #' @param observed  A boolean vector indicating which variables are observed
 #' @return A dataframe with columns, x, tail estimate and confidence intervals
-tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg, facPotFg, observed = NULL){
+tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
   if( is.null(x))
     stop("Specify scores x ")
   if( !is.numeric(x) )
@@ -15,8 +15,10 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg, facPotFg, observed = NULL){
     stop("n must be a single integer")
   if( !is.numeric(alpha))
     stop("alpha must be a numeric vector")
-  if( !is.dfg(dfg))
-    stop("dfg must be a dfg object")
+  if( !is.dfg(dfg1))
+    stop("dfg1 must be a dfg object")
+  if( !is.dfg(dfg2))
+    stop("dfg1 must be a dfg object")
   if( !is.null(observed)){
     if( !is.logical(observed) | !is.vector(observed))
       stop("observed must be a logical vector")
@@ -24,17 +26,28 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg, facPotFg, observed = NULL){
       stop("observed must have same length equal to number of variables")
   }
   
-  #Check if compatible dimensions
-  stopifnot( is.list(facPotFg), all(sapply(facPotFg, is.matrix)))
-  stopifnot( length(facPotFg) == length(dfg$facPot))
-  facPotBg <- potentials(dfg)
-  stopifnot( all(sapply(seq_along(facPotBg), FUN=function(i){all(dim(facPotBg[[i]])==dim(facPotFg[[i]]))})) )
+  # Restructure dfgs
+  .compareDfgs(dfg1, dfg2)
+  
+  # If not same nb structure remap
+  if( ! all( sapply(seq_along(dfg1$facNbs), function(i){all(dfg1$facNbs[[i]] == dfg2$facNbs[[i]])})))
+    dfg2 <- .remapFacNbsDfg(dfg2, match(dfg2$facNbs, dfg1$facNbs))
+  
+  # If not same potential map remap
+  if( ! length(dfg1$potMap) == length(dfg2$potMap) |
+        ! all(dfg1$potMap == dfg2$potMap) ){
+    cm <- .commonMap(dfg1$potMap, dfg2$potMap)
+    dfg1 <- .remapPotMapDfg(dfg1, cm)
+    dfg2 <- .remapPotMapDfg(dfg2, cm)
+  }
   
   # Data frame to return
   ret <- data.frame(x = numeric(0), p = numeric(0), low = numeric(0), high = numeric(0), p_lower = numeric(0), alpha = numeric(0))
 
   # Build bg module
-  moduleBg <- .build(dfg)
+  facPotBg <- potentials(dfg1)
+  facPotFg <- potentials(dfg2)
+  moduleBg <- .build(dfg1)
   
   for(i in seq_along(alpha)){
     if( length(x) == 0) #check if any samples are assigned
@@ -42,7 +55,7 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg, facPotFg, observed = NULL){
     a <- alpha[i]
     
     #Make samples
-    dfgIS <- .copy(dfg)
+    dfgIS <- .copy(dfg1)
     facPotIS <- lapply(seq_along(facPotBg), FUN=function(i){
       m <- facPotBg[[i]]**(1-a)*facPotFg[[i]]**a
       
@@ -59,12 +72,12 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg, facPotFg, observed = NULL){
     }
     
     # Calculate weights and scores
-    dfgFg <- .copy(dfg)
+    dfgFg <- .copy(dfg1)
     potentials(dfgFg) <- facPotFg
     moduleFg <- .build(dfgFg)
-    ncIS <- .likelihood(matrix(NA, 1, length(dfg$varDim)), dfgIS, log = T, module = moduleIS) # dfgIS is not normalized
-    weights <- exp(.likelihood(samples, dfg, log = T, module = moduleBg) - .likelihood(samples, dfgIS, log = T, module = moduleIS) + ncIS)
-    scores <- .likelihood(samples, dfgFg, log = T, module = moduleFg) - .likelihood(samples, dfg, log = T, module = moduleBg)
+    ncIS <- .likelihood(matrix(NA, 1, length(dfg1$varDim)), dfgIS, log = T, module = moduleIS) # dfgIS is not normalized
+    weights <- exp(.likelihood(samples, dfg1, log = T, module = moduleBg) - .likelihood(samples, dfgIS, log = T, module = moduleIS) + ncIS)
+    scores <- .likelihood(samples, dfgFg, log = T, module = moduleFg) - .likelihood(samples, dfg1, log = T, module = moduleBg)
     
     #Tail probabilities P(S > x)
     cdf_upper_tail <- sapply(x, function(s){
@@ -111,18 +124,30 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg, facPotFg, observed = NULL){
 
 #' Saddlepoint approximation for tail estimation
 #' @param x         points to evaluate tail probabilities in
-#' @param dfg       Probabilistic graphical model specifying null model
-#' @param facPotFg  Foreground model
+#' @param dfg1      dfg object specifying null model
+#' @param dfg2      dfg object specifying foreground model
 #' @return A dataframe with columns, x, tail estimate and confidence intervals
-tailSaddle <- function(x, dfg, facPotFg){
+tailSaddle <- function(x, dfg1, dfg2){
   stopifnot(is.numeric(x))
-  stopifnot(is.dfg(dfg))
   
   #Check if compatible dimensions
-  stopifnot( is.list(facPotFg), all(sapply(facPotFg, is.matrix)))
-  stopifnot( length(facPotFg) == length(dfg$facPot))
-  stopifnot( all(sapply(seq_along(dfg$facPot), FUN=function(i){all(dim(dfg$facPot[[i]])==dim(facPotFg[[i]]))})) )
-  facPotBg <- potentials(dfg)
+  # Restructure dfgs
+  .compareDfgs(dfg1, dfg2)
+  
+  # If not same nb structure remap
+  if( ! all( sapply(seq_along(dfg1$facNbs), function(i){all(dfg1$facNbs[[i]] == dfg2$facNbs[[i]])})))
+    dfg2 <- .remapFacNbsDfg(dfg2, match(dfg2$facNbs, dfg1$facNbs))
+  
+  # If not same potential map remap
+  if( ! length(dfg1$potMap) == length(dfg2$potMap) |
+        ! all(dfg1$potMap == dfg2$potMap) ){
+    cm <- .commonMap(dfg1$potMap, dfg2$potMap)
+    dfg1 <- .remapPotMapDfg(dfg1, cm)
+    dfg2 <- .remapPotMapDfg(dfg2, cm)
+  }
+  
+  facPotBg <- potentials(dfg1)
+  facPotFg <- potentials(dfg2)
   
   #Setup data structures
   cdf_upper_tail <- rep(NA, length(x))
@@ -130,7 +155,7 @@ tailSaddle <- function(x, dfg, facPotFg){
   for(i in seq_along(x)){
     t <- x[i]
     
-    moduleSaddle <- .build(dfg)
+    moduleSaddle <- .build(dfg1)
     
     #Solve d/dt k(theta) = t
     #where k(theta) is the cumulant transform
@@ -140,7 +165,7 @@ tailSaddle <- function(x, dfg, facPotFg){
       {
         moduleSaddle$resetPotentials( .facPotToFunA(facPotBg, facPotFg, z) )
         facScore <- .facPotToFunB(facPotBg, facPotFg)
-        res <- .expect.dfg(dfg, facScore, module = moduleSaddle)
+        res <- .expect.dfg(dfg1, facScore, module = moduleSaddle)
         return(res[2]/res[1]-t)
       }, c(-5,5))$root
     },
@@ -157,14 +182,14 @@ tailSaddle <- function(x, dfg, facPotFg){
     kud2 <- grad(function(x){
       moduleSaddle$resetPotentials( .facPotToFunA(facPotBg, facPotFg, x) )
       facScore <- .facPotToFunB(facPotBg, facPotFg)
-      res <- .expect.dfg(dfg, facScore, module = moduleSaddle)
+      res <- .expect.dfg(dfg1, facScore, module = moduleSaddle)
       return(res[2]/res[1])
     }, theta)
     
     
     #Find MGF in theta
     moduleSaddle$resetPotentials( .facPotToFunA(facPotBg, facPotFg, theta) )
-    phi <- .likelihood(data = matrix(NA, 1, length(dfg$varDim)), dfg = dfg, module = moduleSaddle)[1]
+    phi <- .likelihood(data = matrix(NA, 1, length(dfg1$varDim)), dfg = dfg1, module = moduleSaddle)[1]
     
     #Calculate 
     la <- theta*sqrt(kud2)

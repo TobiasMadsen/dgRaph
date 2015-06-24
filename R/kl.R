@@ -11,23 +11,19 @@ kl <- function(dfg1, dfg2){
 }
 
 .kl <- function(dfg1, dfg2, module = NULL){
-  if(! is.dfg(dfg1))
-    stop("dfg1 must be a dfg object")
-  if(! is.dfg(dfg2))
-    stop("dfg2 must be a dfg object")
+  .compareDfgs(dfg1, dfg2)
 
-  if(is.null(module))
-    module <- .build(dfg1)
+  # If not same nb structure remap
+  if( ! all( sapply(seq_along(dfg1$facNbs), function(i){all(dfg1$facNbs[[i]] == dfg2$facNbs[[i]])})))
+    dfg2 <- .remapFacNbsDfg(dfg2, match(dfg2$facNbs, dfg1$facNbs))
   
-  # Check same structure
-  if( length(dfg1$facPot) != length(dfg2$facPot))
-    stop("The two factor graphs must have same structure: facPot not identical")
-  if( ! all(sapply(seq_along(dfg1$facPot), 
-                 FUN=function(i){ all(dim(dfg1$facPot[[i]]) == dim(dfg2$facPot[[i]])) }
-                 )))
-    stop("The two factor graphs must have same structure: facPot not identical")
-  if( ! all(dfg1$varDim == dfg2$varDim))
-    stop("The two factor graphs must have same structure: varDim not identical")
+  # If not same potential map remap
+  if( ! length(dfg1$potMap) == length(dfg2$potMap) |
+      ! all(dfg1$potMap == dfg2$potMap) ){
+    cm <- .commonMap(dfg1$potMap, dfg2$potMap)
+    dfg1 <- .remapPotMapDfg(dfg1, cm)
+    dfg2 <- .remapPotMapDfg(dfg2, cm)
+  }
   
   # Scores
   scores <- lapply(seq_along(dfg1$facPot), FUN=function(i){

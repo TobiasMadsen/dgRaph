@@ -1,6 +1,45 @@
 library(dgRaph)
 context("PGM class")
 
+test_that("Remapping potentials 1",{
+  varDim <- c(2,2)
+  facPot <- list(matrix(1,1,2),
+                 matrix(1,2,2))
+  facNbs <- list(c(1,2),1)
+  potMap <- c(2,1)
+  
+  mydfg <- dfg(varDim, facPot, facNbs, potMap)
+  mydfgRemap <- .remapPotMapDfg(mydfg, c(1,2))
+  
+  expect_equal( mydfgRemap$potMap, c(1,2))
+  expect_equal( mydfg$facPot[[1]], mydfgRemap$facPot[[2]])
+  expect_equal( mydfg$facPot[[2]], mydfgRemap$facPot[[1]])
+})
+
+test_that("Remapping facNbs 1",{
+  varDim <- c(2,2,2)
+  facPot <- list(matrix(1,1,2),
+                 matrix(1,2,2),
+                 matrix(1,2,2))
+  facNbs <- list(c(1),c(1,2),c(2,3))
+  
+  mydfg <- dfg(varDim, facPot, facNbs)
+  mydfgRemap <- .remapFacNbsDfg(mydfg, c(2,3,1))
+  
+  expect_equal( mydfgRemap$potMap[2], mydfg$potMap[1])
+  expect_equal( mydfgRemap$potMap[3], mydfg$potMap[2])
+  expect_equal( mydfgRemap$potMap[1], mydfg$potMap[3])
+  
+  expect_equal( mydfgRemap$facNbs[[2]], mydfg$facNbs[[1]])
+  expect_equal( mydfgRemap$facNbs[[3]], mydfg$facNbs[[2]])
+  expect_equal( mydfgRemap$facNbs[[1]], mydfg$facNbs[[3]])
+  
+  # Going back
+  mydfgRemap2 <- .remapFacNbsDfg(mydfgRemap, match(mydfgRemap$facNbs, mydfg$facNbs))
+  expect_equal( mydfgRemap2$facNbs, mydfg$facNbs)
+  expect_equal( mydfgRemap2$potMap, mydfg$potMap)
+})
+
 test_that("Variable and factor names",{
   varDim <- rep(4,6)
   facPot <- list(matrix(0.25,1,4),

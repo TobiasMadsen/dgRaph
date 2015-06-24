@@ -125,3 +125,52 @@ plot.dfg <- function(x, ...){
          edge.color = "black", ...)
   }
 }
+
+# Check if two dfgs has similar structure
+# Only need to compare variable dimensions and neighbor structure
+.compareDfgs <- function(dfg1, dfg2){
+  if(! is.dfg(dfg1))
+    stop("dfg1 must be a dfg object")
+  if(! is.dfg(dfg2))
+    stop("dfg2 must be a dfg object")
+  
+  if( ! all(dfg1$varDim == dfg2$varDim))
+    stop("The two factor graphs must have same structure: varDim not identical")
+  
+  if( ! length(dfg1$facNbs) == length(dfg2$facNbs))
+    stop("The two factor graphs must have the same number of neighbors")
+  
+  if(! all(dfg1$facNbs %in% dfg2$facNbs))
+    stop("The two factor graphs must have the same neighbor structure. For now this also includes the order, that is c(1,2) is not the same as c(2,1)")
+}
+
+# Remap potentials dfg
+# Generate a dfg with a new richer mapping of potentials
+# the unique elements in potMap must be sorted
+.remapPotMapDfg <- function(dfg, potMap){
+  if(! is.dfg(dfg))
+    stop("dfg must be a dfg object")
+  
+  if(length(dfg$potMap) != length(potMap))
+    stop("length of potMap must be equal to the number of potentials in dfg")
+  
+  # Make new potentials
+  dfg$facPot <- dfg$facPot[ dfg$potMap[ match(unique(potMap), potMap) ] ]
+  
+  # Set new potMap
+  dfg$potMap <- potMap
+    
+  dfg # return modified object
+}
+
+# Change the order of factors
+.remapFacNbsDfg <- function(dfg, facMap){
+  # Check is a map
+  if( ! all( facMap %in% seq_along(facMap)))
+    stop("facMap must be a map")
+  
+  dfg$potMap[facMap] <- dfg$potMap
+  dfg$facNbs[facMap] <- dfg$facNbs
+  
+  dfg # return modified object
+}

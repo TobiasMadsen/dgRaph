@@ -4,14 +4,14 @@
 \alias{tailSaddle}
 \title{Saddlepoint approximation for tail estimation}
 \usage{
-tailSaddle(x, dfg, facPotFg)
+tailSaddle(x, dfg1, dfg2)
 }
 \arguments{
 \item{x}{points to evaluate tail probabilities in}
 
-\item{dfg}{Probabilistic graphical model specifying null model}
+\item{dfg1}{dfg object specifying null model}
 
-\item{facPotFg}{Foreground model}
+\item{dfg2}{dfg object specifying foreground model}
 }
 \value{
 A dataframe with columns, x, tail estimate and confidence intervals
