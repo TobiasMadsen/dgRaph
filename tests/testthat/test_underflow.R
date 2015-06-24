@@ -1,6 +1,36 @@
 library(dgRaph)
 context("Underflow")
 
+test_that("Variable 10 neighbors",{
+  N <- 10
+  source("cases/nNeighbors.R")
+  mydfg <- nNeighbors(N)
+  
+  # Calculate statistics
+  data <- data.frame(matrix(rep(1,N+1),1,N+1))
+  expect_equal(likelihood(data, dfg = mydfg,log=T), N*log(0.01))
+})
+
+test_that("Variable 100 neighbors",{
+  N <- 100
+  source("cases/nNeighbors.R")
+  mydfg <- nNeighbors(N)
+  
+  # Calculate statistics
+  data <- data.frame(matrix(rep(1,N+1),1,N+1))
+  expect_equal(likelihood(data, dfg = mydfg,log=T), N*log(0.01))
+})
+
+test_that("Variable 1000 neighbors",{
+  N <- 1000
+  source("cases/nNeighbors.R")
+  mydfg <- nNeighbors(N)
+  
+  # Calculate statistics
+  data <- data.frame(matrix(rep(1,N+1),1,N+1))
+  expect_equal(likelihood(data, dfg = mydfg,log=T), N*log(0.01))
+})
+
 test_that("Graph 10 Nodes",{
   N <- 10
   source("cases/nDependentVariables.R")

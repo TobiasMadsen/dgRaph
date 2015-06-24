@@ -318,13 +318,13 @@ using namespace std;
       if (nbs[i] != receiver){
 	outMes.second += inMes[i]->second;
 	outMes.first = elemProd<vector_t>( inMes[i]->first, outMes.first);
+
+	// Normalize message
+	double nc = sum(outMes.first);
+	outMes.first /= nc;
+	outMes.second += std::log(nc);
       }
     }
-
-    // Normalize message
-    double nc = sum(outMes.first);
-    outMes.first /= nc;
-    outMes.second += std::log(nc);
   }
 
 
