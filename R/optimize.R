@@ -108,6 +108,18 @@ fixedlinkOptimize <- function(range1 = c(0,100), range2 = c(0,100), alpha = 1, b
   return(list(pot = pot, str = str))
 }
 
+.independentOptimize <- function(expCounts){
+  pot <- matrix(colSums(expCounts)/sum(expCounts),
+                nrow = nrow(expCounts),
+                ncol = ncol(expCounts),
+                byrow = T)
+  str <- "Row normalize independent of parent\n"
+  str <- paste0(str, paste(1:ncol(pot), collapse = '\t'), '\n')
+  str <- paste0(str, paste(signif(pot[1,],5), collapse = '\t'), '\n')
+  
+  return(list(pot = pot, str = str))
+}
+
 .normOptimize <- function(expCounts, range = c(0,ncol(expCounts))){
   str <- "norm-potential update\n"
   meanScaled <- rep(0, nrow(expCounts))

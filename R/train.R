@@ -7,6 +7,7 @@
 #'                  "norm" optimizing a discretized normal conditional distribution
 #'                  "linreg" optimizing a normal linear regression of x2 on x1
 #'                  "beta" optimizing a discretized beta conditional distribution
+#'                  "indep" optimized a multinomial independent of parent of variable
 #' @param optimFun  A named list with additional optimization functions. 
 #'                  Refer to the optimization function by entry name in "optim".
 #' @param threshold Stop training when difference in likelihood between two iterations is below threshold
@@ -64,6 +65,12 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
       }
       if(optim[i] == 'beta'){
         opt <- .betaOptimize(expCounts[[i]])
+        if(lastIteration)
+          strPotential[[i]] <<- opt[['str']]
+        return(opt[['pot']])
+      }
+      if(optim[i] == 'indep'){
+        opt <- .independentOptimize(expCounts[[i]])
         if(lastIteration)
           strPotential[[i]] <<- opt[['str']]
         return(opt[['pot']])
