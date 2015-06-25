@@ -1,0 +1,247 @@
+---
+title       : dgRaph @ useR!
+subtitle    : Introduction
+author      : Tobias Madsen
+job         : 
+framework   : revealjs       # {io2012, html5slides, shower, dzslides, ...}
+revealjs: {theme: Solarized, transition: none, center: "true"}
+hitheme     : zenburn      # 
+bootstrap:
+  theme: amelia
+widgets     : mathjax            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+---
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+```{r include=FALSE, cache = FALSE}
+library(dgRaph)
+library(ggplot2)
+```
+
+# dgRaph at @ UseR!
+### Tobias Madsen
+<img src="../fig/AU_logo.png"  alt="some_text" width='50%' style="background:none; border:none; box-shadow:none;">
+
+--- &vertical
+
+<!-- motivating example -->
+
+<img src="fig/giving_a_user_talk.png"  alt="some_text" width='50%' margin='100px 15% 0% 15%' style="background:none; border:none; box-shadow:2px;">
+
+<img src="fig/motivating_problem.png"  alt="some_text" width='50%' margin='100px 15% 0% 15%' style="background:none; border:none; box-shadow:2px;">
+
+***
+
+### Motifs
+
+Sequence logo
+
+Matrix of probabilities
+
+***
+
+Significance of incidence
+
+***
+
+Additional layers of data
+
+What now?
+
+--- &vertical
+
+<!-- background on factor graphs -->
+
+### Factor Graphs
+
+<img src="../fig/mixture_fac.svg"  alt="some_text" width='50%' margin='100px 15% 0% 15%' style="background:none; border:none; box-shadow:none;">
+
+$$
+p(x) = f_a(x_1)f_b(x_1, x_2)
+$$
+
+***
+
+### Factor Graphs
+
+<img src="../fig/mixture_fac.svg"  alt="some_text" width='50%' margin='100px 15% 0% 15%' style="background:none; border:none; box-shadow:none;">
+
+$$
+p(x) = p(x_1)p(x_2\mid x_1)
+$$
+
+--- &vertical
+
+### Motif Example
+
+Graph
+
+***
+
+### Motif Example
+
+```{r motifbgData, cache.extra = tools::md5sum("df.tab")}
+df <- read.delim("df.tab")
+head(dfmotif)
+```
+
+***
+
+### Motif Example
+
+```{r encodeGraph}
+library(dgRaph)
+varDim <- c(rep(4,5),rep(100,5))
+facPot <- list(multinomialPotential(dim = c(1, 4)), # Prior
+               multinomialPotential(dim = c(4, 4)), # Transition
+               betaPotential(dim = c(4, 100))) # Emission
+facNbs <- list(1, 
+               c(1,2), c(2,3), c(3,4), c(4,5),
+               c(1,6), c(2,7), c(3,8), c(4,9), c(5,10))
+potMap <- c(1,2,2,2,2,3,3,3,3,3)
+
+bgDfg <- dfg(varDim, facPot, facNbs, potMap,
+             varNames = c("X1","X2","X3","X4","X5","Y1","Y2","Y3","Y4","Y5"))
+```
+
+***
+
+```{r motifbgPlot}
+plot(bgDfg, layout = layout.reingold.tilford)
+```
+
+***
+
+### Motif Example
+
+```{r learning1, results='hide', fig.height=5, dependson="motifbgData"}
+bgDfg <- train(data = df, dfg = bgDfg, 
+               optim = c('row', 'row', 'beta'), verbose = T)
+```
+
+***
+
+```{r learning2, fig.show='hide', dependson="motifbgData"}
+bgDfg <- train(data = df, dfg = bgDfg, 
+               optim = c('row', 'row', 'beta'), verbose = T)
+```
+
+***
+
+### Motif Model
+
+Train a motif model as well
+
+```{r motifModel, echo=FALSE, results='hide', fig.show='hide'}
+dfmotif <- read.delim("dfmotif.tab")
+
+facPotMotif <- c(list(multinomialPotential(dim = c(1,4))),
+                 rep(list(matrix(0.25,4,4)),4),
+                 list(betaPotential(dim = c(4, 100))))
+potMapMotif <- c(1:5, rep(6,5))
+
+motifDfg <- dfg(varDim, facPotMotif, facNbs, potMapMotif,
+                varNames = c("X1","X2","X3","X4","X5","Y1","Y2","Y3","Y4","Y5"))
+motifDfg <- train(data = dfmotif, dfg = motifDfg, optim = c('row', rep('indep', 4), 'beta'), verbose = T)
+
+```
+
+```{r eval=FALSE}
+motifDfg
+```
+
+<img src="fig/cooking.jpg"  alt="some_text" width='50%' margin='100px 15% 0% 15%' style="background:none; border:none; box-shadow:2px;">
+
+--- &vertical
+
+### Significance evaluation
+
+***
+
+How rare is this match?
+
+***
+
+### Importance Sampling
+
+Use a class of distributions parameterized by $\alpha$:
+
+$$
+P^{IS}(X) = P_{M_1}(X)^{(1-\alpha)}P_{M_2}(X)^{\alpha}
+$$
+
+***
+
+```{r tailIS, dependson=c("motifModel","learning1", "learning2", "motifbgData")}
+x <- seq(-6,4,0.01)
+dfis <- tailIS(x, n=10000, alpha=1, dfg1 = bgDfg, dfg2 = motifDfg)
+head(dfis)
+```
+
+***
+
+```{r importancePlot, echo=FALSE, cache=FALSE, fig.height=4.5}
+ggplot(dfis, aes(x=x,y=p)) + geom_line() + theme_bw() +
+  scale_y_log10() + 
+  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="red") +
+  annotation_logticks(sides="l")
+```
+
+***
+
+### Saddle point Approximation
+
+<img src="fig/the_scream.jpg"  alt="some_text" width='30%' margin='100px 15% 0% 15%' style="background:none; border:none; box-shadow:2px;">
+formulas + "The scream"
+
+***
+
+```{r tailSaddle, dependson=c("motifModel","learning1", "learning2", "motifbgData")}
+x <- seq(-6,4,0.01)
+dfSaddle <- tailSaddle(x, dfg1 = bgDfg, dfg2 = motifDfg)
+head(dfis)
+```
+
+***
+
+```{r saddlePlot, echo=FALSE, cache=FALSE, fig.height=4.5}
+ggplot(dfSaddle, aes(x=x,y=p)) + geom_line() + theme_bw() +
+  scale_y_log10() + 
+  annotation_logticks(sides="l")
+```
+
+***
+
+```{r comparison, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(dfSaddle, aes(x=x)) + geom_line(aes(y=p),linetype="longdash") +
+  ylim(0.001,1) +
+  geom_line(data=dfis, aes(y=p), colour="red") +
+  geom_ribbon(data=dfis, aes(ymin=pmax(low, 0.001),ymax=high),alpha=0.3,fill="red") +
+  theme_bw() + 
+  scale_y_log10() +
+  ylab("p-value") + 
+  xlab("score") +
+  ggtitle("Estimates of uppertail of score function") +
+  annotation_logticks(sides="l")
+```
+
+---
+
+## Acknowledgements
+
+<img src="../fig/finish.jpg"  alt="some_text" width='40%' margin='100px 15% 0% 15%' style="background:none; border:none; box-shadow:none;">
+### Jakob Skou, Jens Ledet, Asger Hobolth, 
+### Michal Switnicki
+
+---
+
+### Website
+
+[tobiasmadsen.github.io/dgRaph](https://tobiasmadsen.github.io/dgRaph)
+<hr style="height:3px; visibility:hidden;" />
+### Github
+
+[github.com/TobiasMadsen/dgRaph](https://github.com/TobiasMadsen/dgRaph)
+
+
