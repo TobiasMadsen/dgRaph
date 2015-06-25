@@ -1,6 +1,26 @@
 library(dgRaph)
 context("Underflow")
 
+test_that("Expect Variable 100 neighbors",{
+  N <- 100
+  source("cases/nNeighbors.R")
+  mydfg <- nNeighbors(N)
+  
+  scores <- list(matrix(1,100,100))
+  res <- unname(expect(x = mydfg, facScores = scores))
+  expect_equal(res[2]/res[1], 100)
+})
+
+test_that("Expect Variable 1000 neighbors",{
+  N <- 1000
+  source("cases/nNeighbors.R")
+  mydfg <- nNeighbors(N)
+  
+  scores <- list(matrix(1,100,100))
+  res <- unname(expect(x = mydfg, facScores = scores))
+  expect_equal(res[2]/res[1], 1000)
+})
+
 test_that("Variable 10 neighbors",{
   N <- 10
   source("cases/nNeighbors.R")

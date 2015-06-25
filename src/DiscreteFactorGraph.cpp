@@ -965,7 +965,7 @@ namespace dgRaph {
   {
     vector<unsigned> const & nbs = neighbors[current];
 
-    //Calculate mu messages
+    // Instantiate mu messages
     outMesMu.second = 0;
     if (stateMask){
       for(unsigned i = 0; i < outMesMu.first.size(); ++i)
@@ -976,17 +976,22 @@ namespace dgRaph {
 	outMesMu.first[i] = 1;
     }
 
-    for(unsigned i = 0; i < nbs.size(); ++i){
-      if(nbs[i] != receiver){
-	outMesMu.second += inMesMu[i]->second;
-	outMesMu.first = elemProd<vector_t>( inMesMu[i]->first, outMesMu.first);
-      }
-    }
 
     // Normalize message
-    double nc = sum(outMesMu.first);
-    outMesMu.first /= nc;
-    outMesMu.second += std::log(nc);
+    double nclogtotal = 0;
+
+    // Calculate mu message
+    for(unsigned i = 0; i < nbs.size(); ++i){
+      if(nbs[i] == receiver)
+	continue;
+      outMesMu.second += inMesMu[i]->second;
+      outMesMu.first = elemProd<vector_t>( inMesMu[i]->first, outMesMu.first);
+      double nc = sum(outMesMu.first);
+      outMesMu.first /= nc;
+      nclogtotal += std::log(nc);
+    }
+
+    outMesMu.second += nclogtotal;
 
     // Calculate lambda messages
     outMesLambda.first *= 0;
@@ -994,6 +999,7 @@ namespace dgRaph {
     for(unsigned i = 0; i < nbs.size(); ++i){
       if(nbs[i] == receiver)
 	continue;
+      
       vector_t add = inMesLambda[i]->first;
       for(unsigned j = 0; j < nbs.size(); ++j){
 	if(j==i or nbs[j] == receiver)
@@ -1009,7 +1015,7 @@ namespace dgRaph {
     }
 
     // Normalize 
-    outMesLambda.first /= nc;
+    outMesLambda.first /= std::exp(nclogtotal);
   }
 
   // helper functions
