@@ -55,7 +55,7 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
     a <- alpha[i]
     
     #Make samples
-    dfgIS <- .copy(dfg1)
+    dfgIS <- dfg1
     facPotIS <- lapply(seq_along(facPotBg), FUN=function(i){
       m <- facPotBg[[i]]**(1-a)*facPotFg[[i]]**a
       
@@ -72,7 +72,7 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
     }
     
     # Calculate weights and scores
-    dfgFg <- .copy(dfg1)
+    dfgFg <- dfg1
     potentials(dfgFg) <- facPotFg
     moduleFg <- .build(dfgFg)
     ncIS <- .likelihood(matrix(NA, 1, length(dfg1$varDim)), dfgIS, log = T, module = moduleIS) # dfgIS is not normalized
