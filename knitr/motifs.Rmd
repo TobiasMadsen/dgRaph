@@ -1,0 +1,116 @@
+---
+layout: post
+title: Motifs
+author: "Tobias Madsen"
+tags: [example]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.path = "figs/motifs/")
+knitr::opts_knit$set(base.url = '/dgRaph/')
+```
+
+<!--
+Build post
+setwd("../gh-pages-dgRaph/")
+library(knitr)
+render_jekyll()
+knit(input = "../gh-pages-dgRaph/knitr//motifs.Rmd", output = "../gh-pages-dgRaph/_posts/2015-06-26-Motifs.md")
+setwd("../dgRaph/")
+-->
+
+A motif is a sequence of DNA that is often found in multiple instances with little to no variation throughout the genome, which enables a biological function. These a described using a so-called PWMs(Position Weighted Matrices, sometimes also PSSMs). Which is simply a matrix describing the frequencies of each base at each position.
+
+```{r PWM, cache=FALSE}
+pwm <- matrix(c(0.4, 0.1, 0.6,  0.4, 0.3,
+                0.1, 0.7, 0.3,  0.1, 0.65,
+                0.1, 0.1, 0.05, 0.1, 0.025,
+                0.4, 0.1, 0.05, 0.4, 0.025) ,4,5, byrow = T)
+
+row.names(pwm) <- c('A', 'C', 'G', 'T')
+data.frame(pwm)
+```
+
+> Personally, I think this is an abomination of a plot, and hope there isn't a way in ggplot2 to do it!
+> -Hadley
+
+Building a factor graph for the background distribution. 
+
+```{r encodeGraph, cache=FALSE}
+library(dgRaph)
+varDim <- c(rep(4,5),rep(100,5))
+facPot <- list(multinomialPotential(dim = c(1, 4)), # Prior
+               multinomialPotential(dim = c(4, 4)), # Transition
+               betaPotential(dim = c(4, 100))) # Emission
+facNbs <- list(1, 
+               c(1,2), c(2,3), c(3,4), c(4,5),
+               c(1,6), c(2,7), c(3,8), c(4,9), c(5,10))
+potMap <- c(1,2,2,2,2,3,3,3,3,3)
+
+bgDfg <- dfg(varDim, facPot, facNbs, potMap,
+             varNames = c("X1","X2","X3","X4","X5","Y1","Y2","Y3","Y4","Y5"))
+```
+
+Plot the graph:
+
+```{r motifbgPlot, message=FALSE, warning=FALSE, cache=FALSE, fig.cap="center"}
+plot(bgDfg, layout = layout.reingold.tilford)
+```
+
+The data to be used for training the background can be downloaded [here]({{ site.baseurl}}/downloads/motif/df.tab) and similarly for the foreground [here]({{ site.baseurl}}/downloads/motif/dfmotif.tab).
+
+First we train the background.
+
+```{r learning1, cache=FALSE, fig.height=5, dependson="motifbgData"}
+bgDfg <- train(data = df, dfg = bgDfg, 
+               optim = c('row', 'row', 'beta'), verbose = T)
+```
+
+Similarly we build and train a motif model
+
+```{r motifModel, echo=FALSE, cache = FALSE, results='hide', fig.show='hide'}
+dfmotif <- read.delim("dfmotif.tab")
+
+facPotMotif <- c(list(multinomialPotential(dim = c(1,4))),
+                 rep(list(matrix(0.25,4,4)),4),
+                 list(betaPotential(dim = c(4, 100))))
+potMapMotif <- c(1:5, rep(6,5))
+
+motifDfg <- dfg(varDim, facPotMotif, facNbs, potMapMotif,
+                varNames = c("X1","X2","X3","X4","X5","Y1","Y2","Y3","Y4","Y5"))
+motifDfg <- train(data = dfmotif, dfg = motifDfg, optim = c('row', rep('indep', 4), 'beta'), verbose = T)
+
+```
+
+### Significance evalution
+
+Significance evaluation using importance sampling
+
+```{r tailIS, dependson=c("motifModel","learning1", "learning2", "motifbgData")}
+x <- seq(-6,4,0.01)
+dfis <- tailIS(x, n=10000, alpha=1, dfg1 = bgDfg, dfg2 = motifDfg)
+head(dfis)
+```
+
+And a plot of the tail distribution found using importance sampling including confidence interval
+
+```{r importancePlot, echo=FALSE, cache=FALSE, fig.height=4.5}
+ggplot(dfis, aes(x=x,y=p)) + geom_line() + theme_bw() +
+  scale_y_log10() + 
+  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="red") +
+  annotation_logticks(sides="l")
+```
+
+We can also use saddlepoint approximation 
+
+```{r tailSaddle, dependson=c("motifModel","learning1", "learning2", "motifbgData")}
+x <- seq(-6,4,0.01)
+dfSaddle <- tailSaddle(x, dfg1 = bgDfg, dfg2 = motifDfg)
+head(dfis)
+```
+
+```{r saddlePlot, echo=FALSE, cache=FALSE, fig.height=4.5}
+ggplot(dfSaddle, aes(x=x,y=p)) + geom_line() + theme_bw() +
+  scale_y_log10() + 
+  annotation_logticks(sides="l")
+```
