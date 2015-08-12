@@ -2,8 +2,7 @@
 % Please edit documentation in R/potentials.R
 \name{multinomialPotential}
 \alias{multinomialPotential}
-\title{Multinomial Potential
-Initialize a multinomial potential with random starting point}
+\title{Multinomial Potential}
 \usage{
 multinomialPotential(dim = c(1, 5))
 }
@@ -11,7 +10,6 @@ multinomialPotential(dim = c(1, 5))
 \item{dim}{A vector with dimensions of potential}
 }
 \description{
-Multinomial Potential
 Initialize a multinomial potential with random starting point
 }
 

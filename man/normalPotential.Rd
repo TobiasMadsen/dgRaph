@@ -2,8 +2,7 @@
 % Please edit documentation in R/potentials.R
 \name{normalPotential}
 \alias{normalPotential}
-\title{Normal Potential
-Initialize a norm potential if means and vars are not provided they will be initialized at random such that the whole range is covered.}
+\title{Normal Potential}
 \usage{
 normalPotential(dim = c(1, 100), range = c(0, 100), means = NULL,
   vars = NULL)
@@ -18,7 +17,6 @@ normalPotential(dim = c(1, 100), range = c(0, 100), means = NULL,
 \item{vars}{A vector of vars. Provide a variance for each class.}
 }
 \description{
-Normal Potential
 Initialize a norm potential if means and vars are not provided they will be initialized at random such that the whole range is covered.
 }
 

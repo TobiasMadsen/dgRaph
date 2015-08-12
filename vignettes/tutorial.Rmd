@@ -14,12 +14,12 @@ A factorgraph consists of variables and factors.
 
 ```{r echo=TRUE, warning=FALSE}
 varDim <- rep(4,6)
-facPot <- c(list(matrix(0.25,1,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)),
-            list(matrix(0.25,4,4)))
+facPot <- list(matrix(0.25,1,4),
+               matrix(0.25,4,4),
+               matrix(0.25,4,4),
+               matrix(0.25,4,4),
+               matrix(0.25,4,4),
+               matrix(0.25,4,4))
 facNbs <- c(list(c(1L)),
             list(c(1L,2L)),
             list(c(1L,3L)),
@@ -28,7 +28,7 @@ facNbs <- c(list(c(1L)),
             list(c(5L,6L)) )
 facNames = c("Prior",rep("Int",5))
 varNames = c("Foo","Bar","Baz","Do","Re","Mi")
-mydfg <- dfg(varDim, facPot, facNbs, varNames, facNames)
+mydfg <- dfg(varDim, facPot, facNbs, varNames = varNames, facNames = facNames)
 ```
 
 If you have `igraph` installed the structure of the graph can be plotted using `plot`
@@ -138,10 +138,3 @@ ggplot(dfis, aes(x=x,y=p)) + geom_line() +
 ##Quantiles
 The sampling function can also be used to estimate quantiles. 
 
-```{r}
-dfnaive <- tailIS(q=seq(0.01,0.5,by=0.001), n=1000, alpha=0, dfg=mydfg, facPotFg=facPotFg)
-#Notice that taking alpha=0 corresponds to naive sampling
-
-ggplot(dfnaive, aes(x=p,y=x)) + geom_line() +
-  theme_bw()
-```

@@ -59,6 +59,7 @@ potentials <- function(dfg){
 }
 
 #' Linear Regression Potential
+#' 
 #' Initialize a linear regression to reasonable (random) defaults. If alpha, beta and var is provided they will be used
 #' @param dim     A vector with dimensions of potential
 #' @param range1  Range of independent variable
@@ -97,6 +98,7 @@ linregPotential <- function(dim = c(100,100), range1 = c(0,100), range2 = c(0,10
 }
 
 #' Normal Potential
+#' 
 #' Initialize a norm potential if means and vars are not provided they will be initialized at random such that the whole range is covered.
 #' @param dim     A vector with dimensions of potential
 #' @param range   A vector with two entries providing the range of the variable.
@@ -131,6 +133,7 @@ normalPotential <- function(dim = c(1,100), range = c(0,100), means = NULL, vars
 }
 
 #' Multinomial Potential
+#' 
 #' Initialize a multinomial potential with random starting point
 #' @param dim     A vector with dimensions of potential
 #' @export
@@ -142,6 +145,7 @@ multinomialPotential <- function(dim = c(1,5)){
 }
 
 #' Beta Potential
+#' 
 #' Initialize a beta distributed potential
 #' @param dim     A vector with dimensions of potential
 #' @param range   The limits of the binning scheme.
@@ -174,5 +178,50 @@ betaPotential <- function(dim = c(1, 100), range = c(0,1), alphas = NULL, betas 
   
   t(sapply(seq_along(alphas), FUN=function(i){
     dbeta(.midpoints(range[1], range[2], length.out = dim[2]), alphas[i], betas[i]) / dim[2]*diff(range)
+  }))
+}
+
+#' Log Regression Potential
+#' 
+#' Initialize a log regression to reasonable (random) defaults. 
+#' \deqn{y = \alpha \log(x) + \beta + \epsilon}
+#' If alpha, beta and var is provided they will be used
+#' @param dim     A vector with dimensions of potential
+#' @param range1  Range of independent variable
+#' @param range2  Range of dependent variable
+#' @param alpha   Slope of linear regression
+#' @param beta    Intercept of linear regression
+#' @param var     Variance
+#' @export
+logregPotential <- function(dim = c(100,100), range1 = c(0,100), range2 = c(0,100), alpha = NULL, beta = NULL, var = NULL){
+  if(length(dim) != 2)
+    stop("dim should be a vector of length 2")
+  if(min(range1) < 0)
+    stop("for log regression range1 should be positive")
+  
+  if(is.null(alpha) & is.null(beta) & is.null(var)){
+    # Draw alpha beta and var
+    # Increasing or decreasing
+    monotonicity <- ifelse(runif(1) > .5, 1, -1)
+    
+    drange1 <- diff(range(log(.midpoints(range1[1], range1[2], dim[1]))))
+    alpha <- monotonicity*runif(1, 0, diff(range2)/3/drange1 )
+    beta <- runif(1, range2[1]+diff(range2)/3, range2[2]-diff(range2)/3)
+    var <- diff(range2)**2/100
+  } else {
+    # Check mean, var and alpha
+    if( is.null(alpha) | is.null(beta) | is.null(var))
+      stop("Provide either all of alpha, beta and var or none of them")
+    if( ! var > 0 )
+      stop("var must be positive")
+  }
+  
+  # Means
+  means <- log(.midpoints(range1[1], range1[2], dim[1]))*alpha+beta
+  
+  t(sapply(means, FUN=function(x){
+    (head(dnorm(seq(range2[1], range2[2], length.out = dim[2] + 1),x,sqrt(var)),-1) +
+       tail(dnorm(seq(range2[1], range2[2], length.out = dim[2] + 1),x,sqrt(var)),-1)) /
+      dim[2]*diff(range2)/2
   }))
 }

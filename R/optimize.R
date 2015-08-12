@@ -78,6 +78,42 @@ fixedlinkOptimize <- function(range1 = c(0,100), range2 = c(0,100), alpha = 1, b
   return(list(pot = pot, str = str, alpha = alphaScaled, beta = betaScaled, var = varScaled))    
 }
 
+.logregOptimize <- function(expCounts, range1 = c(0,nrow(expCounts)), range2 = c(0,ncol(expCounts))){
+  #values <- .midpoints()
+  n <- nrow(expCounts)
+  m <- ncol(expCounts)
+  values_x <- matrix(log(.midpoints(range1[1], range1[2], n)), n, m, byrow = FALSE)
+  values_y <- matrix(.midpoints(range2[1], range2[2], m), n, m, byrow = TRUE)
+  SP_xy <- sum(values_x * values_y * expCounts)
+  S_x   <- sum(values_x * expCounts) # x runs along rows
+  S_y   <- sum(values_y * expCounts) # y runs along columns
+  USS_x <- sum(values_x**2 * expCounts)
+  USS_y <- sum(values_y**2 * expCounts)
+  N <- sum(expCounts)
+  
+  SSD_x  <- USS_x-S_x**2/N
+  SSD_y  <- USS_y-S_y**2/N
+  SPD_xy <- SP_xy - S_x*S_y/N
+  
+  alpha <- SPD_xy / SSD_x
+  beta  <- (S_y - S_x* alpha) / N
+  var   <- (SSD_y - SPD_xy * SPD_xy/SSD_x) / N
+  if(var  <= 0)
+    stop("Variance 0 or less")
+  
+  # Use potential generator
+  pot <- logregPotential(dim = dim(expCounts), 
+                         range1 = range1,
+                         range2 = range2,
+                         alpha = alpha,
+                         beta = beta,
+                         var = var)
+  
+  str <- "Log Regression Potential\n"
+  str <- paste0(str, "alpha:\t", signif(alpha, 5), "\nbeta:\t", signif(beta, 5), '\nvar:\t', signif(var, 5), '\n')
+  return(list(pot = pot, str = str, alpha = alpha, beta = beta, var = var))    
+}
+
 .fixedlinkOptimize <- function(expCounts, range1 = c(1,nrow(expCounts)), range2 = c(1,ncol(expCounts)), alpha = 1, beta = 0){
   # Find means
   m <- matrix(.midpoints(range1[1], range1[2], nrow(expCounts))*alpha+beta, nrow(expCounts), ncol(expCounts))
@@ -160,7 +196,6 @@ fixedlinkOptimize <- function(range1 = c(0,100), range2 = c(0,100), alpha = 1, b
     xv  <- (sum(x*val**2)-xs**2/sum(x) )/sum(x)
     a   <- xm*(xm*(1-xm)/xv-1)
     b   <- a*(1/xm-1)
-    i <<- i + 1
     
     alphas[[i]] <- a
     betas[[i]]  <- b

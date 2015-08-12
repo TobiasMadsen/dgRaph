@@ -14,8 +14,8 @@ test_that("Beta optimizer",{
   beta  <- betaOpt$betas[1]
   
   # Tests
-  expect_equal( alpha, 4, 0.005)
-  expect_equal( beta, 140, 0.005)
+  expect_equal( alpha, 4, tolerance = 0.005)
+  expect_equal( beta, 140, tolerance = 0.005)
   
   # Reflection
   alpha <- betaOpt$alphas[1]
@@ -99,6 +99,31 @@ test_that("Linreg optimizer 2",{
                                alpha = -2, 
                                beta = 19, 
                                var = 8))
+})
+
+test_that("Log regression 1",{
+  # Generate data
+  set.seed(1)
+  expCounts <- t(sapply( log(seq(0.5,99.5,1)), FUN=function(x){
+    dat <- rnorm(400, 10*x+20, 5)
+    as.vector(unname(table(cut(dat, 0:100))))
+  }))
+  
+  # Optimize
+  reg <- .logregOptimize(expCounts)  
+  
+  # Tests
+  expect_equal( reg$alpha, 10, tolerance = 0.005)
+  expect_equal( reg$beta, 20, tolerance = 0.005)
+  expect_equal( reg$var, 25, tolerance = 0.05)
+  
+  # Reflection
+  expect_equal( reg$pot, 
+                logregPotential(dim = c(100,100),
+                                alpha = reg$alpha, 
+                                beta = reg$beta,
+                                var = reg$var
+                                ))
 })
 
 test_that("Linreg/Normal optimizer comparison 1",{

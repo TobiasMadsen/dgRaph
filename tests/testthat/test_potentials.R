@@ -72,6 +72,25 @@ test_that("Normal potential 2",{
   normalPotential(dim = c(1,200))
 })
 
+test_that("Log regression potential 1",{
+  set.seed(1)
+  pot <- logregPotential(dim = c(3,100))
+  expect_true(is.matrix(pot))
+  expect_equal(dim(pot), c(3,100))
+  expect_equal(rowSums(pot), c(1,1,1), tolerance = 5e-2)
+  expect_true(min(pot) >= 0)
+})
+
+test_that("Log regression potential 2",{
+  pot <- logregPotential(dim = c(100,100), alpha = 2, beta = 50, var = 5)
+  expect_equal( which.max(pot[30,]), 57)
+  expect_equal( which.max(pot[1,]), 49)
+})
+
+test_that("Log regression out of range",{
+  expect_error({pot <- logregPotential(range1 = c(-5,5), range2 = c(0,100))})
+})
+
 test_that("Get potentials",{
   source("cases/twoDepedentVariables.R")
   mydfg <- twoDependentVariables()

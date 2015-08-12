@@ -2,8 +2,7 @@
 % Please edit documentation in R/potentials.R
 \name{betaPotential}
 \alias{betaPotential}
-\title{Beta Potential
-Initialize a beta distributed potential}
+\title{Beta Potential}
 \usage{
 betaPotential(dim = c(1, 100), range = c(0, 1), alphas = NULL,
   betas = NULL)
@@ -18,7 +17,6 @@ betaPotential(dim = c(1, 100), range = c(0, 1), alphas = NULL,
 \item{betas}{Provide a beta for each class. See alphas}
 }
 \description{
-Beta Potential
 Initialize a beta distributed potential
 }
 
