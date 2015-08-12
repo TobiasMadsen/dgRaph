@@ -1,7 +1,14 @@
-<!--
-%\VignetteEngine{knitr::knitr}
-%\VignetteIndexEntry{An R Markdown Vignette with knitr}
--->
+---
+title: "dgRaph tutorial"
+author: "Tobias Madsen"
+data: "`r Sys.Date()`"
+output: rmarkdown::pdf_document
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
 ```{r setup, include=FALSE}
 library(knitr)
 library(dgRaph)
@@ -10,131 +17,206 @@ library(ggplot2)
 ```
 
 ## dgRaph tutorial
-A factorgraph consists of variables and factors. 
 
-```{r echo=TRUE, warning=FALSE}
-varDim <- rep(4,6)
-facPot <- list(matrix(0.25,1,4),
-               matrix(0.25,4,4),
-               matrix(0.25,4,4),
-               matrix(0.25,4,4),
-               matrix(0.25,4,4),
-               matrix(0.25,4,4))
-facNbs <- c(list(c(1L)),
-            list(c(1L,2L)),
-            list(c(1L,3L)),
-            list(c(3L,4L)),
-            list(c(3L,5L)),
-            list(c(5L,6L)) )
-facNames = c("Prior",rep("Int",5))
-varNames = c("Foo","Bar","Baz","Do","Re","Mi")
-mydfg <- dfg(varDim, facPot, facNbs, varNames = varNames, facNames = facNames)
+Let us start with an example of hwo to specify a factor graph:
+
+```{r encodeGraph, warning=FALSE, message=FALSE}
+library(dgRaph)
+varDim <- rep(4,5)
+facPot <- list(multinomialPotential(c(1,4)),
+               multinomialPotential(c(4,4)))
+facNbs <- list(c(1L),
+               c(1L,2L),
+               c(1L,3L),
+               c(3L,4L),
+               c(3L,5L))
+potMap <- c(1,2,2,2,2)
+facNames <- c("P",rep("I",4))
+varNames <- c("Do","Re","Mi","Fa","Sol")
+mydfg <- dfg(varDim, facPot, facNbs, potMap, varNames, facNames)
 ```
 
-If you have `igraph` installed the structure of the graph can be plotted using `plot`
-```{r}
-plot(mydfg)
+We will give a description of each argument below. The factor graph object can be plotted with the `plot` function:
+
+```{r plotGraph, warning=FALSE, message=FALSE}
+plot(mydfg, layout = layout.reingold.tilford)
 ```
 
-#### Tail approximation
-Suppose we have two models with the same graph structure, but different factor potentials. We can define a score of an observation as the loglikelihoodratio
+`varDim` holds the number of states for each variable. The support for continuous variables is mediated through discretisation, the number of states for a continuous variable is the number of bins it is discretised into
+
+```{r varDim}
+varDim
+```
+
+`facPot` is a list of matrices holding factor potentials. The list does not have to have the same number of elements as there are factor nodes; using the `potMap` argument the same potential can be used for multiple factors.
+
+```{r facPot}
+facPot
+```
+
+`dgRaph` supplies a number of functions that generates potentials for common distri- butions. By default they are initialized to reasonable random values which is useful for EM-training, it is of course also possible to provide parameter values.
+
+```{r examplePotentials, eval=FALSE}
+multinomialPotential(dim = c(1, 5))
+normalPotential(dim = c(1, 100))
+betaPotential(dim = c(1, 100), range = c(0,1))
+linregPotential(dim = c(100, 100))
+```
+
+`facNbs` is a list of neighbours for each factor. The corresponding factor potential should have as many rows as the first neighbour and as many columns as the second neighbour.
+
+```{r facNbs}
+facNbs
+```
+
+Finally `potMap` is a vector providing the mapping between factors and potentials. `potMap[i]` is the number of the potential corresponding to the i’th factor.
+
+```{r potMap}
+potMap
+```
+
+### Functionality
+
+A number of methods takes data as input. The accepted data format is a matrix or data frame with one column for each variable. Each row corresponds to a single observation. An observation is a vector of integers indicating the states/bins of the variables, missing data or latent variables are indicated by `NA`. We have considered matching variables by column name, but this has not yet been implemented.
+
+```{r dataInput, cache=FALSE}
+data <- matrix(c(1,2,3,4,1,
+                 NA,NA,2,1,NA,
+                 2,1,NA,NA,3), 3, 5, byrow = T)
+```
+
+`likelihood` takes data and a dgRaph object and outputs a vector of likelihoods, one for each observation.
+
+```{r likelihood}
+likelihood(data, mydfg)
+```
+
+`mps` calculates the most probable states, that is an assignment of the unobserved variables that maximises the complete likelihood function.
+
+```{r mps, cache=FALSE}
+data <- matrix(c(1,2,3,4,1,
+                 NA,NA,2,1,NA,
+                 2,1,NA,NA,3), 3, 5, byrow = T)
+mps(data, mydfg)
+```
+
+facExpectations is the work horse of the EM-algorithm, providing the posterior distributions for the variables neighbouring a factor. These posterior distributions are then summed up over all observations. If we have observations $X_1,\ldots,X_N$, the expectation counts for factor a is the following table
+
 $$
-S(x) = \log \frac{\prod_{\mathcal{A}}f_a^\prime(x_a)}{\prod_{\mathcal{A}}f_a(x_a)} = \sum_{\mathcal{A}} \left[\log f_a^\prime(x_a) - \log f_a(x_a)\right]
+t(x_a) = \sum_{i=1}^N \mathbb{E}\left[ \mathbb{I}(X_a=x_a) \mid X_i \right]
 $$
 
-Motivate by bayesian statistics...
+Obtaining these counts constitutes the E-step of the EM-algorithm and are used for finding new factor potentials in the M-step. If the same potential is shared by multiple factors, the expectation counts is also summed over these factors.
 
-Lets define a foreground model where the variables are correlated with the ancestors
-```{r}
-rndDist <- function(row,col){
-  x <- rexp(row*col,1/(c(1:row)+2))
-  mat <- matrix(x, row, col, byrow = T)
-  mat/rowSums(mat)
-}
-set.seed(1)
-facPotFg <- c(list(rndDist(1,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)),
-              list(rndDist(4,4)))
+```{r facExpectations, cache=FALSE}
+data <- matrix(c(1,2,3,4,1,
+                 NA,NA,2,1,NA,
+                 2,1,NA,NA,3), 3, 5, byrow = T)
+facExpectations(data, mydfg)
 ```
 
-Lets calculate the tail probabilities in different points using the saddlepoint approximation
-```{r}
-x <- seq(-3,4,0.01)
-dfsaddle <- tailSaddle(x, mydfg, facPotFg)
+We can simulate observations from a factor graph using the `simulate` function 
 
+```{r simulate, cache=FALSE}
+simulate(mydfg, 6)
+```
+
+The output is a data frame in the same format that is used for data-input.
+We can also calculate expectations of the form $\mathbb{E}\left[ \sum_{a\in\mathcal{A}}g_a(x_a)\right]$. The functions $\{g_a\}_{a\in\mathcal{A}}$ should be given as a list of matrices, `facScore`, with same length and dimensions as the potentials.
+
+```{r expect, cache=FALSE}
+facScore <- list(matrix(0,1,4), diag(4))
+expect(mydfg, facScore)
+```
+
+We can calculate the Kullback-Leibler divergence between two factor graphs with the same structure, by which we mean that they share the same set of variables and if there is a factor $a$ with neighbour variables $Ne(a)$ in the first graph then there exist a factor $b$ with the same set of neighbours in the second graph. The factors do not have to appear in the same order and factors that are shared in the first graph do not have to be shared in the second and vice versa.
+
+```{r kl}
+# Make a second factor graph with different potentials
+mydfg2 <- mydfg
+potentials(mydfg2) <- list(multinomialPotential(c(1,4)),
+                           multinomialPotential(c(4,4)))
+
+# Calculate kl
+kl(dfg1 = mydfg, dfg2 = mydfg2)
+```
+
+### Tail approximations
+
+Consider two factor graph models $P_{bg}$ and $P_{fg}$, where we think of $P_{bg}$ as a background model and $P_{fg}$ as a foreground model. We can define the score for an observation as
+\begin{equation}
+S(X) = \log\frac{P_{fg}(X)}{P_{bg}(X)}.
+\end{equation}
+We are interested in evaluating, $P_{bg}(S(X) > s)$, i.e. the tail of the score-distribution under the background model. We have implemented two approximation methods for this problem, \texttt{tailIS} uses importance sampling, whereas \texttt{tailSaddle} uses a saddle point approximation.
+
+```{r tailIS}
+dfis <- tailIS(x = seq(0,3,0.001), n = 10000, alpha = 0.5, dfg1 = mydfg, dfg2 = mydfg2)
+dfsaddle <- tailSaddle(x = seq(0,3,0.001), dfg1 = mydfg, dfg2 = mydfg2)
+```
+
+We can plot the result of the two methods together. The sampling based approach is plotted with confidence bands around it and the saddle point approximation is the dashed green line. 
+
+```{r tailPlot, warning=FALSE, message=FALSE}
 library(ggplot2)
-ggplot(dfsaddle, aes(x=x,y=p)) + geom_line() +
-  theme_bw() + 
-  scale_y_log10() +
-  ylab("p-value") + 
-  xlab("score") +
-  ggtitle("Saddlepoint approximation of the upper tail")
-```
-
-Naive simulation of scores to give estimates of $P(S > x)$. Notice that confidence bands is narrow for small scores and wide for high scores. Most often our interest is the 
-```{r}
-dfnaive <- tailIS(x, n=1000, alpha=0, dfg=mydfg, facPotFg=facPotFg)
-#Notice that taking alpha=0 corresponds to naive sampling
-
-ggplot(dfnaive, aes(x=x,y=p)) + geom_line() +
-  theme_bw() +
-  scale_y_log10() + 
+ggplot(dfis, aes(x=x,y=p)) + geom_line() + theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+        #panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_blank()) +
   geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="blue") +
-  annotation_logticks(sides="l")
+  annotation_logticks(sides="l") +
+  geom_line(data=dfsaddle, aes(y=p), colour = "darkgreen", size = 0.8, linetype = "dashed") +
+  ggtitle("Tail approximations")
 ```
 
-To get better estimates of $P(S > x)$ for higher values of $x$, we can apply importance sampling. The importance sampling distribution we use is defines by
+
+### EM-algorithm
+
+If our factor graph is parameterised by $\theta=(\theta_a)_{a\in\mathcal{A}}$, we can write 
+
 $$
-P^{IS}(x) \propto P^{bg}(x)^{1-\alpha}P^{fg}(x)^{\alpha}
+l_0(\theta; X) = \log L_0(\theta; X) = \log \prod_{a \in\mathcal{A}}f_a(X_a,\theta) = \sum_{a \in\mathcal{A}}\log f_a(X_a,\theta),
 $$
-It is seen that putting $\alpha=0$ corresponds to naive sampling. We now estimate tail probabilities using importance sampling and $\alpha=1.5$.
+
+assuming(!) that the graph is normalized for all $\theta$. The M-step of the EM-algorithm(see p. 276 of *The Elements of Statistical Learning*) consist of maximizing
+
+$$
+\begin{split}
+\mathbb{E}\left[ l_0(\theta^\prime; X^{full}) \mid X^{obs}, \theta \right] = &
+\mathbb{E}\left[ \sum_{a \in\mathcal{A}}\log f_a(X_a,\theta^\prime_a) \mid X^{obs}, \theta \right] \\ = &
+\sum_{a \in\mathcal{A}}\mathbb{E}\left[ \log f_a(X_a,\theta^\prime_a) \mid X^{obs}, \theta \right] ,
+\end{split}
+\label{eq:dgraph:optim}
+$$
+
+with respect to $\theta^\prime$, where the expectation is taken over the distribution of the full data induced by $\theta$ and conditioned on the observed data. We see that we can optimise each potential individually, and the expectation counts are the statistics we need.
+
+To each factor we associate an optimisation function, which update the potential in the M-step of the EM-algorithm.
+We provide predefined functions for performing this update, corresponding to the distribution the potential encodes, e.g. normal distribution or multinomial distribution. At the same time we allow for implementing custom optimisation functions, thus having a high degree of flexibility.
+
+The EM-algorithm is implemented in the `train` function. The function takes a factor graph object and data to learn the parameters from:
+
+```{r createdata, echo=FALSE, results='hide'}
+potentials(mydfg2) <- list(matrix(c(0.2,0.3,0.3,0.2),1,4),
+                           diag(4)*0.6+matrix(0.1,4,4))
+dftrain <- simulate(mydfg2, n = 1000)
+dftrain[,1] <- NA
+
+```
+
+```{r dftrain}
+head(dftrain)
+```
+
+The `train` function outputs a new factor graph object with optimised potentials. Most arguments are self-explanatory, except the `optim`-argument used to specify an optimisation method for each potential.
+
 
 ```{r}
-dfis <- tailIS(x, n=1000, alpha=1.5, dfg=mydfg, facPotFg=facPotFg)
-#Notice that taking alpha=0 corresponds to naive sampling
-
-ggplot(dfis, aes(x=x,y=p)) + geom_line() +
-  theme_bw() +
-  scale_y_log10() + 
-  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="red") +
-  annotation_logticks(sides="l")
+mydfgtrained <- train(data = dftrain, 
+                      dfg = mydfg, 
+                      optim = c('row','row'),
+                      verbose = T, 
+                      iter.max = 1000, 
+                      threshold = 1e-5)
 ```
-
-We see quite opposite to naive sampling, that we have wide confidence bands for small $x$ and more narrow confidence bands for large $x$. So far we don't have any general advise for picking a good value of $\alpha$, the smaller probabilities you need to estimate, the larger $\alpha$.
-
-Lets compare the estimates from our three methods. The dashed line is the saddlepointapproximation, the blue line is naive sampling and in red importance sampling:
-
-```{r, echo=FALSE}
-ggplot(dfsaddle, aes(x=x)) + geom_line(aes(y=p),linetype="longdash") +
-  geom_line(data=dfis, aes(y=p), colour="red") +
-  geom_line(data=dfnaive, aes(y=p), colour="blue") +
-  geom_ribbon(data=dfis, aes(ymin=pmax(low, 0.001),ymax=high),alpha=0.3,fill="red") +
-  geom_ribbon(data=dfnaive, aes(ymin=pmax(low, 0.001),ymax=high),alpha=0.3,fill="blue") +
-  theme_bw() + 
-  scale_y_log10() +
-  ylab("p-value") + 
-  xlab("score") +
-  ggtitle("Estimates of uppertail of score function") +
-  annotation_logticks(sides="l")
-```
-
-##Combining
-Different values of alpha can be employed to get a narrow confidence limits over a long range of scores
-
-```{r}
-dfis <- tailIS(x, n=1000, alpha=c(0,0.5,1,1.5), dfg=mydfg, facPotFg=facPotFg)
-#Notice that taking alpha=0 corresponds to naive sampling
-
-ggplot(dfis, aes(x=x,y=p)) + geom_line() +
-  theme_bw() +
-  scale_y_log10() + 
-  geom_ribbon(aes(ymin=pmax(low,0.0001),ymax=high),alpha=0.3,fill="red") +
-  annotation_logticks(sides="l")
-```
-
-##Quantiles
-The sampling function can also be used to estimate quantiles. 
-
