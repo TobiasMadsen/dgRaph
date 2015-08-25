@@ -233,12 +233,7 @@ using namespace std;
 
     // private data
     // convenience data structures -- perhaps make public
-    vector<vector<message_t const *> > inMessages_;
-    vector<vector<message_t> > outMessages_;
     vector<vector<vector<unsigned> > > maxNeighborStates_;
-
-    vector<vector<message_t const *> > inMessages2_; //For messages of the second type
-    vector<vector<message_t> > outMessages2_;
 
     //Structures for calculation of expectancies
     //See note sumproduct.pdf

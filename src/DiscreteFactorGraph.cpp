@@ -235,10 +235,10 @@ namespace dgRaph {
 
   void DFG::runSumProduct(stateMaskVec_t const & stateMasks)
   {
-    if (inMessages_.size() == 0) 
+    if (inMu_.size() == 0) 
       initMessages();
     
-    runSumProduct(stateMasks, inMessages_, outMessages_);
+    runSumProduct(stateMasks, inMu_, outMu_);
   }
 
 
@@ -302,12 +302,12 @@ namespace dgRaph {
   number_t DFG::runMaxSum(stateMaskVec_t const & stateMasks, vector<unsigned> & maxVariables)
   {
     // init data structures
-    if (inMessages_.size() == 0)
+    if (inMu_.size() == 0)
       initMessages();
     if (maxNeighborStates_.size() == 0)
       initMaxNeighbourStates();
     
-    return runMaxSum(stateMasks, maxVariables, inMessages_, outMessages_, maxNeighborStates_);
+    return runMaxSum(stateMasks, maxVariables, inMu_, outMu_, maxNeighborStates_);
   }
 
 
@@ -443,10 +443,10 @@ namespace dgRaph {
 
   number_t DFG::calcNormConst(stateMaskVec_t const & stateMasks)
   {
-    if (inMessages_.size() == 0)
+    if (inMu_.size() == 0)
       initMessages();
 
-    return calcNormConst(stateMasks, inMessages_, outMessages_);
+    return calcNormConst(stateMasks, inMu_, outMu_);
   }
 
 
@@ -477,10 +477,10 @@ namespace dgRaph {
 
   number_t DFG::calcLogNormConst(stateMaskVec_t const & stateMasks)
   {
-    if (inMessages_.size() == 0)
+    if (inMu_.size() == 0)
       initMessages();
 
-    return calcLogNormConst(stateMasks, inMessages_, outMessages_);
+    return calcLogNormConst(stateMasks, inMu_, outMu_);
   }
 
   number_t DFG::calcLogNormConst(stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMessages, vector<vector<message_t> > & outMessages) const
@@ -514,7 +514,7 @@ namespace dgRaph {
 
   void DFG::calcVariableMarginals(vector<vector_t> & variableMarginals, stateMaskVec_t const & stateMasks)
   {
-    calcVariableMarginals(variableMarginals, stateMasks, inMessages_);
+    calcVariableMarginals(variableMarginals, stateMasks, inMu_);
   }
 
 
@@ -536,7 +536,7 @@ namespace dgRaph {
 
   void DFG::calcFactorMarginals(vector<matrix_t> & factorMarginals)
   {
-    calcFactorMarginals(factorMarginals, inMessages_);
+    calcFactorMarginals(factorMarginals, inMu_);
   }
 
 
@@ -571,7 +571,7 @@ namespace dgRaph {
   // init data structures given in DFG.
   void DFG::initMessages()
   {
-    initMessages(inMessages_, outMessages_);
+    initMessages(inMu_, outMu_);
   }
 
 
