@@ -49,6 +49,28 @@ NumericVector RDFG::expect(List const & facScores){
   return ret;
 }
 
+NumericVector RDFG::gamma(List const & facScores){
+  // Convert to matrix
+  std::vector<dgRaph::matrix_t> facScoresVec;
+  for(int k = 0; k < facScores.size(); ++k){
+    facScoresVec.push_back( rMatToMat( facScores[k] ));
+  }
+
+  // Generate statemasks
+  dgRaph::stateMaskVec_t stateMasks( dfg.variables.size() );
+
+  // Set factor scores
+  dfg.resetScores( facScoresVec);
+  std::pair<dgRaph::number_t, dgRaph::number_t> res = dfg.calcExpect(stateMasks);
+  double res2 = dfg.calcGamma(stateMasks);
+  
+  NumericVector ret(3);
+  ret(0) = res.first;
+  ret(1) = res.second;
+  ret(2) = res2;
+  return ret;
+}
+
 IntegerMatrix RDFG::simulate(int N){
   // Calculate marginals
   dgRaph::stateMaskVec_t stateMasks( dfg.variables.size() );

@@ -146,6 +146,7 @@ using namespace std;
 
     /** No preconditions. Give the two kinds of potentials*/
     pair<number_t,number_t> calcExpect(stateMaskVec_t const & stateMasks);
+    number_t calcGamma(stateMaskVec_t const & stateMasks);
 
     // convenience functions
     DFGNode const & getFactor(unsigned facId) const {return nodes[ factors[ facId ] ];} 
@@ -214,12 +215,20 @@ using namespace std;
     //Functions for calculating expectancies
     //See note: sumProduct.pdf
     void runExpectInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
-//void runExpectOutwardsRec(unsigned current, unsigned sender, vector<matrix_t> const & fun_a, vector<matrix_t> const & fun_b, stateMaskVec_t const & stateMasks, vector<vector<vector_t const *> > & inMu, vector<vector<vector_t> > & outMu, vector<vector<vector_t const *> > & inLambda, vector<vector<vector_t> > & outLambda) const;
     void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
     void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const;
     void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
     void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskPtr_t stateMask, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const;
     void calcExpectMessage(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
+
+    // Functions for calculating 2nd order moment
+    // Precondtion run calcExpect first?
+    void runGammaInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda, vector<vector<message_t const *> > & inGamma, vector<vector<message_t> > & outGamma) const;
+    void calcGammaMessageFactor(unsigned current, unsigned receiver, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda, vector<vector<message_t const *> > & inGamma, vector<vector<message_t> > & outGamma) const;
+    void calcGammaMessageFactor(unsigned current, unsigned receiver, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda, vector<message_t const *> const & inMesGamma, message_t & outMesGamma) const;
+    void calcGammaMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda, vector<vector<message_t const *> > & inGamma, vector<vector<message_t> > & outGamma) const;
+    void calcGammaMessageVariable(unsigned current, unsigned receiver, stateMaskPtr_t stateMask, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda, vector<message_t const *> const & inMesGamma, message_t & outMesGamma) const;
+    void calcGammaMessage(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda, vector<vector<message_t const *> > & inGamma, vector<vector<message_t> > & outGamma) const;
 
 
     // Initialize data structures, only need to run once
@@ -241,6 +250,8 @@ using namespace std;
     vector<vector<message_t> > outMu_;
     vector<vector<message_t const *> > inLambda_;
     vector<vector<message_t> > outLambda_;
+    vector<vector<message_t const *> > inGamma_;
+    vector<vector<message_t> > outGamma_;
 
     vector<vector_t> variableMarginals_;
     vector<matrix_t> factorMarginals_;

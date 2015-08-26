@@ -198,3 +198,49 @@ tailSaddle <- function(x, dfg1, dfg2){
   
   data.frame(x=x, p=cdf_upper_tail)
 }
+
+#' Normal approximation for tail estimation
+#' @param x         points to evaluate tail probabilities in
+#' @param dfg1      dfg object specifying null model
+#' @param dfg2      dfg object specifying foreground model
+#' @return A dataframe with columns, x, tail estimate and confidence intervals
+tailNormal <- function(x, dfg1, dfg2){
+  stopifnot(is.numeric(x))
+  
+  #Check if compatible dimensions
+  # Restructure dfgs
+  .compareDfgs(dfg1, dfg2)
+  
+  # If not same nb structure remap
+  if( ! all( sapply(seq_along(dfg1$facNbs), function(i){all(dfg1$facNbs[[i]] == dfg2$facNbs[[i]])})))
+    dfg2 <- .remapFacNbsDfg(dfg2, match(dfg2$facNbs, dfg1$facNbs))
+  
+  # If not same potential map remap
+  if( ! length(dfg1$potMap) == length(dfg2$potMap) |
+        ! all(dfg1$potMap == dfg2$potMap) ){
+    cm <- .commonMap(dfg1$potMap, dfg2$potMap)
+    dfg1 <- .remapPotMapDfg(dfg1, cm)
+    dfg2 <- .remapPotMapDfg(dfg2, cm)
+  }
+
+  # Calculations
+  facPotBg <- potentials(dfg1)
+  facPotFg <- potentials(dfg2)
+  moduleNormal <- .build(dfg1)
+  
+  # Calculate Mean
+  facScore <- .facPotToFunB(facPotBg, facPotFg)
+  moduleNormal$resetPotentials( .facPotToFunA(facPotBg, facPotFg, 0))
+  res <- .expect.dfg(dfg1, facScore, module = moduleNormal)
+  m <- res[2]
+  
+  # Calculate Variance
+  v <- grad(function(x){
+    moduleNormal$resetPotentials( .facPotToFunA(facPotBg, facPotFg, x) )
+    res <- .expect.dfg(dfg1, facScore, module = moduleNormal)
+    return(res[2]/res[1])
+  }, 0)
+
+  data.frame(x=x, p=pnorm(x, m, v, lower.tail = FALSE))
+}
+

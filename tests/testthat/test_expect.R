@@ -15,6 +15,11 @@ test_that("Components", {
   res <- unname( expect(mydfg, facExp) )
   expect_equal(unname(res[1]),6)
   expect_equal(unname(res[2]),18)
+  
+  res <- unname( expect2(mydfg, facExp) )
+  expect_equal(res[1],6)
+  expect_equal(res[2],18)
+  expect_equal(res[3],54)
 })
 
 test_that("Simple phylogenetic model",{
@@ -74,4 +79,66 @@ test_that("Bernoulli disconnected",{
   dtlogmgf <- function(t){N/((1/2)**t+(3/2)**t)*(log(1/2)*(1/2)**t+log(3/2)*(3/2)**t )}
   expect_equal(mgf(t),res[1])
   expect_equal(dtlogmgf(t), res[2]/res[1])
+})
+
+#################################################
+# Second order moment
+#################################################
+
+test_that("Constant variable", {
+  varDim <- c(1L)
+  facPot <- list(matrix(3,1,1))
+  facExp <- list(matrix(2,1,1))
+  facNbs <- list(1L)
+  
+  mydfg <- dfg(varDim, facPot, facNbs)
+  
+  res <- unname( expect2(mydfg, facExp) )
+  expect_equal(res[1], 3)
+  expect_equal(res[2], 6)
+  expect_equal(res[3], 12)
+})
+
+test_that("Pair of variables",{
+  varDim <- rep(2L,2)
+  facPot <- list(matrix(1:2,1,2),
+                 matrix(1:4,2,2, byrow = T))
+  facExp <- list(matrix(1,1,2),
+                 matrix(1,2,2))
+  facNbs <- list(1,1:2)
+  mydfg <- dfg(varDim, facPot, facNbs)
+  
+  res <- unname(expect2(mydfg, facExp))
+  
+  expect_equal(res[1], 17)
+  expect_equal(res[2], 34)
+  expect_equal(res[3], 68)
+})
+
+test_that("Multiple neighbors",{
+  varDim <- 1L
+  facPot <- lapply(1:8,function(i){matrix(1)})
+  facExp <- facPot
+  facNbs <- list(1,1,1,1,1,1,1,1)
+  mydfg <- dfg(varDim, facPot, facNbs)
+  
+  res <- unname(expect2(mydfg, facExp))
+  expect_equal(res[1], 1)
+  expect_equal(res[2], 8)
+  expect_equal(res[3], 64)
+})
+
+test_that("Components 2",{
+  varDim <- rep(2L, 2)
+  facPot <- list(matrix(1:2,1,2),
+                 matrix(3:4,1,2))
+  facExp <- facPot
+  facNbs <- list(1,2)
+  
+  mydfg <- dfg(varDim, facPot, facNbs)
+  res <- unname(expect2(mydfg, facExp))
+  
+  expect_equal(res[1], 21)
+  expect_equal(res[2], 110)
+  expect_equal(res[3], 586)
 })
