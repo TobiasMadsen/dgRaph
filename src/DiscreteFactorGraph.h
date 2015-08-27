@@ -18,7 +18,7 @@
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/foreach.hpp>
 #include <vector>
-#include <utility>
+#include <array>
 #include <algorithm>
 #include <cmath>
 
@@ -145,8 +145,8 @@ using namespace std;
     number_t calcFullLikelihood( vector<unsigned> const & sample);
 
     /** No preconditions. Give the two kinds of potentials*/
-    pair<number_t,number_t> calcExpect(stateMaskVec_t const & stateMasks);
-    number_t calcGamma(stateMaskVec_t const & stateMasks);
+    array<number_t, 2> calcExpect(stateMaskVec_t const & stateMasks);
+    array<number_t, 3> calcGamma(stateMaskVec_t const & stateMasks);
 
     // convenience functions
     DFGNode const & getFactor(unsigned facId) const {return nodes[ factors[ facId ] ];} 
@@ -215,8 +215,8 @@ using namespace std;
     //Functions for calculating expectancies
     //See note: sumProduct.pdf
     void runExpectInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
-    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
-    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const;
+    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<vector<message_t const *> > & inMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
+    void calcExpectMessageFactor(unsigned current, unsigned receiver, vector<message_t const *> const & inMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const;
     void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;
     void calcExpectMessageVariable(unsigned current, unsigned receiver, stateMaskPtr_t stateMask, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const;
     void calcExpectMessage(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const;

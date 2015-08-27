@@ -832,14 +832,14 @@ namespace dgRaph {
   }
 
   //Calculate expectancies
-  pair<number_t,number_t> DFG::calcExpect(stateMaskVec_t const & stateMasks){
+  array<number_t, 2> DFG::calcExpect(stateMaskVec_t const & stateMasks){
+    // Run calcNormConstant to set mu-messages
+    number_t res_lik = calcNormConst(stateMasks);
+
     //Initialize messages
-    if( inMu_.size() == 0)
-      initMessages(inMu_, outMu_);
     if( inLambda_.size() == 0)
       initMessages(inLambda_, outLambda_);
 
-    number_t res_lik = 1; // Likelihood type
     number_t res_exp = 0; //Expectancy type
 
     for(int i = 0; i < roots.size(); ++i){
@@ -852,7 +852,6 @@ namespace dgRaph {
       
       // calculate the likelihood of current component
       number_t lik_com = calcNormConstComponent(root, stateMask, inMu_[root]);
-      res_lik *= lik_com;
 
       if(!nodes[root].isFactor()){
 	unsigned dim = nodes[root].getDimension();
@@ -865,7 +864,10 @@ namespace dgRaph {
     
     }//Ends loop over roots
 
-    return make_pair(res_lik, res_exp*res_lik);
+    array<number_t, 2> ret;
+    ret[0] = res_lik;
+    ret[1] = res_exp*res_lik;
+    return ret;
   }
 
   void DFG::runExpectInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const{
@@ -885,23 +887,22 @@ namespace dgRaph {
 
   void DFG::calcExpectMessage(unsigned current, unsigned receiver, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const {
     if(nodes[current].isFactor())
-      calcExpectMessageFactor(current, receiver, inMu, outMu, inLambda, outLambda);
+      calcExpectMessageFactor(current, receiver, inMu, inLambda, outLambda);
     else
       calcExpectMessageVariable(current, receiver, stateMasks, inMu, outMu, inLambda, outLambda);
   }
 
-  void DFG::calcExpectMessageFactor(unsigned current, unsigned receiver, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const
+  void DFG::calcExpectMessageFactor(unsigned current, unsigned receiver, vector<vector<message_t const *> > & inMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda) const
   {
     vector<unsigned> const & nbs = neighbors[current];
     vector< message_t const *> const & inMesMu( inMu[current] );
-    message_t & outMesMu = outMu[current][ getIndex( nbs, receiver) ]; //identify message
-    vector< message_t const *> const & inMesLambda( inLambda[current] );
+     vector< message_t const *> const & inMesLambda( inLambda[current] );
     message_t & outMesLambda = outLambda[current][ getIndex( nbs, receiver) ]; //identify message
 
-    calcExpectMessageFactor(current, receiver, inMesMu, outMesMu, inMesLambda, outMesLambda);
+    calcExpectMessageFactor(current, receiver, inMesMu, inMesLambda, outMesLambda);
   }
 
-  void DFG::calcExpectMessageFactor(unsigned current, unsigned receiver, vector<message_t const *> const & inMesMu, message_t & outMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const
+  void DFG::calcExpectMessageFactor(unsigned current, unsigned receiver, vector<message_t const *> const & inMesMu, vector<message_t const *> const & inMesLambda, message_t & outMesLambda) const
   {
     vector<unsigned> const & nbs = neighbors[current];
     DFGNode const & nd = nodes[current];
@@ -911,18 +912,13 @@ namespace dgRaph {
     //One neighbor
     if(nd.getDimension() == 1){
       for( unsigned i = 0; i < nd.getPotential().size2(); ++i){
-	outMesMu.first[i] = pot_a(0,i);
 	outMesLambda.first[i] = pot_a(0,i)*pot_b(0,i);
-	outMesMu.second = 0; // Use same normalization constant for both types of messages
       }
     }
 
     //Two neighbors
     if(nd.getDimension() == 2){
       if(nbs[0] == receiver){ // rows are receivers
-	outMesMu.first = prod(pot_a, inMesMu[1]->first);
-	outMesMu.second = inMesMu[1]->second;
-	
 	//TODO Vectorize the following computations
 	for(unsigned i = 0; i < pot_a.size1(); ++i){
 	  outMesLambda.first[i] = 0;
@@ -933,9 +929,6 @@ namespace dgRaph {
 	}
       }
       else{ // nbs[1] == receiver, columns are receivers
-	outMesMu.first = prod(inMesMu[0]->first, pot_a);
-	outMesMu.second = inMesMu[0]->second;
-
 	//TODO Vectorize the following computations
 	for(unsigned j = 0; j < pot_a.size2(); ++j){
 	  outMesLambda.first[j] = 0;
@@ -965,32 +958,14 @@ namespace dgRaph {
   {
     vector<unsigned> const & nbs = neighbors[current];
 
-    // Instantiate mu messages
-    outMesMu.second = 0;
-    if (stateMask){
-      for(unsigned i = 0; i < outMesMu.first.size(); ++i)
-	outMesMu.first[i] = (*stateMask)[i];
-    }
-    else{ //init to 1
-      for(unsigned i = 0; i < outMesMu.first.size(); ++i)
-	outMesMu.first[i] = 1;
-    }
-
-    // Normalize message
+    // Reattain normalizing factor
     double nclogtotal = 0;
-
-    // Calculate mu message
     for(unsigned i = 0; i < nbs.size(); ++i){
       if(nbs[i] == receiver)
 	continue;
-      outMesMu.second += inMesMu[i]->second;
-      outMesMu.first = elemProd<vector_t>( inMesMu[i]->first, outMesMu.first);
-      double nc = sum(outMesMu.first);
-      outMesMu.first /= nc;
-      nclogtotal += std::log(nc);
+      nclogtotal += inMesMu[i]->second;
     }
-
-    outMesMu.second += nclogtotal;
+    double lognc = outMesMu.second - nclogtotal;
 
     // Calculate lambda messages
     outMesLambda.first *= 0;
@@ -1014,21 +989,19 @@ namespace dgRaph {
     }
 
     // Normalize 
-    outMesLambda.first /= std::exp(nclogtotal);
+    outMesLambda.first /= std::exp(lognc);
   }
 
   // Calculate 2nd order moment
-  number_t DFG::calcGamma(stateMaskVec_t const & stateMasks){
+  array<number_t, 3> DFG::calcGamma(stateMaskVec_t const & stateMasks){
+    // Setting lambda and mu messages
+    array<number_t, 2> resExpect = calcExpect(stateMasks);
+
     // Initialize messages
-    if( inMu_.size() == 0)
-      initMessages(inMu_, outMu_);
-    if( inLambda_.size() == 0)
-      initMessages(inLambda_, outLambda_);
     if( inGamma_.size() == 0)
       initMessages(inGamma_, outGamma_);
 
     number_t res_gamma = 0;
-    number_t res_lik   = 1;
 
     for(int i = 0; i < roots.size(); ++i){
       // Calc inward recursion
@@ -1046,7 +1019,6 @@ namespace dgRaph {
 
       // calculate the likelihood of the current component
       number_t lik_com_i = calcNormConstComponent(root_i, stateMask_i, inMu_[root_i]);
-      res_lik *= lik_com_i;
 
       unsigned dim_i = nodes[root_i].getDimension();
       message_t mu_i(vector_t(dim_i), 0);
@@ -1079,10 +1051,13 @@ namespace dgRaph {
 
 	res_gamma += 2*sum(lambda_i.first)*std::exp(mu_i.second)*sum(lambda_j.first)*std::exp(mu_j.second)/lik_com_i/lik_com_j;
       }
-      
-
     }
-    return res_gamma*res_lik;
+    
+    array<number_t, 3> ret;
+    ret[0] = resExpect[0];
+    ret[1] = resExpect[1];
+    ret[2] = resExpect[0] * res_gamma;
+    return ret;
   }
 
   void DFG::runGammaInwardsRec(unsigned current, unsigned sender, stateMaskVec_t const & stateMasks, vector<vector<message_t const *> > & inMu, vector<vector<message_t> > & outMu, vector<vector<message_t const *> > & inLambda, vector<vector<message_t> > & outLambda, vector<vector<message_t const *> > & inGamma, vector<vector<message_t> > & outGamma) const {
