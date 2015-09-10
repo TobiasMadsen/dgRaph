@@ -5,34 +5,34 @@ test_that("Training returns dfg",{
   mydfg <- IIDVariables(1)
   data <- data.frame(matrix(c(2,1,1,2,2,2,2,NA,2,1),10,1))
   
-  tryCatch({
-    sink("/dev/null")
-    optDfg <- train(data, mydfg, optim = 'row')
-  },
-  finally = {sink()})
-  
+  optDfg <- train(data, mydfg)
+
   expect_true(is.dfg(optDfg))
   expect_false( identical(optDfg, mydfg))
 })
 
 test_that("Custom Optimization", {
+  mypotential <- list(mat = matrix(c(0.2,0.2,0.3,0.3), 1, 4),
+                      param = NULL)
+  class(mypotential) <- c("uniform","potential")
+  update.uniform <- function(pot, expCounts){
+    ret <- list(mat = matrix(0.25,1,4))
+    class(ret) <- c("uniform", "potential")
+    ret
+  }
+  
   varDim <- c(4)
-  facPot <- list(matrix(c(0.2,0.2,0.3,0.3), 1, 4))
+  facPot <- list(mypotential)
   facNbs <- list(1)
   mydfg  <- dfg(varDim, facPot, facNbs)
   
   # Custom training function
-  optimList <- list("uniform" = function(expCounts){return(list(pot = matrix(0.25,1,4), str = "Uniform\n"))})
   df <- data.frame(O1 = c(1,2,3))
   
-  tryCatch({
-    sink("/dev/null")
-    optDfg <- train(df, mydfg, optim = 'uniform', optimFun = optimList)
-  },
-  finally = {sink()})
+  optDfg <- train(df, mydfg)
   
   # Test
-  expect_equal( potentials(optDfg)[[1]], matrix(0.25,1,4))
+  expect_equal( as.matrix(potentials(optDfg)[[1]]), matrix(0.25,1,4))
 })
 
 test_that("Beta Distribution", {
@@ -46,16 +46,12 @@ test_that("Beta Distribution", {
   set.seed(1)
   df <- data.frame(O1 = ceiling(rbeta(500, 4,6)*100))
   
-  # Train
-  tryCatch({
-    sink("/dev/null")
-    optDfg <- train(df, mydfg, optim = 'beta')
-  },
-  finally = {sink()})
-  
+  # Train 
+  optDfg <- train(df, mydfg)
+    
   # Compare Kolmogorov Smirnoff style
   expect_less_than(
-    max(abs(pbeta(1:100/100, 4, 6) - cumsum(potentials(optDfg)[[1]][1,]))),
+    max(abs(pbeta(1:100/100, 4, 6) - cumsum(as.matrix(potentials(optDfg)[[1]])[1,]))),
     0.02)
   
 })
@@ -75,15 +71,11 @@ test_that("Normal Mixture",{
   r2 <- round(rnorm(800, 70, 6))
   df <- data.frame(H1 = NA, O1 = sample(c(r1,r2)))
   
-  tryCatch({
-    sink("/dev/null")
-    optDfg <- train(df, mydfg, optim = c('row', 'norm'), threshold = 1e-5)
-  }, 
-  finally={sink()})
+  optDfg <- train(df, mydfg, threshold = 1e-5)
 
   # Check that decision boundary is in the 50-60's
   newFacPot <- potentials(optDfg)
-  classification <- apply( sweep(newFacPot[[2]], 1, STATS = newFacPot[[1]], FUN = "*"), 2, which.max)
+  classification <- apply( sweep(as.matrix(newFacPot[[2]]), 1, STATS = as.matrix(newFacPot[[1]]), FUN = "*"), 2, which.max)
   expect_equal( length(unique(classification[1:50])), 1)
   expect_equal( length(unique(classification[65:100])), 1)
 })
@@ -99,12 +91,8 @@ test_that("Markov Chain",{
   
   # Test
   df <- data.frame(matrix(c(1,NA,1,2),1,1000))
-  tryCatch({
-    sink("/dev/null") # Portability?
-    optDfg <- train(df, mydfg)
-  },
-  finally = {sink()})
-  
+  optDfg <- train(df, mydfg)
+    
   facPotTrained <- potentials(optDfg)
   expect_equal(facPotTrained[[2]][1,1], 0, tolerance = 1e-5)
   expect_equal(facPotTrained[[2]][1,2], 1, tolerance = 1e-5)
@@ -119,11 +107,9 @@ test_that("IID Variables",{
   
   # Test
   df <- data.frame(matrix(c(2,1,1,2,2,2,2,NA,2,1),1,10))
-  tryCatch({
-    sink("/dev/null")
-    optDfg <- train(df, mydfg)
-  },
-  finally = {sink()})
+  
+  optDfg <- train(df, mydfg)
+  
   facPotTrained <- potentials(optDfg)
   expect_equal(facPotTrained[[1]][1,1], 0.333333, tolerance = 1e-5)
   expect_equal(facPotTrained[[1]][1,2], 0.666667, tolerance = 1e-5)

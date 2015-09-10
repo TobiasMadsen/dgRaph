@@ -2,14 +2,6 @@
 #' @param data      dataframe or matrix with observed data. The mapping between columns and rows will be performed automatically. 
 #'                  NA will be interpreted as a missing variable
 #' @param dfg       discrete factor graph object
-#' @param optim     character vector with an optimization function for each potential. The built-in functions are
-#'                  "row" optimizing a multinomial conditional distribution 
-#'                  "norm" optimizing a discretized normal conditional distribution
-#'                  "linreg" optimizing a normal linear regression of x2 on x1
-#'                  "beta" optimizing a discretized beta conditional distribution
-#'                  "indep" optimized a multinomial independent of parent of variable
-#' @param optimFun  A named list with additional optimization functions. 
-#'                  Refer to the optimization function by entry name in "optim".
 #' @param threshold Stop training when difference in likelihood between two iterations is below threshold
 #' @param iter.max  Maximal number of iterations of the EM-algorithm.
 #' @param dataList  provides support for partially observed data. See online documentation.
@@ -45,56 +37,18 @@ train <- function(data, dfg, optim = NULL, optimFun = NULL, threshold = 1e-9, it
     expCounts <- .facExpectations(data, dfg, dataList = dataList, module = module)
     
     # Update potentials
-    newPotentials <- lapply( seq_along(expCounts), FUN=function(i){
-      if(is.null(optim) || optim[i] == 'row'){ # Default optimization
-        opt <- .rowOptimize(expCounts[[i]])
-        if(lastIteration)
-          strPotential[[i]] <<- opt[['str']]
-        return(opt[['pot']])
-      }
-      if(optim[i] == 'noopt'){
-        if(lastIteration)
-          strPotential[[i]] <<- "No optimization performed\n"
-        return( matrix(0,0,0) )
-      }
-      if(optim[i] == 'norm'){
-        opt <- .normOptimize(expCounts[[i]])
-        if(lastIteration)
-          strPotential[[i]] <<- opt[['str']]
-        return(opt[['pot']])
-      }
-      if(optim[i] == 'beta'){
-        opt <- .betaOptimize(expCounts[[i]])
-        if(lastIteration)
-          strPotential[[i]] <<- opt[['str']]
-        return(opt[['pot']])
-      }
-      if(optim[i] == 'indep'){
-        opt <- .independentOptimize(expCounts[[i]])
-        if(lastIteration)
-          strPotential[[i]] <<- opt[['str']]
-        return(opt[['pot']])
-      }
-      if(!is.null(optimFun) && optim[i] %in% names(optimFun)){
-        if(!is.function(optimFun[[optim[i]]]))
-          stop("optimFun should contain functions that take expectation counts and return potentials")
-        opt <- optimFun[[optim[i]]](expCounts[[i]])
-        if(lastIteration)
-          strPotential[[i]] <<- opt[['str']]
-        return(opt[['pot']])
-      }
-      stop(paste0("No matching optimization function found for: ", optim[i]))
-    })
+    for(i in seq_along(expCounts)){
+      potentials(dfg)[[i]] <- update(potentials(dfg)[[i]], expCounts[[i]])
+    }
     
-    # potentials(dfg) <- newPotentials
+    # Expose to C++ side
+    newPotentials <- lapply(potentials(dfg), as.matrix)
     module$resetPotentials( newPotentials )
     
     if(lastIteration)
       break;
   }
   if (verbose) cat("\n")
-  
-  potentials(dfg) <- module$getPotentials()
   
   # Summary
   # Iterations / Convergence

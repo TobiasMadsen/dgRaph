@@ -6,16 +6,16 @@ test_that("Beta potential 1",{
   for(i in 1:3){
     set.seed(i)
     pot <- betaPotential(dim = c(2,100))
-    expect_true(is.matrix(pot))
+    expect_true(is.matrix(pot) | is.potential(pot))
     expect_equal(dim(pot), c(2,100))
-    expect_equal(rowSums(pot), c(1,1), tolerance = 1e-4)
-    expect_true(min(pot) >= 0)
+    expect_equal(rowSums(as.matrix(pot)), c(1,1), tolerance = 1e-4)
+    expect_true(min(as.matrix(pot)) >= 0)
   }
 })
 
 test_that("Beta potential 2",{
   # Generate a beta potential with known parameters
-  val <- betaPotential(dim = c(2,100), alphas = c(2,3), betas = c(2,2))
+  val <- as.matrix(betaPotential(dim = c(2,100), alphas = c(2,3), betas = c(2,2)))
   
   expect_equal(val[1,], diff(pbeta(seq(0,1,length.out = 101), 2, 2)), tolerance = 1e-3)
   expect_equal(val[2,], diff(pbeta(seq(0,1,length.out = 101), 3, 2)), tolerance = 1e-3)
@@ -23,24 +23,24 @@ test_that("Beta potential 2",{
 
 test_that("Beta potential 3",{
   # Check range argument
-  val <- betaPotential(dim = c(1,100), range = c(0,1e-2), alphas = 2, betas = 800)
+  val <- as.matrix(betaPotential(dim = c(1,100), range = c(0,1e-2), alphas = 2, betas = 800))
   
   expect_equal(val[1,], diff(pbeta(seq(0,1e-2,length.out = 101), 2, 800)), tolerance = 1e-3)
 })
 
 test_that("Beta potential 4",{
   # Check range argument both ends
-  val <- betaPotential(dim = c(1,100), range = c(1e-3,1e-2), alphas = 2, betas = 800)
+  val <- as.matrix(betaPotential(dim = c(1,100), range = c(1e-3,1e-2), alphas = 2, betas = 800))
   
   expect_equal(val[1,], diff(pbeta(seq(1e-3,1e-2,length.out = 101), 2, 800)), tolerance = 1e-3)
 })
 
 test_that("Beta potential 5",{
   # Check not infinite in either end
-  val <- betaPotential(dim = c(1,100), range = c(0,1), alpha = 0.5, beta = 3)
+  val <- as.matrix(betaPotential(dim = c(1,100), range = c(0,1), alpha = 0.5, beta = 3))
   expect_equal( sum(is.infinite(val)), 0)
   
-  val <- betaPotential(dim = c(1,100), range = c(0,1), alpha = 3, beta = 0.5)
+  val <- as.matrix(betaPotential(dim = c(1,100), range = c(0,1), alpha = 3, beta = 0.5))
   expect_equal( sum(is.infinite(val)), 0)
 })
 
@@ -61,10 +61,10 @@ test_that("Normal potential 1", {
   for(i in 1:3){
     set.seed(i)
     pot <- normalPotential(dim = c(3,100))
-    expect_true(is.matrix(pot))
+    expect_true(is.potential(pot))
     expect_equal(dim(pot), c(3,100))
-    expect_equal(rowSums(pot), c(1,1,1), tolerance = 5e-2)
-    expect_true(min(pot) >= 0)
+    expect_equal(rowSums(as.matrix(pot)), c(1,1,1), tolerance = 5e-2)
+    expect_true(min(as.matrix(pot)) >= 0)
   }
 })
 
@@ -75,16 +75,16 @@ test_that("Normal potential 2",{
 test_that("Log regression potential 1",{
   set.seed(1)
   pot <- logregPotential(dim = c(3,100))
-  expect_true(is.matrix(pot))
+  expect_true(is.potential(pot))
   expect_equal(dim(pot), c(3,100))
-  expect_equal(rowSums(pot), c(1,1,1), tolerance = 5e-2)
-  expect_true(min(pot) >= 0)
+  expect_equal(rowSums(as.matrix(pot)), c(1,1,1), tolerance = 5e-2)
+  expect_true(min(as.matrix(pot)) >= 0)
 })
 
 test_that("Log regression potential 2",{
   pot <- logregPotential(dim = c(100,100), alpha = 2, beta = 50, var = 5)
-  expect_equal( which.max(pot[30,]), 57)
-  expect_equal( which.max(pot[1,]), 49)
+  expect_equal( which.max(as.matrix(pot)[30,]), 57)
+  expect_equal( which.max(as.matrix(pot)[1,]), 49)
 })
 
 test_that("Log regression out of range",{

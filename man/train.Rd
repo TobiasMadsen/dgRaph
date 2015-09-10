@@ -13,16 +13,6 @@ NA will be interpreted as a missing variable}
 
 \item{dfg}{discrete factor graph object}
 
-\item{optim}{character vector with an optimization function for each potential. The built-in functions are
-"row" optimizing a multinomial conditional distribution
-"norm" optimizing a discretized normal conditional distribution
-"linreg" optimizing a normal linear regression of x2 on x1
-"beta" optimizing a discretized beta conditional distribution
-"indep" optimized a multinomial independent of parent of variable}
-
-\item{optimFun}{A named list with additional optimization functions.
-Refer to the optimization function by entry name in "optim".}
-
 \item{threshold}{Stop training when difference in likelihood between two iterations is below threshold}
 
 \item{iter.max}{Maximal number of iterations of the EM-algorithm.}

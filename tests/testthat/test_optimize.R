@@ -8,19 +8,17 @@ test_that("Beta optimizer",{
   expCounts <- matrix( hist(dat, breaks = seq(0, 0.1, 0.001), plot = FALSE)$counts, 1, 100)
 
   # Optimize
-  betaOpt <- betaOptimize(range = c(0,0.1))(expCounts)
-  pot <- betaOpt$pot
-  alpha <- betaOpt$alphas[1]
-  beta  <- betaOpt$betas[1]
+  betaPot <- betaPotential(dim = c(1,100), range = c(0,0.1))
+  betaPotUpdated <- update(betaPot, expCounts)
+  alpha <- betaPotUpdated$param$alphas[1]
+  beta  <- betaPotUpdated$param$betas[1]
   
   # Tests
   expect_equal( alpha, 4, tolerance = 0.005)
   expect_equal( beta, 140, tolerance = 0.005)
   
   # Reflection
-  alpha <- betaOpt$alphas[1]
-  beta  <- betaOpt$betas[1]
-  expect_equal( pot, 
+  expect_equal( betaPotUpdated, 
                 betaPotential(dim = c(1,100), 
                               range = c(0,0.1),
                               alphas = alpha, 
@@ -36,15 +34,16 @@ test_that("Linreg optimizer 1",{
                   1,0,0,0,0), 5,5)
   
   # Optimize
-  linreg <- linregOptimize(range1 = c(0.5,5.5), range2 = c(0.5,5.5))(dat)
+  linregPot <- linregPotential(dim = c(5,5), range1 = c(0.5,5.5), range2 = c(0.5,5.5))
+  linregPotUpdated <- update(linregPot, dat)
   
   # Tests
-  expect_equal(linreg$alpha, -1)
-  expect_equal(linreg$beta, 5)
-  expect_equal(linreg$var, 0.5)
+  expect_equal(linregPotUpdated$param$alpha, -1)
+  expect_equal(linregPotUpdated$param$beta, 5)
+  expect_equal(linregPotUpdated$param$var, 0.5)
   
   # Reflection
-  expect_equal(linreg$pot, 
+  expect_equal(linregPotUpdated, 
                linregPotential(dim = dim(dat), 
                                range1 = c(0.5,5.5), 
                                range2 = c(0.5,5.5), 
@@ -131,15 +130,17 @@ test_that("Linreg/Normal optimizer comparison 1",{
   dat <- matrix(c(0,0,1,2,1,0),6,6, byrow = T)
   
   # Optimize
-  linreg <- linregOptimize()(dat)
+  linregPot <- linregPotential(dim = c(6,6))
+  linregPotUpdated <- update(linregPot, dat)
   
   # Rows identical
-  expect_equal(linreg$pot[1,], linreg$pot[2,])
+  expect_equal(as.matrix(linregPotUpdated)[1,], as.matrix(linregPotUpdated)[2,])
   
   # Check equal to similar one dimensional update
   datRow <- dat[1,,drop = F]
-  normopt <- normOptimize()(datRow)
-  expect_equal(normopt$pot[1,], linreg$pot[1,])
+  normPot <- normalPotential(dim = c(1,6))
+  normPotUpdated <- update(normPot,datRow)
+  expect_equal( as.matrix(normPotUpdated)[1,], as.matrix(linregPotUpdated)[1,])
 })
 
 test_that("Normal optimizer 1",{
@@ -148,16 +149,17 @@ test_that("Normal optimizer 1",{
                   0,0.5,4,0.5,0,0), 2, 6, byrow = T)
   
   # Optimize
-  normopt <- normOptimize(range = c(1,13))(dat)
+  normPot <- normalPotential(range = c(1,13), dim = c(2,6))
+  normPotUpdated <- update(normPot, dat)
   
   # Tests
-  expect_equal(normopt$means, c(8,6) )
-  expect_equal(normopt$vars, c(2,0.8) )
-  expect_equal(which.max(normopt$pot[1,]), 4)
-  expect_equal(which.max(normopt$pot[2,]), 3)
+  expect_equal(normPotUpdated$param$means, c(8,6) )
+  expect_equal(normPotUpdated$param$vars, c(2,0.8) )
+  expect_equal(which.max(as.matrix(normPotUpdated)[1,]), 4)
+  expect_equal(which.max(as.matrix(normPotUpdated)[2,]), 3)
   
   # Reflection
-  expect_equal(normopt$pot, 
+  expect_equal(normPotUpdated, 
                normalPotential(dim = c(2,6), 
                                range = c(1,13), 
                                means = c(8,6), 
@@ -173,21 +175,22 @@ test_that("Normal optimizer 2",{
   dat[1,102] <- 2
   
   # Optimize
-  normopt <- normOptimize(range = c(100,300))(dat)
+  normPot <- normalPotential(range = c(100,300), dim = c(1,200))
+  normPotUpdated <- update(normPot, dat)
   
   # Tests
-  expect_equal(normopt$means[1], 200)
-  expect_equal(normopt$vars[1], 1.05) # Uses MLE for variance
+  expect_equal(normPotUpdated$param$means[1], 200)
+  expect_equal(normPotUpdated$param$vars[1], 1.05) # Uses MLE for variance
 
   # Reflection
-  expect_equal(normopt$pot, 
+  expect_equal(normPotUpdated, 
                normalPotential(dim = c(1,200), 
                                range = c(100,300), 
                                means = 200, 
                                vars = 1.05))
 })
 
-test_that("Fixedlink optimizer 1",{
+test_that("Meanlink optimizer 1",{
   # Generate data
   dat <- matrix(c(1,1,0,0,0,
                   0,1,1,0,0,
@@ -195,22 +198,26 @@ test_that("Fixedlink optimizer 1",{
                   0,0,0,1,1), 4, 5, byrow = T)
   
   # Optimize
-  fixedopt <- fixedlinkOptimize(range1 = c(0.5,4.5), range2 = c(0.5,5.5), alpha = 1, beta = 0)(dat)
+  meanlinkPot <- meanlinkPotential(dim = c(4,5),
+                                   range1 = c(0.5,4.5),
+                                   range2 = c(0.5,5.5),
+                                   alpha = 1, beta = 0)
+  meanlinkPotUpdated <- update(meanlinkPot, dat)
   
   # Tests
-  expect_equal(fixedopt$var, 0.5)
+  expect_equal(meanlinkPotUpdated$param$var, 0.5)
   
   # Reflection
-  expect_equal(fixedopt$pot, 
-               linregPotential(dim = dim(dat), 
-                               range1 = c(0.5,4.5), 
-                               range2 = c(0.5,5.5), 
-                               alpha = 1, 
-                               beta = 0, 
-                               var = 0.5))
+  expect_equal(meanlinkPotUpdated, 
+               meanlinkPotential(dim = dim(dat), 
+                                 range1 = c(0.5,4.5), 
+                                 range2 = c(0.5,5.5), 
+                                 alpha = 1, 
+                                 beta = 0, 
+                                 var = 0.5))
 })
 
-test_that("Fixedlink optimizer 2",{
+test_that("Meanlink optimizer 2",{
   # Generate data
   dat <- matrix(c(0,1,1,0,0,
                   0,0,0,0,0,
@@ -218,17 +225,22 @@ test_that("Fixedlink optimizer 2",{
                   0,0,0,0,0), 4, 5, byrow = T)
   
   # Optimize
-  fixedopt <- fixedlinkOptimize(range1 = c(2.5,6.5), range2 = c(0,10), alpha = 2, beta = -3)(dat)
+  meanlinkPot <- meanlinkPotential(dim = c(4,5),
+                                   range1 = c(2.5,6.5),
+                                   range2 = c(0,10),
+                                   alpha = 2,
+                                   beta = -3)
+  meanlinkPotUpdated <- update(meanlinkPot, dat)
   
   # Tests
-  expect_equal(fixedopt$var, 2)
+  expect_equal(meanlinkPotUpdated$param$var, 2)
   
   # Reflection
-  expect_equal(fixedopt$pot, 
-               linregPotential(dim = dim(dat), 
-                               range1 = c(2.5,6.5), 
-                               range2 = c(0,10), 
-                               alpha = 2, 
-                               beta = -3, 
-                               var = 2))
+  expect_equal(meanlinkPotUpdated, 
+               meanlinkPotential(dim = dim(dat), 
+                                 range1 = c(2.5,6.5), 
+                                 range2 = c(0,10), 
+                                 alpha = 2, 
+                                 beta = -3, 
+                                 var = 2))
 })

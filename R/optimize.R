@@ -2,12 +2,8 @@
 # Building custom optimization functions
 #################################################
 
-#' Beta optimization
-#' @param range     range of variable
-#' @export
-betaOptimize <- function(range = c(0,1)){
-  # Return a function that takes expcounts and return 
-  return(function(expCounts){.betaOptimize(expCounts, range = range)})
+update.matrix <- function(pot, expCounts){
+  sweep( expCounts, 1, STATS = rowSums(expCounts), FUN = '/')
 }
 
 #' Linear Regression optimization

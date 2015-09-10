@@ -24,7 +24,7 @@ dfg <- function(varDim,
     stop("varDim must be a vector of integers")
   
   #Check facPot is a list of matrices
-  if( ! is.list(facPot) | ! all(sapply(facPot, is.matrix)))
+  if( ! is.list(facPot) | ! all(sapply(facPot, function(f){is.matrix(f) | is.potential(f)})))
     stop("facPot must be a list of matrices")
     
   #Check facNbs is a list of integer vectors
