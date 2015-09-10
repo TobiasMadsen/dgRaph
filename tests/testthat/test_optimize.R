@@ -64,15 +64,18 @@ test_that("Linreg optimizer 2",{
   # Optimize
   # Bins x corresponds to 1,2,3,4
   # Bins y corresponds to 1,2,3,4,5
-  linreg <- linregOptimize(range1 = c(0.5,4.5), range2 = c(0.5,5.5))(dat) 
+  linregPot <- linregPotential(dim = c(4,5),
+                               range1 = c(0.5,4.5),
+                               range2 = c(0.5,5.5))
+  linregPotUpdated <- update(linregPot, dat)
   
   # Tests
-  expect_equal(linreg$alpha, -1)
-  expect_equal(linreg$beta, 5)
-  expect_equal(linreg$var, 0.5)
-  
+  expect_equal(linregPotUpdated$param$alpha, -1)
+  expect_equal(linregPotUpdated$param$beta, 5)
+  expect_equal(linregPotUpdated$param$var, 0.5)
+
   # Reflection
-  expect_equal(linreg$pot, 
+  expect_equal(linregPotUpdated, 
                linregPotential(dim = dim(dat), 
                                range1 = c(0.5,4.5), 
                                range2 = c(0.5,5.5), 
@@ -83,15 +86,18 @@ test_that("Linreg optimizer 2",{
   # Optimize
   # Bins x corresponds to 2,4,6,8
   # Bins y corresponds to 3,7,11,15,19
-  linreg <- linregOptimize(range1 = c(1,9), range2 = c(1,21))(dat)
+  linregPot <- linregPotential(dim = c(4,5),
+                               range1 = c(1,9),
+                               range2 = c(1,21))
+  linregPotUpdated <- update(linregPot, dat)
   
   # Tests
-  expect_equal(linreg$alpha, -2)
-  expect_equal(linreg$beta, 19)
-  expect_equal(linreg$var, 8)
-  
+  expect_equal(linregPotUpdated$param$alpha, -2)
+  expect_equal(linregPotUpdated$param$beta, 19)
+  expect_equal(linregPotUpdated$param$var, 8)
+
   # Reflection
-  expect_equal(linreg$pot, 
+  expect_equal(linregPotUpdated, 
                linregPotential(dim = dim(dat), 
                                range1 = c(1,9), 
                                range2 = c(1,21), 
@@ -109,19 +115,20 @@ test_that("Log regression 1",{
   }))
   
   # Optimize
-  reg <- .logregOptimize(expCounts)  
+  logregPot <- logregPotential(dim = c(100,100), range1 = c(0,100), range2 = c(0,100))
+  logregPotUpdated <- update(logregPot, expCounts)
   
   # Tests
-  expect_equal( reg$alpha, 10, tolerance = 0.005)
-  expect_equal( reg$beta, 20, tolerance = 0.005)
-  expect_equal( reg$var, 25, tolerance = 0.05)
+  expect_equal( logregPotUpdated$param$alpha, 10, tolerance = 0.005)
+  expect_equal( logregPotUpdated$param$beta, 20, tolerance = 0.005)
+  expect_equal( logregPotUpdated$param$var, 25, tolerance = 0.05)
   
   # Reflection
-  expect_equal( reg$pot, 
+  expect_equal( logregPotUpdated, 
                 logregPotential(dim = c(100,100),
-                                alpha = reg$alpha, 
-                                beta = reg$beta,
-                                var = reg$var
+                                alpha = logregPotUpdated$param$alpha, 
+                                beta = logregPotUpdated$param$beta,
+                                var = logregPotUpdated$param$var
                                 ))
 })
 
