@@ -1110,6 +1110,7 @@ namespace dgRaph {
 	  for(unsigned j = 0; j < pot_a.size2(); ++j){
 	    outMesGamma.first[i] += pot_a(i,j) * pot_b2(i,j) * inMesMu[1]->first[j];
 	    outMesGamma.first[i] += pot_a(i,j) * inMesGamma[1]->first[j];
+	    outMesGamma.first[i] += 2*pot_a(i,j) * pot_b(i,j) * inMesLambda[1]->first[j];
 	  }
 	}
       }
@@ -1119,6 +1120,7 @@ namespace dgRaph {
 	  for(unsigned i = 0; i < pot_a.size1(); ++i){
 	    outMesGamma.first[j] += pot_a(i,j) * pot_b2(i,j) * inMesMu[0]->first[i];
 	    outMesGamma.first[j] += pot_a(i,j) * inMesGamma[0]->first[i];
+	    outMesGamma.first[j] += 2 * pot_a(i,j) * pot_b(i,j) * inMesLambda[0]->first[i];
 	  }
 	}
       }
