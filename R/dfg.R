@@ -35,7 +35,7 @@ dfg <- function(varDim,
   
   #Check all facNbs are in 1:seq_along(varDim)
   if( max(unlist(facNbs)) > length(varDim) || min(unlist(facNbs)) <= 0 )
-    stop("facNbs should be integers 1,2,...,length(varDim)")
+    stop("facNbs should be integers among 1,2,...,length(varDim)")
   
   #Check that potential dimensions matches var dimensions
   if( ! length(facNbs) == length(potMap) )

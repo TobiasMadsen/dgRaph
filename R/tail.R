@@ -15,6 +15,8 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
     stop("n must be a single integer")
   if( !is.numeric(alpha))
     stop("alpha must be a numeric vector")
+  if( any(is.nan(alpha)))
+    stop("alpha can not contain NaN's")
   if( !is.dfg(dfg1))
     stop("dfg1 must be a dfg object")
   if( !is.dfg(dfg2))
@@ -152,41 +154,47 @@ tailSaddle <- function(x, dfg1, dfg2){
   #Setup data structures
   cdf_upper_tail <- rep(NA, length(x))
   
+  # Find range of scores
+  moduleSaddle <- .build(dfg1)
+  facScore <- .facPotToFunB(facPotBg, facPotFg)  
+  expFacScore <- lapply(facScore, function(x){exp(x)})
+  expFacScoreMinus <- lapply(facScore, function(x){exp(-x)})
+  moduleSaddle$resetPotentials( expFacScore )
+  mpsDat <- .mps(data = matrix(NA, 1,length(dfg1$varDim)), dfg = dfg1, module = moduleSaddle)
+  maxValue <- log(.likelihood(data = mpsDat, dfg = dfg1, module = moduleSaddle))
+  moduleSaddle$resetPotentials( expFacScoreMinus )
+  mpsDat <- .mps(data = matrix(NA, 1,length(dfg1$varDim)), dfg = dfg1, module = moduleSaddle)
+  minValue <- -log(.likelihood(data = mpsDat, dfg = dfg1, module = moduleSaddle))
+  
+  theta <- 0
   for(i in seq_along(x)){
     t <- x[i]
     
-    moduleSaddle <- .build(dfg1)
-    
-    #Solve d/dt k(theta) = t
-    #where k(theta) is the cumulant transform
-    theta <- tryCatch(
-    {
-      uniroot(function(z)
-      {
-        moduleSaddle$resetPotentials( .facPotToFunA(facPotBg, facPotFg, z) )
-        facScore <- .facPotToFunB(facPotBg, facPotFg)
-        res <- .expect.dfg(dfg1, facScore, module = moduleSaddle)
-        return(res[2]/res[1]-t)
-      }, c(-5,5))$root
-    },
-    error = function(e){
-      NULL
+    # Solve d/dt k(theta) = t
+    # Where k(theta) is the cumulant transform
+    # Using Newton-Raphson
+    iter <- 0
+    cum <- rep(0,2)
+    while(T){
+      if(t >= maxValue | t <= minValue){
+        cum <- c(NA, NA)
+        break;
+      }
+      moduleSaddle$resetPotentials( .facPotToFunA(facPotBg, facPotFg, theta) )
+      res <- unname(.expect2.dfg(dfg1, facScore, module = moduleSaddle))
+      cum <- c(res[2]/res[1], (res[3]*res[1]-res[2]**2)/(res[1]**2) )
+      
+      theta <- theta - min(max((cum[1]-t)/ cum[2],-5),5)
+      iter <- iter +1
+      if(iter > 100)
+        break;
+      if(any(is.nan(cum)) | abs(cum[1] - t) < 0.001)
+        break;
     }
-    )
-    
-    #If theta not determinable(t is not within the range of the score)
-    if(is.null(theta))
-      next
     
     #Numerically find d/dt^2 k(t)
-    kud2 <- grad(function(x){
-      moduleSaddle$resetPotentials( .facPotToFunA(facPotBg, facPotFg, x) )
-      facScore <- .facPotToFunB(facPotBg, facPotFg)
-      res <- .expect.dfg(dfg1, facScore, module = moduleSaddle)
-      return(res[2]/res[1])
-    }, theta)
-    
-    
+    kud2 <- cum[2]
+
     #Find MGF in theta
     moduleSaddle$resetPotentials( .facPotToFunA(facPotBg, facPotFg, theta) )
     phi <- .likelihood(data = matrix(NA, 1, length(dfg1$varDim)), dfg = dfg1, module = moduleSaddle)[1]
@@ -228,18 +236,12 @@ tailNormal <- function(x, dfg1, dfg2){
   facPotFg <- potentials(dfg2)
   moduleNormal <- .build(dfg1)
   
-  # Calculate Mean
+  # Calculate Mean and Variance
   facScore <- .facPotToFunB(facPotBg, facPotFg)
-  moduleNormal$resetPotentials( .facPotToFunA(facPotBg, facPotFg, 0))
-  res <- .expect.dfg(dfg1, facScore, module = moduleNormal)
+  moduleNormal$resetPotentials( facPotBg )
+  res <- .expect2.dfg(dfg1, facScore, module = moduleNormal)
   m <- res[2]
-  
-  # Calculate Variance
-  v <- grad(function(x){
-    moduleNormal$resetPotentials( .facPotToFunA(facPotBg, facPotFg, x) )
-    res <- .expect.dfg(dfg1, facScore, module = moduleNormal)
-    return(res[2]/res[1])
-  }, 0)
+  v <- res[3] - res[2]**2
 
   data.frame(x=x, p=pnorm(x, m, v, lower.tail = FALSE))
 }
