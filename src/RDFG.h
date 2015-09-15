@@ -22,6 +22,9 @@ public:
   // Calculate Expecations
   NumericVector expect(List const & facScores);
 
+  // Calculate 2nd order moment
+  NumericVector gamma(List const & facScores);
+
   // Sampling
   IntegerMatrix simulate(int N);
 

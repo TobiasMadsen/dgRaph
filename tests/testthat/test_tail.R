@@ -68,11 +68,11 @@ test_that("NA when out of range saddlepoint",{
   facPotFg <- c(list(matrix(c(0.9,0.1),1,2)))
   facNbs <- c(list(c(1L)) )
   
-  mydfg <- dfg(varDim, facPot, facNbs)
-  mydfgFg <- dfg(varDim, facPotFg, facNbs)
+  dfg1 <- dfg(varDim, facPot, facNbs)
+  dfg2 <- dfg(varDim, facPotFg, facNbs)
   
   #Score range [log(0.1/0.5);log(0.9/0.5)] = [-1.609, .588]
-  dfsaddle <- tailSaddle( seq(-2,1,0.1), dfg1 = mydfg, dfg2 = mydfgFg)
+  dfsaddle <- tailSaddle( seq(-2,1,0.1), dfg1 = dfg1, dfg2 = dfg2)
   expect_equal( which(is.na(dfsaddle$p)), c(1:4,27:31) )
 })
 
