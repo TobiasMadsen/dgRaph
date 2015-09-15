@@ -9,6 +9,7 @@ src/*.dll
 tests/boost/*.o
 tests/examples/*
 tests/benchmark/*
+inst/*
 inst/doc
 inst/html
 inst/slides/assets
