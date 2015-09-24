@@ -223,7 +223,6 @@ test_that("Larger structure III", {
   potMap <- c(1,2,2)
   
   mydfg <- dfg(varDim, facPot1, facNbs, potMap)
-  plot(mydfg)
   
   facExp <- list(matrix(0, 1,2), matrix(1:2,2,2,byrow = T))
   
@@ -240,7 +239,6 @@ test_that("Larger structure IV",{
   potMap <- c(1,2,2,2)
   
   mydfg <- dfg(varDim, facPot1, facNbs, potMap)
-  plot(mydfg)
   
   facExp <- list(matrix(1:2, 1,2), matrix(1:2,2,2,byrow = T))
   

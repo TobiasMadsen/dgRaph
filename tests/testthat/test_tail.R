@@ -76,6 +76,73 @@ test_that("NA when out of range saddlepoint",{
   expect_equal( which(is.na(dfsaddle$p)), c(1:4,27:31) )
 })
 
+test_that("Saddlepoint single variable",{
+  # Binomial distributed score B(1/2,4)
+  varDim <- 5
+  facPot <- list(matrix(dbinom(0:4,4,1/2),1,5))
+  facPotFg <- list(exp(matrix(0:4,1,5))*facPot[[1]])
+  facNbs <- list(1)
+  mydfg <- dfg(varDim, facPot, facNbs)
+  mydfgFg <- dfg(varDim, facPotFg, facNbs)
+
+  tail_df <- tailSaddle(x = c(2,3), dfg1 = mydfg, dfg2 = mydfgFg)
+
+  # Approximation at mean
+  expect_equal(tail_df$p[1], 0.5)
+
+  # Saddlepoint in 3
+  n <- 4
+  theta <- log(3)
+  v <- 3/4
+  sp <- ((1+exp(theta))/2)**n*exp(-3*theta)*exp((theta**2*v)/2)*(1-pnorm(theta*sqrt(v)))
+
+  expect_equal( tail_df$p[2], sp, tolerance = 1e-5)
+})
+
+test_that("Saddlepoint multiple variables",{
+  # Binomial distributed score B(1/2,8)
+  varDim <- c(5,5)
+  facPot <- list(matrix(dbinom(0:4,4,1/2),1,5),
+                 matrix(dbinom(0:4,4,1/2),5,5,byrow =T))
+  facPotFg <- list(exp(matrix(0:4,1,5))*facPot[[1]],
+                   exp(matrix(0:4,5,5,byrow=T))*facPot[[2]])
+  facNbs <- list(1,c(1,2))
+  mydfg <- dfg(varDim, facPot, facNbs)
+  mydfgFg <- dfg(varDim, facPotFg, facNbs)
+
+  tail_df <- tailSaddle(x = c(4,6), dfg1 = mydfg, dfg2 = mydfgFg)
+  
+  # Approximation at mean
+  test_that(tail_df$p[1], 0.5)
+
+  # Saddlepoint in 6
+  n <- 8
+  theta <- log(3)
+  v <- 3/2
+  sp <- ((1+exp(theta))/2)**n*exp(-6*theta)*exp((theta**2*v)/2)*(1-pnorm(theta*sqrt(v)))
+
+  expect_equal( tail_df$p[2], sp, tolerance = 1e-5)
+})
+
+test_that("Lattice correction saddlepoint",{
+  # Binomial distributed score B(1/2,4)
+  varDim <- 5
+  facPot <- list(matrix(dbinom(0:4,4,1/2),1,5))
+  facPotFg <- list(exp(matrix(0:4,1,5))*facPot[[1]])
+  facNbs <- list(1)
+  mydfg <- dfg(varDim, facPot, facNbs)
+  mydfgFg <- dfg(varDim, facPotFg, facNbs)
+
+  tail_df <- tailSaddle(x = c(2,3), dfg1 = mydfg, dfg2 = mydfgFg)
+  tail_df_lattice <- tailSaddle(x = c(2,3), dfg1 = mydfg, dfg2 = mydfgFg, lattice = 1)
+
+  # No lattice correction at mean as saddlepoint is zero
+  expect_equal(tail_df_lattice$p[1], tail_df$p[1])
+
+  # Saddlepoint at 3 is 
+  expect_equal(tail_df_lattice$p[2], tail_df$p[2]*log(3)*3/2)
+})
+
 test_that("IS sampling binomial",{
   varDim <- 2
   facPot <- list(matrix(c(0.01, 0.99),1 ,2))

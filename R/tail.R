@@ -20,7 +20,7 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
   if( !is.dfg(dfg1))
     stop("dfg1 must be a dfg object")
   if( !is.dfg(dfg2))
-    stop("dfg1 must be a dfg object")
+    stop("dfg2 must be a dfg object")
   if( !is.null(observed)){
     if( !is.logical(observed) | !is.vector(observed))
       stop("observed must be a logical vector")
@@ -128,8 +128,9 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
 #' @param x         points to evaluate tail probabilities in
 #' @param dfg1      dfg object specifying null model
 #' @param dfg2      dfg object specifying foreground model
+#' @param lattice   correct for scores only taking values on lattice
 #' @return A dataframe with columns, x, tail estimate and confidence intervals
-tailSaddle <- function(x, dfg1, dfg2){
+tailSaddle <- function(x, dfg1, dfg2, lattice = 0){
   stopifnot(is.numeric(x))
   
   #Check if compatible dimensions
@@ -199,9 +200,12 @@ tailSaddle <- function(x, dfg1, dfg2){
     moduleSaddle$resetPotentials( .facPotToFunA(facPotBg, facPotFg, theta) )
     phi <- .likelihood(data = matrix(NA, 1, length(dfg1$varDim)), dfg = dfg1, module = moduleSaddle)[1]
     
-    #Calculate 
-    la <- theta*sqrt(kud2)
+    #Calculate
+    la <- theta*sqrt(kud2)    
     cdf_upper_tail[i] <- phi*exp(-theta*t)*exp(la**2/2)*(1-pnorm(la))
+    if(lattice != 0)
+      if(abs(lattice*theta) > 1e-9)
+        cdf_upper_tail[i] <- cdf_upper_tail[i] * abs(theta*lattice)/(1-exp(-lattice*abs(theta)))
   }
   
   data.frame(x=x, p=cdf_upper_tail)

@@ -4,7 +4,7 @@
 \alias{tailSaddle}
 \title{Saddlepoint approximation for tail estimation}
 \usage{
-tailSaddle(x, dfg1, dfg2)
+tailSaddle(x, dfg1, dfg2, lattice = 0)
 }
 \arguments{
 \item{x}{points to evaluate tail probabilities in}
@@ -12,6 +12,8 @@ tailSaddle(x, dfg1, dfg2)
 \item{dfg1}{dfg object specifying null model}
 
 \item{dfg2}{dfg object specifying foreground model}
+
+\item{lattice}{correct for scores only taking values on lattice}
 }
 \value{
 A dataframe with columns, x, tail estimate and confidence intervals
