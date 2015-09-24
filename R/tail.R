@@ -154,6 +154,7 @@ tailSaddle <- function(x, dfg1, dfg2, lattice = 0){
   
   #Setup data structures
   cdf_upper_tail <- rep(NA, length(x))
+  thetas <- rep(NA, length(x))
   
   # Find range of scores
   moduleSaddle <- .build(dfg1)
@@ -203,12 +204,13 @@ tailSaddle <- function(x, dfg1, dfg2, lattice = 0){
     #Calculate
     la <- theta*sqrt(kud2)    
     cdf_upper_tail[i] <- phi*exp(-theta*t)*exp(la**2/2)*(1-pnorm(la))
+    thetas <- theta
     if(lattice != 0)
       if(abs(lattice*theta) > 1e-9)
         cdf_upper_tail[i] <- cdf_upper_tail[i] * abs(theta*lattice)/(1-exp(-lattice*abs(theta)))
   }
   
-  data.frame(x=x, p=cdf_upper_tail)
+  data.frame(x=x, p=cdf_upper_tail, theta = thetas)
 }
 
 #' Normal approximation for tail estimation
