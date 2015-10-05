@@ -204,7 +204,7 @@ tailSaddle <- function(x, dfg1, dfg2, lattice = 0){
     #Calculate
     la <- theta*sqrt(kud2)    
     cdf_upper_tail[i] <- phi*exp(-theta*t)*exp(la**2/2)*(1-pnorm(la))
-    thetas <- theta
+    thetas[i] <- theta
     if(lattice != 0)
       if(abs(lattice*theta) > 1e-9)
         cdf_upper_tail[i] <- cdf_upper_tail[i] * abs(theta*lattice)/(1-exp(-lattice*abs(theta)))
@@ -244,11 +244,10 @@ tailNormal <- function(x, dfg1, dfg2){
   
   # Calculate Mean and Variance
   facScore <- .facPotToFunB(facPotBg, facPotFg)
-  moduleNormal$resetPotentials( facPotBg )
   res <- .expect2.dfg(dfg1, facScore, module = moduleNormal)
   m <- res[2]
   v <- res[3] - res[2]**2
 
-  data.frame(x=x, p=pnorm(x, m, v, lower.tail = FALSE))
+  data.frame(x=x, p=pnorm(x, m, sqrt(v), lower.tail = FALSE))
 }
 

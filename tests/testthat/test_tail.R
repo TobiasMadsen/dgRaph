@@ -99,6 +99,26 @@ test_that("Saddlepoint single variable",{
   expect_equal( tail_df$p[2], sp, tolerance = 1e-5)
 })
 
+test_that("Normal single variable",{
+  # Binomial distributed score B(1/2,4)
+  varDim <- 5
+  facPot <- list(matrix(dbinom(0:4,4,1/2),1,5))
+  facPotFg <- list(exp(matrix(0:4,1,5))*facPot[[1]])
+  facNbs <- list(1)
+  mydfg <- dfg(varDim, facPot, facNbs)
+  mydfgFg <- dfg(varDim, facPotFg, facNbs)
+  
+  tail_df <- tailNormal(x = c(2,3), dfg1 = mydfg, dfg2 = mydfgFg)
+  
+  # Approximation at mean
+  expect_equal(tail_df$p[1], 0.5)
+  
+  # Normal approx in 3
+  np <- pnorm(3, mean = 2, sd = 1, lower.tail = F)
+  
+  expect_equal( tail_df$p[2], np)
+})
+
 test_that("Saddlepoint multiple variables",{
   # Binomial distributed score B(1/2,8)
   varDim <- c(5,5)
@@ -122,6 +142,28 @@ test_that("Saddlepoint multiple variables",{
   sp <- ((1+exp(theta))/2)**n*exp(-6*theta)*exp((theta**2*v)/2)*(1-pnorm(theta*sqrt(v)))
 
   expect_equal( tail_df$p[2], sp, tolerance = 1e-5)
+})
+
+test_that("Normal multiple variables",{
+  # Binomial distributed score B(1/2,8)
+  varDim <- c(5,5)
+  facPot <- list(matrix(dbinom(0:4,4,1/2),1,5),
+                 matrix(dbinom(0:4,4,1/2),5,5,byrow =T))
+  facPotFg <- list(exp(matrix(0:4,1,5))*facPot[[1]],
+                   exp(matrix(0:4,5,5,byrow=T))*facPot[[2]])
+  facNbs <- list(1,c(1,2))
+  mydfg <- dfg(varDim, facPot, facNbs)
+  mydfgFg <- dfg(varDim, facPotFg, facNbs)
+  
+  tail_df <- tailNormal(x = c(4,6), dfg1 = mydfg, dfg2 = mydfgFg)
+  
+  # Approximation at mean
+  test_that(tail_df$p[1], 0.5)
+  
+  # Normal Approx in 6
+  np <- pnorm(6, mean = 4, sd = sqrt(2), lower.tail = F)
+  
+  expect_equal( tail_df$p[2], np, tolerance = 1e-5)
 })
 
 test_that("Lattice correction saddlepoint",{
