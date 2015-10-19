@@ -4,10 +4,14 @@
 \alias{multinomialPotential}
 \title{Multinomial Potential}
 \usage{
-multinomialPotential(dim = c(1, 5))
+multinomialPotential(dim = c(1, 5), mat = NULL, independent = FALSE)
 }
 \arguments{
 \item{dim}{A vector with dimensions of potential}
+
+\item{mat}{Optionally give fixed matrix potential}
+
+\item{independent}{The two nodes are independent, i.e. rows are identical. This is mainly useful for encoding additional indepedence assumptions in a fixed graph structure.}
 }
 \description{
 Initialize a multinomial potential with random starting point

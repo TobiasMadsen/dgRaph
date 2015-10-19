@@ -47,8 +47,8 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
   ret <- data.frame(x = numeric(0), p = numeric(0), low = numeric(0), high = numeric(0), p_lower = numeric(0), alpha = numeric(0))
 
   # Build bg module
-  facPotBg <- potentials(dfg1)
-  facPotFg <- potentials(dfg2)
+  facPotBg <- lapply(potentials(dfg1), as.matrix)
+  facPotFg <- lapply(potentials(dfg2), as.matrix)
   moduleBg <- .build(dfg1)
   
   for(i in seq_along(alpha)){
@@ -149,8 +149,8 @@ tailSaddle <- function(x, dfg1, dfg2, lattice = 0){
     dfg2 <- .remapPotMapDfg(dfg2, cm)
   }
   
-  facPotBg <- potentials(dfg1)
-  facPotFg <- potentials(dfg2)
+  facPotBg <- lapply(potentials(dfg1), as.matrix)
+  facPotFg <- lapply(potentials(dfg2), as.matrix)
   
   #Setup data structures
   cdf_upper_tail <- rep(NA, length(x))
@@ -238,8 +238,8 @@ tailNormal <- function(x, dfg1, dfg2){
   }
 
   # Calculations
-  facPotBg <- potentials(dfg1)
-  facPotFg <- potentials(dfg2)
+  facPotBg <- lapply(potentials(dfg1), as.matrix)
+  facPotFg <- lapply(potentials(dfg2), as.matrix)
   moduleNormal <- .build(dfg1)
   
   # Calculate Mean and Variance

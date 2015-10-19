@@ -1,6 +1,24 @@
 library(dgRaph)
 context("Optimizing")
 
+test_that("Multinomial optimizer",{
+  expCounts <- matrix( c(5,5,8,2), 2, 2, byrow = T)
+  
+  # Optimize
+  multinomialPot <- multinomialPotential(dim = c(2,2))
+  multinomialPotUpdated <- update(multinomialPot, expCounts)
+  expect_equal(as.matrix(multinomialPotUpdated), matrix(c(0.5,0.5,0.8,0.2), 2,2, byrow = T))
+})
+
+test_that("Multinomial optimizer independent",{
+  expCounts <- matrix( c(5,5,8,2), 2, 2, byrow = T)
+  
+  # Optimize
+  multinomialPot <- multinomialPotential(dim = c(2,2), independent = T)
+  multinomialPotUpdated <- update(multinomialPot, expCounts)
+  expect_equal(as.matrix(multinomialPotUpdated), matrix(c(0.65,0.35), 2,2, byrow = T))
+})
+
 test_that("Beta optimizer",{
   # Generate data
   set.seed(1)

@@ -44,16 +44,23 @@ test_that("Beta potential 5",{
   expect_equal( sum(is.infinite(val)), 0)
 })
 
-test_that("Multinomial potential",{
+test_that("Multinomial potential 1",{
   # Generate a multinomial potential
   for(i in 1:3){
     set.seed(i)
     pot <- multinomialPotential(dim = c(2,4))
-    expect_true(is.matrix(pot))
+    expect_true(is.potential(pot))
     expect_equal(dim(pot), c(2,4))
-    expect_equal(rowSums(pot), c(1,1))
-    expect_true(min(pot) >= 0)
+    expect_equal(rowSums(as.matrix(pot)), c(1,1))
+    expect_true(min(as.matrix(pot)) >= 0)
   }
+})
+
+test_that("Multinomial potential 2",{
+  pot <- multinomialPotential(dim = c(2,4), independent = TRUE)
+  expect_true(min(as.matrix(pot)) >= 0)
+  expect_equal(rowSums(as.matrix(pot)), c(1,1))
+  expect_equal(as.matrix(pot)[1,], as.matrix(pot)[2,])
 })
 
 test_that("Normal potential 1", {
