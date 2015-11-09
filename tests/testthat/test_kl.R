@@ -71,3 +71,16 @@ test_that("Two dependent variables",{
   
   expect_equal( unname(kl(dfg1, dfg2)), (log(4/9)+log(4/3)+log(4/3)+log(4))/4 )
 })
+
+test_that("Non-matrix potentials",{
+  varDim <- 100
+  facPotBg <- list(normalPotential(dim = c(1,100), range = c(0,1), means = 0.5, vars = 0.01))
+  facPotFg <- list(normalPotential(dim = c(1,100), range = c(0,1), means = 0.4, vars = 0.01))
+  facNbs <- list(1)
+  
+  dfg1 <- dfg(varDim, facPotBg, facNbs)
+  dfg2 <- dfg(varDim, facPotFg, facNbs)  
+  
+  # Divergence is (mu1 - mu2)^2/(2*var)  ~= 1/2
+  expect_equal(unname(kl(dfg1, dfg2)), 1/2, tolerance = 1e-2)
+})

@@ -27,9 +27,9 @@ kl <- function(dfg1, dfg2){
   
   # Scores
   scores <- lapply(seq_along(dfg1$facPot), FUN=function(i){
-    m <- log(dfg1$facPot[[i]]/dfg2$facPot[[i]])
+    m <- log(as.matrix(dfg1$facPot[[i]])/as.matrix(dfg2$facPot[[i]]))
     
-    m[dfg1$facPot[[i]] == 0 | dfg2$facPot[[i]] == 0] <- 0
+    m[as.matrix(dfg1$facPot[[i]]) == 0 | as.matrix(dfg2$facPot[[i]]) == 0] <- 0
     m
   })
   res <- .expect.dfg(dfg1, scores, module = module)[2]
