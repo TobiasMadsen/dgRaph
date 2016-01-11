@@ -19,6 +19,15 @@ test_that("Multinomial optimizer independent",{
   expect_equal(as.matrix(multinomialPotUpdated), matrix(c(0.65,0.35), 2,2, byrow = T))
 })
 
+test_that("Multinomial optimizer pseudo-count",{
+  expCounts <- matrix( c(3,0,1,2), 2, 2, byrow = T)
+  
+  # Optimize
+  multinomialPot <- multinomialPotential(dim = c(2,2), pseudocount = 1)
+  multinomialPotUpdated <- update(multinomialPot, expCounts)
+  expect_equal(as.matrix(multinomialPotUpdated), matrix( c(0.8, 0.2, 0.4, 0.6), 2,2, byrow = T))
+})
+
 test_that("Beta optimizer",{
   # Generate data
   set.seed(1)
