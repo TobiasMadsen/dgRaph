@@ -9,7 +9,7 @@
 #' @return A discrete factor graph object with updated potentials
 #' @export
 train <- function(data, dfg, threshold = 1e-9, iter.max = 200, dataList = list(), verbose = FALSE){
-  Rprof(filename = "Rprof_dgRaph_train.out", append = TRUE, line.profiling = T)
+  #Rprof(filename = "Rprof_dgRaph_train.out", append = TRUE, line.profiling = T)
   .checkInputData(dfg, data, dataList)
   module <- .build(dfg)
   

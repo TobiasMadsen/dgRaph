@@ -18,9 +18,9 @@
   }
   
   # Within range
-  if( ! suppressWarnings( all( sapply(data, max, na.rm = T) <= dfg$varDim) ) )
+  if( ! suppressWarnings( all( apply(data, 2, max, na.rm = T) <= dfg$varDim) ) )
     stop("Data outside range")
-  if( ! suppressWarnings( all( sapply(data, min, na.rm = T) > 0 )))
+  if( ! suppressWarnings( all( apply(data, 2, min, na.rm = T) > 0 )))
     stop("Data outside range")
   
   # DataList is a list of lists of numeric vectors
