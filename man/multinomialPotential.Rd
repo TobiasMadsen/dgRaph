@@ -5,7 +5,7 @@
 \title{Multinomial Potential}
 \usage{
 multinomialPotential(dim = c(1, 5), mat = NULL, independent = FALSE,
-  pseudocount = 0L)
+  pseudocount = 0L, noopt = FALSE)
 }
 \arguments{
 \item{dim}{A vector with dimensions of potential}
@@ -15,6 +15,8 @@ multinomialPotential(dim = c(1, 5), mat = NULL, independent = FALSE,
 \item{independent}{The two nodes are independent, i.e. rows are identical. This is mainly useful for encoding additional indepedence assumptions in a fixed graph structure.}
 
 \item{pseudocount}{Add pseudocount to each cell. Default is 0.}
+
+\item{noopt}{Hold parameters fixed}
 }
 \description{
 Initialize a multinomial potential with random starting point

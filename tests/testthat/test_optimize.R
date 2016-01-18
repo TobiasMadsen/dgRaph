@@ -24,8 +24,19 @@ test_that("Multinomial optimizer pseudo-count",{
   
   # Optimize
   multinomialPot <- multinomialPotential(dim = c(2,2), pseudocount = 1)
-  multinomialPotUpdated <- update(multinomialPot, expCounts)
-  expect_equal(as.matrix(multinomialPotUpdated), matrix( c(0.8, 0.2, 0.4, 0.6), 2,2, byrow = T))
+  multinomialPot <- update(multinomialPot, expCounts)
+  multinomialPot<- update(multinomialPot, expCounts)
+  expect_equal(as.matrix(multinomialPot), matrix( c(0.8, 0.2, 0.4, 0.6), 2,2, byrow = T))
+})
+
+test_that("Multinomial optimizer no-opt",{
+  expCounts <- matrix( c(3,0,1,2), 2, 2, byrow = T)
+  
+  # Optimize
+  multinomialPot <- multinomialPotential(c(2,2), mat = matrix(c(0.6,0.4,0.3,0.7), 2, 2, byrow = T), noopt = TRUE)
+  multinomialPot <- update(multinomialPot, expCounts)
+  multinomialPot <- update(multinomialPot, expCounts) # ensure that flags are passed to next iteration
+  expect_equal(as.matrix(multinomialPot), matrix(c(0.6,0.4,0.3,0.7), 2, 2, byrow = T))
 })
 
 test_that("Beta optimizer",{
