@@ -24,7 +24,7 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
   if( !is.null(observed)){
     if( !is.logical(observed) | !is.vector(observed))
       stop("observed must be a logical vector")
-    if( length(observed) != length(dfg$varDim))
+    if( length(observed) != length(dfg1$varDim))
       stop("observed must have same length equal to number of variables")
   }
   
@@ -70,7 +70,7 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
     samples <- .simulate.dfg(dfgIS, n, module = moduleIS)
     if(!is.null(observed)){
       # Change unobserved columns to NA
-      samples[,which(observed)] <- NA
+      samples[,which(!observed)] <- NA
     }
     
     # Calculate weights and scores

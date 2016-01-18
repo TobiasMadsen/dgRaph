@@ -199,3 +199,28 @@ test_that("IS sampling binomial",{
   expect_less_than(tail_df$p[1], 0.011)
   expect_more_than(tail_df$p[1], 0.009)
 })
+
+test_that("IS unobserved variables",{
+  varDim <- c(2,2)
+  facPotBg <- list(matrix(c(0.5,0.5),1,2),
+                   matrix(c(0.1,0.9,0.9,0.1),2,2))
+  facPotFg <- list(matrix(c(0.8,0.2),1,2),
+                   matrix(c(0.4,0.4,0.6,0.6),2,2))
+  facNbs <- list(1,c(1,2))
+  dfg1 <- dfg(varDim, facPotBg, facNbs)
+  dfg2 <- dfg(varDim, facPotFg, facNbs)
+  
+  # Stochastic test 
+  tail_df <- tailIS(0.18, n = 10000, alpha = 0.5, dfg1 = dfg1, dfg2 = dfg2)
+  expect_less_than(tail_df$p[1], 0.12)
+  expect_more_than(tail_df$p[1], 0.08)
+  
+  # With first variable unobserved 2nd variable has marginals
+  # (0.5,0.5) and (0.4, 0.6) in the bg and fg respectively
+  # log(0.6/0.5) ~= 0.1823
+  # Stochastic test
+  tail_df <- tailIS(x = 0.18, n = 1000, alpha = 0.5, dfg1 = dfg1, dfg2 = dfg2, observed = c(F,T))
+  expect_less_than(tail_df$p[1], 0.52)
+  expect_more_than(tail_df$p[1], 0.48)
+})
+
