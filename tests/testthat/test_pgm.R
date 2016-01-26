@@ -122,6 +122,15 @@ test_that("Too many neighbors",{
   expect_error({mydfg <- dfg(varDim, facPot, facNbs)}) 
 })
 
+test_that("facNbs is list of vectors",{
+  varDim <- c(2,3)
+  facPot <- list(matrix(1,1,2),
+                 matrix(1,2,3))
+  facNbs <- c(list(1L), list(list(c(1L,2L))))
+  
+  expect_error({dfg(varDim, facPot, facNbs)}, "*facNbs must be a list of vectors*")
+})
+
 test_that("Check acyclic",{
   varDim <- c(2,2)
   facPot <- c(list(matrix(1,2,2)),
