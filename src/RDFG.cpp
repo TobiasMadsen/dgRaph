@@ -41,7 +41,7 @@ NumericVector RDFG::expect(List const & facScores){
 
   // Set factor scores
   dfg.resetScores( facScoresVec);
-  std::array<dgRaph::number_t, 2> res = dfg.calcExpect(stateMasks);
+  dgRaph::vector_t res = dfg.calcExpect(stateMasks);
 
   NumericVector ret(2);
   ret(0) = res[0];
@@ -61,7 +61,7 @@ NumericVector RDFG::gamma(List const & facScores){
 
   // Set factor scores
   dfg.resetScores( facScoresVec);
-  std::array<dgRaph::number_t, 3> res = dfg.calcGamma(stateMasks);
+  dgRaph::vector_t res = dfg.calcGamma(stateMasks);
   
   NumericVector ret(3);
   ret(0) = res[0];
