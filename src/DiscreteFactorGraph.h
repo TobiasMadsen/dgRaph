@@ -18,7 +18,7 @@
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/foreach.hpp>
 #include <vector>
-#include <array>
+//#include <array>
 #include <algorithm>
 #include <cmath>
 
@@ -145,8 +145,8 @@ using namespace std;
     number_t calcFullLikelihood( vector<unsigned> const & sample);
 
     /** No preconditions. Give the two kinds of potentials*/
-    array<number_t, 2> calcExpect(stateMaskVec_t const & stateMasks);
-    array<number_t, 3> calcGamma(stateMaskVec_t const & stateMasks);
+    vector_t calcExpect(stateMaskVec_t const & stateMasks);
+    vector_t calcGamma(stateMaskVec_t const & stateMasks);
 
     // convenience functions
     DFGNode const & getFactor(unsigned facId) const {return nodes[ factors[ facId ] ];} 

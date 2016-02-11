@@ -832,7 +832,7 @@ namespace dgRaph {
   }
 
   //Calculate expectancies
-  array<number_t, 2> DFG::calcExpect(stateMaskVec_t const & stateMasks){
+  vector_t DFG::calcExpect(stateMaskVec_t const & stateMasks){
     // Run calcNormConstant to set mu-messages
     number_t res_lik = calcNormConst(stateMasks);
 
@@ -864,7 +864,7 @@ namespace dgRaph {
     
     }//Ends loop over roots
 
-    array<number_t, 2> ret;
+    vector_t ret(2);
     ret[0] = res_lik;
     ret[1] = res_exp*res_lik;
     return ret;
@@ -993,9 +993,9 @@ namespace dgRaph {
   }
 
   // Calculate 2nd order moment
-  array<number_t, 3> DFG::calcGamma(stateMaskVec_t const & stateMasks){
+  vector_t DFG::calcGamma(stateMaskVec_t const & stateMasks){
     // Setting lambda and mu messages
-    array<number_t, 2> resExpect = calcExpect(stateMasks);
+    vector_t resExpect = calcExpect(stateMasks);
 
     // Initialize messages
     if( inGamma_.size() == 0)
@@ -1053,7 +1053,7 @@ namespace dgRaph {
       }
     }
     
-    array<number_t, 3> ret;
+    vector_t ret(3);
     ret[0] = resExpect[0];
     ret[1] = resExpect[1];
     ret[2] = resExpect[0] * res_gamma;
