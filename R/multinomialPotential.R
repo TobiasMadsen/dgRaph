@@ -31,7 +31,7 @@ update.multinomialPotential <- function(pot, expCounts){
   if(pot$param$noopt)
     return(pot)
   
-  if(pot$param$pc != 0)
+  if(length(pot$param$pc) > 1 || pot$param$pc != 0)
     expCounts <- expCounts + pot$param$pc
     
   if(! pot$param$independent)
