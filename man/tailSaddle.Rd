@@ -4,7 +4,7 @@
 \alias{tailSaddle}
 \title{Saddlepoint approximation for tail estimation}
 \usage{
-tailSaddle(x, dfg1, dfg2, lattice = 0)
+tailSaddle(x, dfg1, dfg2, lattice = 0, itermax = 100, tolerance = 0.001)
 }
 \arguments{
 \item{x}{points to evaluate tail probabilities in}
@@ -14,6 +14,10 @@ tailSaddle(x, dfg1, dfg2, lattice = 0)
 \item{dfg2}{dfg object specifying foreground model}
 
 \item{lattice}{correct for scores only taking values on lattice}
+
+\item{itermax}{maximal number of iterations for finding saddlepoint for each x}
+
+\item{tolerance}{tolerance of deviation of mean from x under the tilted distribution}
 }
 \value{
 A dataframe with columns, x, tail estimate and confidence intervals

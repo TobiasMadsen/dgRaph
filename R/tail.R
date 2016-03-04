@@ -27,7 +27,9 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
     if( length(observed) != length(dfg1$varDim))
       stop("observed must have same length equal to number of variables")
   }
-  
+
+  require(dplyr)
+
   # Restructure dfgs
   .compareDfgs(dfg1, dfg2)
   
@@ -44,16 +46,15 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
   }
   
   # Data frame to return
-  ret <- data.frame(x = numeric(0), p = numeric(0), low = numeric(0), high = numeric(0), p_lower = numeric(0), alpha = numeric(0))
+  ret <- data.frame(x = numeric(0), p = numeric(0), low = numeric(0), high = numeric(0), p_lower = numeric(0), alpha = numeric(0), expectedScore = numeric(0))
 
   # Build bg module
   facPotBg <- lapply(potentials(dfg1), as.matrix)
   facPotFg <- lapply(potentials(dfg2), as.matrix)
+  facScore <- .facPotToFunB(facPotBg, facPotFg)  
   moduleBg <- .build(dfg1)
-  
+
   for(i in seq_along(alpha)){
-    if( length(x) == 0) #check if any samples are assigned
-      next
     a <- alpha[i]
     
     #Make samples
@@ -80,6 +81,8 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
     ncIS <- .likelihood(matrix(NA, 1, length(dfg1$varDim)), dfgIS, log = T, module = moduleIS) # dfgIS is not normalized
     weights <- exp(.likelihood(samples, dfg1, log = T, module = moduleBg) - .likelihood(samples, dfgIS, log = T, module = moduleIS) + ncIS)
     scores <- .likelihood(samples, dfgFg, log = T, module = moduleFg) - .likelihood(samples, dfg1, log = T, module = moduleBg)
+    expectedScore <- expect(dfgIS, facScore)
+    expectedScore <- unname(expectedScore[2] / expectedScore[1])
     
     #Tail probabilities P(S > x)
     cdf_upper_tail <- sapply(x, function(s){
@@ -98,10 +101,12 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
     
     ret <- rbind( ret, 
                   data.frame(x=x, p=cdf_upper_tail[2,], low=cdf_upper_tail[1,], high=cdf_upper_tail[3,], 
-                             p_lower=cdf_upper_tail[4,], alpha=a) )
+                             p_lower=cdf_upper_tail[4,], alpha=a, expectedScore = expectedScore) )
   }
-  
-  ret
+
+  if( is.null(observed) || all(observed) )
+    return(ret %>% dplyr::group_by(x) %>% dplyr::slice(which.min(abs(x - expectedScore))) %>% dplyr::select(-expectedScore))
+  return(ret)
 }
 
 #####################################################################
@@ -129,8 +134,10 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
 #' @param dfg1      dfg object specifying null model
 #' @param dfg2      dfg object specifying foreground model
 #' @param lattice   correct for scores only taking values on lattice
+#' @param itermax   maximal number of iterations for finding saddlepoint for each x
+#' @param tolerance tolerance of deviation of mean from x under the tilted distribution
 #' @return A dataframe with columns, x, tail estimate and confidence intervals
-tailSaddle <- function(x, dfg1, dfg2, lattice = 0){
+tailSaddle <- function(x, dfg1, dfg2, lattice = 0, itermax = 100, tolerance = 0.001){
   stopifnot(is.numeric(x))
   
   #Check if compatible dimensions
@@ -177,20 +184,50 @@ tailSaddle <- function(x, dfg1, dfg2, lattice = 0){
     # Using Newton-Raphson
     iter <- 0
     cum <- rep(0,2)
+    
+    # Used if Newton-Raphson appears to diverge
+    theta_largest_negative <- -Inf # Largest theta that gives a negative value so far
+    theta_smallest_positive <- Inf # Smallest theta that gives a positive value so far
+
+    # Indicators for small and large scores
+    
     while(T){
+      # Abort if t is out of range
       if(t >= maxValue | t <= minValue){
         cum <- c(NA, NA)
         break;
       }
+      
+      # Calculate expectancy and first derivative
       moduleSaddle$resetPotentials( .facPotToFunA(facPotBg, facPotFg, theta) )
       res <- unname(.expect2.dfg(dfg1, facScore, module = moduleSaddle))
       cum <- c(res[2]/res[1], (res[3]*res[1]-res[2]**2)/(res[1]**2) )
       
-      theta <- theta - min(max((cum[1]-t)/ cum[2],-5),5)
+      if(cum[1] > t && theta < theta_smallest_positive){
+        theta_smallest_positive <- theta
+      }
+      if(cum[1] < t && theta > theta_largest_negative){
+        theta_largest_negative <- theta
+      }
+      
+      theta <- theta - (cum[1]-t)/ cum[2]
+
+      tryCatch({
+      if(theta < theta_largest_negative || theta > theta_smallest_positive){
+        # Fall back to bisection
+        theta <- (theta_largest_negative+theta_smallest_positive)/2
+      }}, error = function(e){
+        cat("Problem in bisection:\n")
+        cat("theta:\t", theta, '\n')
+        cat("theta_largest_negative:\t", theta_largest_negative, '\n')
+        cat("theta_smallest_positive:\t", theta_smallest_positive, '\n') 
+      })
+      
       iter <- iter +1
-      if(iter > 100)
+      
+      if(iter > itermax)
         break;
-      if(any(is.nan(cum)) | abs(cum[1] - t) < 0.001)
+      if(any(is.nan(cum)) | abs(cum[1] - t) < tolerance)
         break;
     }
     
