@@ -50,7 +50,7 @@ test_that("Beta Distribution", {
   optDfg <- train(df, mydfg)
     
   # Compare Kolmogorov Smirnoff style
-  expect_less_than(
+  expect_lt(
     max(abs(pbeta(1:100/100, 4, 6) - cumsum(as.matrix(potentials(optDfg)[[1]])[1,]))),
     0.02)
   

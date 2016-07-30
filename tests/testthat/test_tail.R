@@ -17,8 +17,8 @@ test_that("Remapping of structures 1",{
   # With probability 0.5*0.5 = 0.25
   naive <- tailIS(x = 0.93, n = 4000, alpha = 0, dfg1 = dfg1, dfg2 = dfg2)
   is    <- tailIS(x = 0.93, n = 4000, alpha = 1.5, dfg1 = dfg1, dfg2 = dfg2)
-  expect_less_than( abs(naive$p-0.25), 0.02)
-  expect_less_than( abs(is$p-0.25), 0.02)
+  expect_lt( abs(naive$p-0.25), 0.02)
+  expect_lt( abs(is$p-0.25), 0.02)
 })
 
 test_that("Remapping of structures 2",{
@@ -36,8 +36,8 @@ test_that("Remapping of structures 2",{
   # With probability 0.2*0.7*0.2 = 0.028
   naive <- tailIS(x = 2.7, n = 4000, alpha = 0, dfg1 = dfg1, dfg2 = dfg2)
   is    <- tailIS(x = 2.7, n = 4000, alpha = 1.5, dfg1 = dfg1, dfg2 = dfg2)
-  expect_less_than( abs(naive$p-0.028), 0.01)
-  expect_less_than( abs(is$p-0.028), 0.001) 
+  expect_lt( abs(naive$p-0.028), 0.01)
+  expect_lt( abs(is$p-0.028), 0.001) 
   
 })
 
@@ -56,10 +56,10 @@ test_that("IS sampling two dependent variables",{
   naive <- tailIS(x = 0.81, n = 10000, alpha = 0.0, dfg = mydfg, dfg2 = mydfgFg)
   
   # Test estimates are close
-  expect_less_than( abs(is$p - naive$p), 0.02)
+  expect_lt( abs(is$p - naive$p), 0.02)
   # Test confidence intervals overlap
-  expect_less_than( is$low, naive$high)
-  expect_less_than( naive$low, is$high)
+  expect_lt( is$low, naive$high)
+  expect_lt( naive$low, is$high)
 })
 
 test_that("NA when out of range saddlepoint",{
@@ -196,8 +196,8 @@ test_that("IS sampling binomial",{
   tail_df <- tailIS(x = 2.98, n = 1000, alpha = 3, dfg1 = mydfg, dfg2 = mydfgFg)
   
   # Stochastic test
-  expect_less_than(tail_df$p[1], 0.011)
-  expect_more_than(tail_df$p[1], 0.009)
+  expect_lt(tail_df$p[1], 0.011)
+  expect_gt(tail_df$p[1], 0.009)
 })
 
 test_that("IS unobserved variables",{
@@ -212,15 +212,18 @@ test_that("IS unobserved variables",{
   
   # Stochastic test 
   tail_df <- tailIS(0.18, n = 10000, alpha = 0.5, dfg1 = dfg1, dfg2 = dfg2)
-  expect_less_than(tail_df$p[1], 0.12)
-  expect_more_than(tail_df$p[1], 0.08)
+  expect_lt(tail_df$p[1], 0.12)
+  expect_gt(tail_df$p[1], 0.08)
   
   # With first variable unobserved 2nd variable has marginals
   # (0.5,0.5) and (0.4, 0.6) in the bg and fg respectively
   # log(0.6/0.5) ~= 0.1823
   # Stochastic test
   tail_df <- tailIS(x = 0.18, n = 1000, alpha = 0.5, dfg1 = dfg1, dfg2 = dfg2, observed = c(F,T))
-  expect_less_than(tail_df$p[1], 0.52)
-  expect_more_than(tail_df$p[1], 0.48)
+  expect_lt(tail_df$p[1], 0.52)
+  expect_gt(tail_df$p[1], 0.48)
 })
 
+test_that("IS assign alpha",{
+  
+})

@@ -24,8 +24,8 @@ test_that("Sampling from 2 state graph",{
   expect_equal( colnames(sim), c('x', 'y'))
   
   # Stochastic tests will fail with probability ~1e-4
-  expect_less_than( sum(sim$x == 1) , 753 )
-  expect_more_than( sum(sim$x == 1) , 644)
+  expect_lt( sum(sim$x == 1) , 753 )
+  expect_gt( sum(sim$x == 1) , 644)
 })
 
 test_that("Sampling unnormalized 1",{
@@ -36,8 +36,8 @@ test_that("Sampling unnormalized 1",{
   sim <- simulate(mydfg, 1000)
   
   # Stochastic test
-  expect_less_than( sum(sim[,1] == 1), 900)
-  expect_more_than( sum(sim[,1] == '1'), 700)
+  expect_lt( sum(sim[,1] == 1), 900)
+  expect_gt( sum(sim[,1] == '1'), 700)
 })
 
 test_that("Sampling unnormalized 2",{
