@@ -22,6 +22,9 @@ public:
   // Calculate Expecations
   NumericVector expect(List const & facScores);
 
+  // Calculate Expectation conditional data
+  NumericMatrix expectCondData(List const & facScores, IntegerMatrix const & observations);
+
   // Calculate 2nd order moment
   NumericVector gamma(List const & facScores);
 

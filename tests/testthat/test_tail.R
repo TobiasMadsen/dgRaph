@@ -200,6 +200,54 @@ test_that("IS sampling binomial",{
   expect_gt(tail_df$p[1], 0.009)
 })
 
+test_that("IS sampling binomial unnormalized background",{
+  varDim <- 2
+  facPot <- list(2*matrix(c(0.01, 0.99),1 ,2))
+  facPotFg <- list(matrix(c(0.2, 0.8), 1, 2))
+  facNbs <- list(1)
+  mydfg <- dfg(varDim, facPot, facNbs)
+  mydfgFg <- dfg(varDim, facPotFg, facNbs)
+  
+  tail_df <- tailIS(x = 2.98, n = 1000, alpha = 3, dfg1 = mydfg, dfg2 = mydfgFg)
+  
+  # Stochastic test
+  expect_lt(tail_df$p[1], 0.011)
+  expect_gt(tail_df$p[1], 0.009)
+})
+
+test_that("IS sampling binomial unnormalized foreground",{
+  varDim <- 2
+  facPot <- list(matrix(c(0.01, 0.99),1 ,2))
+  facPotFg <- list(2*matrix(c(0.2, 0.8), 1, 2))
+  facNbs <- list(1)
+  mydfg <- dfg(varDim, facPot, facNbs)
+  mydfgFg <- dfg(varDim, facPotFg, facNbs)
+  
+  tail_df <- tailIS(x = 2.98, n = 1000, alpha = 3, dfg1 = mydfg, dfg2 = mydfgFg)
+  
+  # Stochastic test
+  expect_lt(tail_df$p[1], 0.011)
+  expect_gt(tail_df$p[1], 0.009)
+})
+
+test_that("IS sampling unnormalized facScore",{
+  varDim <- c(2,2)
+  facPot <- list(matrix(c(1:4),2,2))
+  facScores <- list(matrix(c(1,0,0,2),2,2))
+  facNbs <- list(c(1,2))
+  
+  mydfg <- dfg(varDim, facPot, facNbs)
+  
+  # Probability table P(X == 0) = 0.5, P(X == 1) = 0.1, P(X == 2) = 0.4
+  tail_df <- tailIS(x = c(0.5, 1.5, 2.5), n = 10000, alpha = 0, dfg1 = mydfg, facScores = facScores)
+  
+  # Stochastic test
+  expect_lt(tail_df$p[1], 0.51)
+  expect_gt(tail_df$p[1], 0.49)
+  expect_lt(tail_df$p[2], 0.41)
+  expect_gt(tail_df$p[2], 0.39)
+})
+
 test_that("IS unobserved variables",{
   varDim <- c(2,2)
   facPotBg <- list(matrix(c(0.5,0.5),1,2),
@@ -222,6 +270,29 @@ test_that("IS unobserved variables",{
   tail_df <- tailIS(x = 0.18, n = 1000, alpha = 0.5, dfg1 = dfg1, dfg2 = dfg2, observed = c(F,T))
   expect_lt(tail_df$p[1], 0.52)
   expect_gt(tail_df$p[1], 0.48)
+})
+
+test_that("IS unobserved variables facScores",{
+  varDim <- c(2,2)
+  facPotBg <- list(matrix(c(0.5,0.5),1,2),
+                   matrix(c(0.1,0.9,0.9,0.1),2,2))
+  facScore <- list(matrix(c(1,0),1,2),
+                   matrix(c(1,0,0,1),2,2))
+  facNbs <- list(1, c(1,2))
+  mydfg <- dfg(varDim, facPotBg, facNbs)
+  
+  # Stochastic test
+  tail_df <- tailIS(x = 1.5, n = 10000, alpha = 0.0, dfg1 = mydfg, facScores = facScore)
+  expect_lt(tail_df$p[1], 0.053)
+  expect_gt(tail_df$p[1], 0.047)
+  
+  # 2nd variable unobserved. 1st has marginal (0.5, 0.5) and associated score (1,0)
+  # Probability of remaining 1/10 and associated score (1/10)
+  # 0.1, 1.1 with probabilities (0.5, 0.5)
+  tail_df <- tailIS(x = c(0.2, 1.5), alpha = 0, n = 10000, dfg1 = mydfg, facScores = facScore, observed = c(T,F))
+  expect_lt(tail_df$p[1], 0.51)
+  expect_gt(tail_df$p[1], 0.49)
+  expect_lt(tail_df$p[2], 0.0001)
 })
 
 test_that("IS assign alpha",{

@@ -6,7 +6,7 @@
 #' @param dfg2      dfg object specifying foreground model
 #' @param observed  A boolean vector indicating which variables are observed
 #' @return A dataframe with columns, x, tail estimate and confidence intervals
-tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
+tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2 = NULL, facScores = NULL, observed = NULL){
   if( is.null(x))
     stop("Specify scores x ")
   if( !is.numeric(x) )
@@ -19,8 +19,15 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
     stop("alpha can not contain NaN's")
   if( !is.dfg(dfg1))
     stop("dfg1 must be a dfg object")
-  if( !is.dfg(dfg2))
+  if( is.null(dfg2) & is.null(facScores))
+    stop("provide either a foreground model (dfg2) or facScores")
+  if( !is.null(dfg2) & !is.dfg(dfg2))
     stop("dfg2 must be a dfg object")
+  if( !is.null(facScores) & 
+      (! is.list(facScores) | ! all(sapply(facScores, function(v){is.matrix(v)}))) )
+    stop("facScores must be a list of matrices")
+  if( !is.null(facScores) & length(facScores) != length(potentials(dfg1)))
+    stop("facScores did not have correct length")
   if( !is.null(observed)){
     if( !is.logical(observed) | !is.vector(observed))
       stop("observed must be a logical vector")
@@ -31,28 +38,46 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
   require(dplyr)
 
   # Restructure dfgs
-  .compareDfgs(dfg1, dfg2)
+  if(! is.null(dfg2))
+    .compareDfgs(dfg1, dfg2)
   
   # If not same nb structure remap
-  if( ! all( sapply(seq_along(dfg1$facNbs), function(i){all(dfg1$facNbs[[i]] == dfg2$facNbs[[i]])})))
-    dfg2 <- .remapFacNbsDfg(dfg2, match(dfg2$facNbs, dfg1$facNbs))
+  if( ! is.null(dfg2)){
+    if( ! all( sapply(seq_along(dfg1$facNbs), function(i){all(dfg1$facNbs[[i]] == dfg2$facNbs[[i]])})))
+      dfg2 <- .remapFacNbsDfg(dfg2, match(dfg2$facNbs, dfg1$facNbs))
+  }
   
   # If not same potential map remap
-  if( ! length(dfg1$potMap) == length(dfg2$potMap) |
+  if( ! is.null(dfg2)){
+    if( ! length(dfg1$potMap) == length(dfg2$potMap) |
         ! all(dfg1$potMap == dfg2$potMap) ){
-    cm <- .commonMap(dfg1$potMap, dfg2$potMap)
-    dfg1 <- .remapPotMapDfg(dfg1, cm)
-    dfg2 <- .remapPotMapDfg(dfg2, cm)
-  }
+      cm <- .commonMap(dfg1$potMap, dfg2$potMap)
+      dfg1 <- .remapPotMapDfg(dfg1, cm)
+      dfg2 <- .remapPotMapDfg(dfg2, cm)
+    }
+  }  
   
   # Data frame to return
   ret <- data.frame(x = numeric(0), p = numeric(0), low = numeric(0), high = numeric(0), p_lower = numeric(0), alpha = numeric(0), expectedScore = numeric(0))
 
+  # Calculate facScores if provided as foreground model
+  ncFg <- 0
+  fgModelProvided <- F
+  if(!is.null(dfg2)){
+    fgModelProvided <- T
+    facPotBg <- lapply(potentials(dfg1), as.matrix)
+    facPotFg <- lapply(potentials(dfg2), as.matrix)
+    facScores <- .facPotToFunB(facPotBg, facPotFg)  
+    dfgFg <- dfg1
+    potentials(dfgFg) <- facPotFg
+    moduleFg <- .build(dfgFg)
+    ncFg <- .likelihood(matrix(NA, 1, length(dfg1$varDim)), dfgFg, log = T, module = moduleFg)
+  }
+  
   # Build bg module
   facPotBg <- lapply(potentials(dfg1), as.matrix)
-  facPotFg <- lapply(potentials(dfg2), as.matrix)
-  facScore <- .facPotToFunB(facPotBg, facPotFg)  
   moduleBg <- .build(dfg1)
+  ncBg <- .likelihood(matrix(NA, 1, length(dfg1$varDim)), dfg1, log = T, module = moduleBg)
 
   for(i in seq_along(alpha)){
     a <- alpha[i]
@@ -60,10 +85,10 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
     #Make samples
     dfgIS <- dfg1
     facPotIS <- lapply(seq_along(facPotBg), FUN=function(i){
-      m <- facPotBg[[i]]**(1-a)*facPotFg[[i]]**a
+      m <- facPotBg[[i]]*exp(a*facScores[[i]])
       
       # Score Matrix
-      m[facPotBg[[i]] == 0 | facPotFg[[i]] == 0] <- 0
+      m[facPotBg[[i]] == 0 | is.infinite(facScores[[i]]) | is.na(facScores[[i]]) ] <- 0
       m
       })
     potentials(dfgIS) <- facPotIS
@@ -75,13 +100,15 @@ tailIS <- function(x=NULL, n = 1000, alpha=0.5, dfg1, dfg2, observed = NULL){
     }
     
     # Calculate weights and scores
-    dfgFg <- dfg1
-    potentials(dfgFg) <- facPotFg
-    moduleFg <- .build(dfgFg)
     ncIS <- .likelihood(matrix(NA, 1, length(dfg1$varDim)), dfgIS, log = T, module = moduleIS) # dfgIS is not normalized
-    weights <- exp(.likelihood(samples, dfg1, log = T, module = moduleBg) - .likelihood(samples, dfgIS, log = T, module = moduleIS) + ncIS)
-    scores <- .likelihood(samples, dfgFg, log = T, module = moduleFg) - .likelihood(samples, dfg1, log = T, module = moduleBg)
-    expectedScore <- expect(dfgIS, facScore)
+    weights <- exp(.likelihood(samples, dfg1, log = T, module = moduleBg) - ncBg - .likelihood(samples, dfgIS, log = T, module = moduleIS) + ncIS) # Ratio between sampling in background to sampling in is
+    #scores <- .likelihood(samples, dfgFg, log = T, module = moduleFg) - ncFg - .likelihood(samples, dfg1, log = T, module = moduleBg) + ncBg
+    scores <- .expect.dfg(dfg1, facScores = facScores, module = moduleBg, data = samples)
+    scores <- unname(scores[,2]/ scores[,1]) 
+    if(fgModelProvided){
+      scores <- scores - ncFg + ncBg
+    }
+    expectedScore <- expect(dfgIS, facScores)
     expectedScore <- unname(expectedScore[2] / expectedScore[1])
     
     #Tail probabilities P(S > x)
@@ -165,9 +192,9 @@ tailSaddle <- function(x, dfg1, dfg2, lattice = 0, itermax = 100, tolerance = 0.
   
   # Find range of scores
   moduleSaddle <- .build(dfg1)
-  facScore <- .facPotToFunB(facPotBg, facPotFg)  
-  expFacScore <- lapply(facScore, function(x){exp(x)})
-  expFacScoreMinus <- lapply(facScore, function(x){exp(-x)})
+  facScores <- .facPotToFunB(facPotBg, facPotFg)  
+  expFacScore <- lapply(facScores, function(x){exp(x)})
+  expFacScoreMinus <- lapply(facScores, function(x){exp(-x)})
   moduleSaddle$resetPotentials( expFacScore )
   mpsDat <- .mps(data = matrix(NA, 1,length(dfg1$varDim)), dfg = dfg1, module = moduleSaddle)
   maxValue <- log(.likelihood(data = mpsDat, dfg = dfg1, module = moduleSaddle))
@@ -200,7 +227,7 @@ tailSaddle <- function(x, dfg1, dfg2, lattice = 0, itermax = 100, tolerance = 0.
       
       # Calculate expectancy and first derivative
       moduleSaddle$resetPotentials( .facPotToFunA(facPotBg, facPotFg, theta) )
-      res <- unname(.expect2.dfg(dfg1, facScore, module = moduleSaddle))
+      res <- unname(.expect2.dfg(dfg1, facScores, module = moduleSaddle))
       cum <- c(res[2]/res[1], (res[3]*res[1]-res[2]**2)/(res[1]**2) )
       
       if(cum[1] > t && theta < theta_smallest_positive){
@@ -280,8 +307,8 @@ tailNormal <- function(x, dfg1, dfg2){
   moduleNormal <- .build(dfg1)
   
   # Calculate Mean and Variance
-  facScore <- .facPotToFunB(facPotBg, facPotFg)
-  res <- .expect2.dfg(dfg1, facScore, module = moduleNormal)
+  facScores <- .facPotToFunB(facPotBg, facPotFg)
+  res <- .expect2.dfg(dfg1, facScores, module = moduleNormal)
   m <- res[2]
   v <- res[3] - res[2]**2
 

@@ -248,3 +248,23 @@ test_that("Larger structure IV",{
   expect_equal(res[2], 20/3*3**4)
   expect_equal(res[3], 408/9*3**4)
 })
+
+test_that("Unobserved data", {
+  varDim <- c(2,2)
+  facPot <- list(matrix(0.5, 1,2), matrix(0.5, 2,2))
+  facNbs <- list(1, c(1,2))
+
+  mydfg <- dfg(varDim, facPot, facNbs)
+
+  facExp <- list(matrix(0,1,2), matrix(c(1,1,1,0), 2,2))
+
+  res <- unname(expect(mydfg, facExp))
+
+  expect_equal(res[1], 1)
+  expect_equal(res[2], 0.75)
+  
+  res <- unname(expect.dfg(mydfg, facExp, data = matrix(c(NA, 1, 2, 2), 2, 2, byrow = T)))
+  
+  expect_equal(res[1,2] / res[1,1], 1)
+  expect_equal(res[2,2] / res[2,1], 0)
+})

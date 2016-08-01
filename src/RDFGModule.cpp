@@ -14,6 +14,8 @@ RCPP_MODULE(phy) {
 
       .method("expect", &RDFG::expect)
 
+      .method("expectCondData", &RDFG::expectCondData)
+
       .method("gamma", &RDFG::gamma) 
 
       .method("facExpCounts", &RDFG::facExpCounts)
