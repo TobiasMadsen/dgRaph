@@ -1,0 +1,69 @@
+---
+title: "PWM Analysis"
+author: "Tobias Madsen"
+date: "`r Sys.Date()`"
+output: rmarkdown::pdf_document
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r loadLibraries, message=FALSE}
+library(dgRaph)
+library(ggplot2)
+```
+
+The CTCF binding motif is obtained from the Jaspar database (ID: MA0139.1).
+
+```{r PFM}
+PFM <- matrix(c(87,167,281,56,8,744,40,107,851,5,333,54,12,56,104,372,82,117,402,
+                291,145,49,800,903,13,528,433,11,0,3,12,0,8,733,13,482,322,181,
+                76,414,449,21,0,65,334,48,32,903,566,504,890,775,5,507,307,73,266,
+                459,187,134,36,2,91,11,324,18,3,9,341,8,71,67,17,37,396,59), 4, 19, byrow = T)
+```
+
+After adding a pseudocount we convert the frequencies to relative frequecies (PPM) and position weight matrices (PWM).
+
+```{r PPM_PWM}
+PPM <- scale(PFM+1, center = FALSE, scale = colSums(PFM+1))
+row.names(PPM) <- c('A','C','G','T')
+
+PWM <- log(t(scale(t(PPM), center = FALSE, scale = c(0.29,0.21,0.21,0.29))))
+```
+
+We build the PWM model as well as a background model using the `dgRaph` package.
+
+```{r buildModel}
+varDim <- rep(4, 19)
+facPot <- lapply(1:19, function(i){matrix(PPM[,i], 1, 4)})
+facPotBg <- list(matrix(c(0.29, 0.21, 0.21, 0.29), 1, 4))
+facNbs <- lapply(1:19, function(i){i})
+pwm_dfg <- dfg(varDim, facPot, facNbs)
+bg_dfg <- dfg(varDim, facPotBg, facNbs, potMap = rep(1, 19))
+```
+
+Evaluate the significance over a range of scores from 0 to 10 using both Saddlepoint Approximation and Importance Sampling.
+
+```{r evalSignificance}
+score_dist_saddle <- tailSaddle(seq(0, 10, 0.01), bg_dfg, pwm_dfg)
+score_dist_saddle$method <- "SA"
+score_dist_is <- tailIS(seq(0, 10, 0.01), 
+                        n = 1000, 
+                        alpha = 0.5, 
+                        dfg1 = bg_dfg, dfg2 = pwm_dfg) %>%
+  as.data.frame()
+score_dist_is$method <- "IS"
+```
+
+Plot the two estimates against each other.
+
+```{r plot}
+plot_df <- rbind(score_dist_saddle[,c("x","p","method")],
+                 score_dist_is[,c("x","p","method")])
+
+ggplot(plot_df, aes(x = x, y = p, colour = method)) + 
+  geom_line() +  scale_y_log10() + theme_bw()
+```
+
+

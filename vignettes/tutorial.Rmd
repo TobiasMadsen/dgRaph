@@ -1,7 +1,7 @@
 ---
 title: "dgRaph tutorial"
 author: "Tobias Madsen"
-data: "`r Sys.Date()`"
+date: "`r Sys.Date()`"
 output: rmarkdown::pdf_document
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
@@ -215,7 +215,6 @@ The `train` function outputs a new factor graph object with optimised potentials
 ```{r}
 mydfgtrained <- train(data = dftrain, 
                       dfg = mydfg, 
-                      optim = c('row','row'),
                       verbose = T, 
                       iter.max = 1000, 
                       threshold = 1e-5)
