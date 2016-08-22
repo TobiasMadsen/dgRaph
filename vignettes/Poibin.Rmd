@@ -1,0 +1,64 @@
+---
+title: "Poibin"
+output: rmarkdown::pdf_document
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r, message=FALSE}
+library(poibin)
+library(dgRaph)
+library(ggplot2)
+```
+
+The dgRaph package has a specialized function for the Poisson-binomial model and the generalization where we assign a score to each variable. I.e. assume $X_1,\ldots X_N$ are independent Bernouilli trials where $X_i \sim$ Bernouilli$(p_i)$. We look at the score
+
+$$
+S = \sum_{i=1}^N s_iX_i
+$$
+
+and evaluate the probability $P(S >= t)$. First consider the simple case of a binomial distribution where $s_i=1$ and $p_i=p$.
+
+```{r}
+N <- 10000
+p <- 0.005
+tail_p_SA <- sapply(51:101, poibinSA, p = rep(p, N), log = T)
+```
+
+Evaluate the same probabilities using the built in binomial CDF function.
+
+```{r}
+tail_p_binom <- pbinom(50:100, N, p, lower.tail = F, log.p = T)
+```
+
+Plot the two against each other
+
+```{r}
+df <- data.frame(p = c(tail_p_SA, tail_p_binom), x = 50:100, 
+                 type = c(rep("SA", 51), rep("Built-in", 51)) )
+ggplot(df, aes(y = p, x = x, colour = type)) + geom_line()
+```
+
+Now we look at the Poisson-Binomial model. Where the $p_i$'s are not identical.
+
+```{r}
+N <- 1000
+p <- rbeta(N, 1, 100)
+```
+
+Tail distribution
+
+```{r}
+tail_p_SA <- sapply(1:50, poibinSA, p = p)
+tail_p_poibin <- log1p(-ppoibin(1:50-1, pp = p))
+```
+
+We can again compare the estimates
+
+```{r}
+df <- data.frame(p = c(tail_p_SA, tail_p_poibin), x = 1:50, 
+                 type = c(rep("SA", 50), rep("DFT-CF", 50)) )
+ggplot(df, aes(y = p, x = x, colour = type)) + geom_line()
+```

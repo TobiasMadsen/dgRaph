@@ -5,3 +5,15 @@ checkAcyclic <- function(rFacNbs) {
     .Call('dgRaph_checkAcyclic', PACKAGE = 'dgRaph', rFacNbs)
 }
 
+cumulant <- function(t, p, s) {
+    .Call('dgRaph_cumulant', PACKAGE = 'dgRaph', t, p, s)
+}
+
+cumulantD1 <- function(t, p, s) {
+    .Call('dgRaph_cumulantD1', PACKAGE = 'dgRaph', t, p, s)
+}
+
+cumulantD2 <- function(t, p, s) {
+    .Call('dgRaph_cumulantD2', PACKAGE = 'dgRaph', t, p, s)
+}
+

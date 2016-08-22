@@ -1,7 +1,5 @@
 ---
 title: "PWM Analysis"
-author: "Tobias Madsen"
-date: "`r Sys.Date()`"
 output: rmarkdown::pdf_document
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
@@ -55,7 +53,7 @@ score_dist_is$method <- "IS"
 
 Plot the two estimates against each other.
 
-```{r plot}
+```{r plot, fig.path="figures/pwm-"}
 plot_df <- rbind(score_dist_saddle[,c("x","p","method")],
                  score_dist_is[,c("x","p","method")])
 

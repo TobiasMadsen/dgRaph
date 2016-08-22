@@ -16,3 +16,42 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// cumulant
+double cumulant(double t, NumericVector p, NumericVector s);
+RcppExport SEXP dgRaph_cumulant(SEXP tSEXP, SEXP pSEXP, SEXP sSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< double >::type t(tSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type p(pSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type s(sSEXP);
+    __result = Rcpp::wrap(cumulant(t, p, s));
+    return __result;
+END_RCPP
+}
+// cumulantD1
+double cumulantD1(double t, NumericVector p, NumericVector s);
+RcppExport SEXP dgRaph_cumulantD1(SEXP tSEXP, SEXP pSEXP, SEXP sSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< double >::type t(tSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type p(pSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type s(sSEXP);
+    __result = Rcpp::wrap(cumulantD1(t, p, s));
+    return __result;
+END_RCPP
+}
+// cumulantD2
+double cumulantD2(double t, NumericVector p, NumericVector s);
+RcppExport SEXP dgRaph_cumulantD2(SEXP tSEXP, SEXP pSEXP, SEXP sSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< double >::type t(tSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type p(pSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type s(sSEXP);
+    __result = Rcpp::wrap(cumulantD2(t, p, s));
+    return __result;
+END_RCPP
+}
