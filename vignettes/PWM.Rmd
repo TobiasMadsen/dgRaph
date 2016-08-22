@@ -17,10 +17,7 @@ library(ggplot2)
 The CTCF binding motif is obtained from the Jaspar database (ID: MA0139.1).
 
 ```{r PFM}
-PFM <- matrix(c(87,167,281,56,8,744,40,107,851,5,333,54,12,56,104,372,82,117,402,
-                291,145,49,800,903,13,528,433,11,0,3,12,0,8,733,13,482,322,181,
-                76,414,449,21,0,65,334,48,32,903,566,504,890,775,5,507,307,73,266,
-                459,187,134,36,2,91,11,324,18,3,9,341,8,71,67,17,37,396,59), 4, 19, byrow = T)
+PFM
 ```
 
 After adding a pseudocount we convert the frequencies to relative frequecies (PPM) and position weight matrices (PWM).
@@ -43,7 +40,7 @@ pwm_dfg <- dfg(varDim, facPot, facNbs)
 bg_dfg <- dfg(varDim, facPotBg, facNbs, potMap = rep(1, 19))
 ```
 
-Evaluate the significance over a range of scores from 0 to 10 using both Saddlepoint Approximation and Importance Sampling.
+Next evaluate the significance over a range of scores from 0 to 10 using both Saddlepoint Approximation and Importance Sampling.
 
 ```{r evalSignificance}
 score_dist_saddle <- tailSaddle(seq(0, 10, 0.01), bg_dfg, pwm_dfg)

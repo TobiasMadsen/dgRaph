@@ -1,0 +1,58 @@
+---
+title: "BaMM analysis"
+output: rmarkdown::pdf_document
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r, warning=FALSE, echo=T, message=FALSE}
+library(dgRaph)
+library(dplyr)
+```
+
+Using the [BaMM software](https://github.com/soedinglab/BaMMmotif) we obtain the transition probabilities for a second order Markov chain motif model for the CTCF motif. We then encode the second order Markov chain as a first order Markov chain by compounding variables $X_1$, $(X_1, X_2)$, $(X_2, X_3)$, $\ldots$, $(X_{15},X_{16})$. We provide the transition probabilites for the Markov chain as a list of matrices, `BammTransProb`. The first matrix is a 1x4 matrix giving the distribution of $X_1$, the second is a 4x16 matrix giving the conditional distribution of $(X_1,X_2$ given $X_1$, the following matrices are 16x16 matrices giving the conditional distribution of $(X_{i+1},X_{i+2})$ given $(X_i,X_{i+1})$. 
+
+```{r}
+BammTransProb[[1]]
+BammTransProb[[2]]
+```
+
+We also provide the background transition probabilities `BammTransProbBg`. We can now build the foreground and background models in the `dgRaph`. 
+
+```{r buildModels}
+varDim <- c(4, rep(16, 16-1))
+facNbs <- c(list(1),lapply(1:15, function(i) c(i, i+1) ))
+bamm_dfg <- dfg(varDim, BammTransProb, facNbs)
+
+potMap <- c(1,2,rep(3, 16-2))
+bamm_dfg_bg <- dfg(varDim, BammTransProbBg, facNbs, potMap = potMap)
+```
+
+Next we evaluate the significance of a range of scores using saddlepoint approximation and importance sampling.
+
+```{r evalSignificance}
+score_dist_saddle <- tailSaddle(seq(-15, 5, 0.05), bamm_dfg_bg, bamm_dfg)
+score_dist_saddle$method <- "SA"
+score_dist_is <- tailIS(seq(-15, 5, 0.05), 
+                        n = 1000, 
+                        alpha = c(0.1,0.2,0.3,0.4,0.5), 
+                        dfg1 = bamm_dfg_bg, dfg2 = bamm_dfg) %>%
+  as.data.frame()
+score_dist_is$alpha <- as.factor(score_dist_is$alpha)
+score_dist_is$method <- "IS"
+```
+
+```{r tailPlot, warning=FALSE, message=FALSE}
+library(ggplot2)
+
+plot_df <- rbind(score_dist_saddle[,c("x","p","method")],
+                 score_dist_is[,c("x","p","method")])
+
+ggplot(plot_df, aes(x = x, y = p, colour = method)) + 
+  geom_line() +  scale_y_log10() + theme_bw() + 
+  geom_ribbon(data = score_dist_is, aes(ymax = high, ymin = low, fill = alpha, group = alpha), alpha = 0.3)
+```
+
+By using different alphas for different parts of the tail. The confidence intervals around the estimates has uniform width on log scale, corresponding to uniform relative error. 

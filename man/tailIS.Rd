@@ -4,7 +4,8 @@
 \alias{tailIS}
 \title{ImportanceSampling for tail estimation}
 \usage{
-tailIS(x = NULL, n = 1000, alpha = 0.5, dfg1, dfg2, observed = NULL)
+tailIS(x = NULL, n = 1000, alpha = 0.5, dfg1, dfg2 = NULL,
+  facScores = NULL, observed = NULL)
 }
 \arguments{
 \item{x}{points to evaluate tail probabilities in}

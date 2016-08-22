@@ -4,12 +4,14 @@
 \alias{expect.dfg}
 \title{Expectations in DFG}
 \usage{
-\method{expect}{dfg}(x, facScores, ...)
+\method{expect}{dfg}(x, facScores, data = NULL, ...)
 }
 \arguments{
 \item{x}{dfg object}
 
 \item{facScores}{A list of matrices similar to factor potentials indicating a function which expectation should be evaluated}
+
+\item{data}{dataframe or matrix with observed data. The mapping between columns and rows will be performed automatically. NA will be interpreted as a missing variable}
 
 \item{...}{Arguments to be passed to methods.}
 }

@@ -19,6 +19,7 @@ Suggests:
     testthat,
     igraph,
     knitr
+LazyData: TRUE
 VignetteBuilder: knitr
 RcppModules: phy
 KeepSource: TRUE
